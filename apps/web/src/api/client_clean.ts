@@ -1,5 +1,86 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
+export function getTenantId(): string {
+  // Prefer explicit tenantId, fallback to company code (used by backend tenantResolver), else 'demo'
+  const tenant = (typeof window !== 'undefined' ? localStorage.getItem('afrigest_tenantId') : null) || ''
+  if (tenant) return tenant
+  const company = (typeof window !== 'undefined' ? localStorage.getItem('afrigest_company') : null) || ''
+  return company || 'demo'
+}
+
+// --- E-COMMERCE CLIENT HELPERS ---
+export async function ecomListProducts() {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/products`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to load ecommerce products')
+  return res.json() as Promise<{ items: Array<{ sku: string; title: string; price: number; currency: string; isOnlineAvailable: boolean }>, tenantId: string }>
+}
+
+export async function ecomListOrders() {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/orders`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to load ecommerce orders')
+  return res.json() as Promise<{ items: Array<{ id: string; status: string; total: number; currency: string }>, tenantId: string }>
+}
+
+export async function ecomCreateOrder(payload: { items: Array<{ sku: string; quantity: number; price: number; currency?: string }>; customer?: { email?: string; phone?: string; firstName?: string; lastName?: string }; payment?: { provider: 'stripe' | 'paypal' | 'mtn_momo' | 'orange_momo' | 'cod' } }) {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to create ecommerce order')
+  return res.json() as Promise<{ id?: string; orderId?: string; payment?: { provider: string; clientSecret?: string } }>
+}
+
+export async function ecomListCustomers() {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/customers`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to load ecommerce customers')
+  return res.json() as Promise<{ items: Array<{ id?: string; email?: string; phone?: string; firstName?: string; lastName?: string }>, tenantId: string }>
+}
+
+export async function ecomCreateCustomer(payload: { email?: string; phone?: string; firstName?: string; lastName?: string }) {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/customers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to create ecommerce customer')
+  return res.json() as Promise<{ id: string; email?: string; phone?: string; firstName?: string; lastName?: string }>
+}
+
+export async function ecomUpdateOrderStatus(orderId: string, status: 'received'|'prepared'|'shipped'|'delivered'|'returned') {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/orders/${encodeURIComponent(orderId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to update order status')
+  return res.json() as Promise<{ id: string; status: string }>
+}
+
+export async function ecomSyncInventory(changes: Array<{ sku: string; delta: number; reason?: string }>) {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/sync-inventory`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ changes })
+  })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to sync inventory')
+  return res.json() as Promise<{ ok: true; tenantId: string; applied: number }>
+}
+
+export async function ecomGetSummary() {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/summary`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to load ecommerce summary')
+  return res.json() as Promise<{ tenantId: string; today: { onlineCount: number; onlineRevenue: number; conversionRate: number } }>
+}
+
 export interface LoginPayload {
   email: string
   password: string
@@ -276,37 +357,7 @@ export async function createDemoRequestPublic(data: { name: string; company: str
   return res.json()
 }
 
-export async function validateReferralPublic(code: string) {
-  const res = await fetch(`${API_URL}/public/referrals/validate?code=${encodeURIComponent(code)}`)
-  if (!res.ok) return { ok: false }
-  return res.json() as Promise<{ ok: boolean; owner?: string | null }>
-}
-
-// Referrals (protected)
-export async function getReferralCode() {
-  const res = await fetch(`${API_URL}/referrals/code`, { headers: authHeaders() })
-  if (!res.ok) throw new Error(await res.text() || 'Failed to load referral code')
-  return res.json() as Promise<{ code: string; company: string }>
-}
-
-export async function generateReferralCode() {
-  const res = await fetch(`${API_URL}/referrals/generate`, { method: 'POST', headers: authHeaders() })
-  if (!res.ok) throw new Error(await res.text() || 'Failed to generate code')
-  return res.json() as Promise<{ code: string; company: string }>
-}
-
-// Leads (protected Super Admin)
-export async function listLeads() {
-  const res = await fetch(`${API_URL}/leads`, { headers: authHeaders() })
-  if (!res.ok) throw new Error(await res.text() || 'Failed to load leads')
-  return res.json() as Promise<Array<{ id: string; name: string; company: string; email: string; phone?: string; message?: string; referralCode?: string; createdAt: string }>>
-}
-
-export async function getReferralStats() {
-  const res = await fetch(`${API_URL}/referrals/stats`, { headers: authHeaders() })
-  if (!res.ok) throw new Error(await res.text() || 'Failed to load referral stats')
-  return res.json() as Promise<{ totalLeads: number; leadsThisMonth: number }>
-}
+// (duplicates removed below — earlier definitions maintained)
 
 export async function getReferralLeads() {
   const res = await fetch(`${API_URL}/referrals/leads`, { headers: authHeaders() })

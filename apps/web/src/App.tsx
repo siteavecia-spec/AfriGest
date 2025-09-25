@@ -16,6 +16,15 @@ import ResetPassword from './pages/ResetPassword'
 import AdminPasswordReset from './pages/AdminPasswordReset'
 import UsersPage from './pages/Users'
 import VerifyEmail from './pages/VerifyEmail'
+import EcommerceOverview from './pages/Ecommerce/Overview'
+import EcommerceProducts from './pages/Ecommerce/Products'
+import EcommerceOrders from './pages/Ecommerce/Orders'
+import EcommerceSettings from './pages/Ecommerce/Settings'
+import EcommerceCustomers from './pages/Ecommerce/Customers'
+import Conversations from './pages/Messaging/Conversations'
+import Chat from './pages/Messaging/Chat'
+import PresencePage from './pages/Messaging/Presence'
+import { showEcommerce, showMessaging } from './config/featureFlags'
 
 export default function App() {
   return (
@@ -34,9 +43,28 @@ export default function App() {
             <Route path="/suppliers" element={<SuppliersPage />} />
             <Route path="/ambassador" element={<AmbassadorPage />} />
             <Route path="/users" element={<UsersPage />} />
+            {/* Messaging module (feature flag) */}
+            {showMessaging && (
+              <>
+                <Route path="/messaging" element={<Conversations />} />
+                <Route path="/messaging/:userId" element={<Chat />} />
+                <Route path="/messaging/presence" element={<PresencePage />} />
+              </>
+            )}
+            {/* Ecommerce module */}
+            {showEcommerce && (
+              <>
+                <Route path="/ecommerce" element={<EcommerceOverview />} />
+                <Route path="/ecommerce/products" element={<EcommerceProducts />} />
+                <Route path="/ecommerce/orders" element={<EcommerceOrders />} />
+                <Route path="/ecommerce/customers" element={<EcommerceCustomers />} />
+              </>
+            )}
           </Route>
           <Route element={<ProtectedByRole allow={["super_admin", "pdg"]} />}>
             <Route path="/settings" element={<SettingsPage />} />
+            {/* Ecommerce settings (PDG/Super Admin) */}
+            {showEcommerce && <Route path="/ecommerce/settings" element={<EcommerceSettings />} />}
           </Route>
           <Route element={<ProtectedByRole allow={["super_admin"]} />}>
             <Route path="/leads" element={<LeadsPage />} />
@@ -48,3 +76,4 @@ export default function App() {
     </Routes>
   )
 }
+

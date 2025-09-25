@@ -107,7 +107,7 @@ export const passwordResetRequests: PasswordResetRequest[] = []
 export const passwordRevokedAfter = new Map<string, number>()
 
 export interface SectorTemplate { key: string; name: string; attributes: SectorAttribute[] }
-export const sectorTemplates: SectorTemplate[] = [
+ export const sectorTemplates: SectorTemplate[] = [
   { key: 'retail', name: 'Commerce de détail', attributes: [
     { key: 'supplier', label: 'Fournisseur', type: 'string' },
     { key: 'ref', label: 'Référence produit', type: 'string' },
@@ -151,6 +151,21 @@ export const sectorTemplates: SectorTemplate[] = [
     { key: 'keyIngredients', label: 'Ingrédients clés', type: 'text' },
     { key: 'expiry', label: 'Date d\'expiration', type: 'date' },
   ]},
-  { key: 'generic', name: 'Générique', attributes: [
-  ]},
+  { key: 'generic', name: 'Générique', attributes: [] },
 ]
+
+// --- E-COMMERCE (in-memory Phase 1) ---
+export type EcommerceOrderStatus = 'received' | 'prepared' | 'shipped' | 'delivered' | 'returned'
+export interface EcommerceOrderItem { sku: string; quantity: number; price: number; currency: string }
+export interface EcommerceOrder {
+  id: ID
+  tenantId: ID
+  items: EcommerceOrderItem[]
+  total: number
+  currency: string
+  status: EcommerceOrderStatus
+  createdAt: string
+  customerEmail?: string
+  customerPhone?: string
+}
+export const ecommerceOrders: EcommerceOrder[] = []

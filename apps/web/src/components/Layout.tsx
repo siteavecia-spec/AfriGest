@@ -1,4 +1,4 @@
-import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText } from '@mui/material'
+import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Badge } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -6,6 +6,8 @@ import type { RootState } from '../store'
 import { logout } from '../features/auth/slice'
 import OfflineBanner from './OfflineBanner'
 import { useEffect, useState } from 'react'
+import { messagingConnect } from '../features/messaging/wsMiddleware'
+import { showEcommerce, showMessaging } from '../config/featureFlags'
 import { logoutApi } from '../api/client_clean'
 import { getPendingSales, trySyncSales, getSyncErrors, clearSyncErrors } from '../offline/salesQueue'
 
@@ -35,6 +37,10 @@ export default function Layout() {
 
   // lightweight polling and online event
   useEffect(() => {
+    // connect messaging WS (only if messaging enabled)
+    if (showMessaging) {
+      try { (dispatch as any)(messagingConnect()) } catch {}
+    }
     let timer: any
     refreshSyncStatus()
     timer = setInterval(refreshSyncStatus, 30000)
@@ -55,16 +61,41 @@ export default function Layout() {
             <>
               <Button color={isActive('/dashboard') ? 'secondary' : 'inherit'} onClick={go('/dashboard')}>Dashboard</Button>
               <Button color={isActive('/pos') ? 'secondary' : 'inherit'} onClick={go('/pos')}>POS</Button>
+              {showMessaging && (
+                <>
+                  <Button color={isActive('/messaging') ? 'secondary' : 'inherit'} onClick={go('/messaging')}>
+                    <Badge color="error" overlap="circular" badgeContent={useSelector((s: RootState) => s.messaging?.unreadTotal || 0)}>
+                      Messagerie
+                    </Badge>
+                  </Button>
+                  <Button color={isActive('/messaging/presence') ? 'secondary' : 'inherit'} onClick={go('/messaging/presence')}>Présence</Button>
+                </>
+              )}
               {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
                 <>
                   <Button color={isActive('/stock') ? 'secondary' : 'inherit'} onClick={go('/stock')}>Stock</Button>
                   <Button color={isActive('/suppliers') ? 'secondary' : 'inherit'} onClick={go('/suppliers')}>Fournisseurs</Button>
                   <Button color={isActive('/ambassador') ? 'secondary' : 'inherit'} onClick={go('/ambassador')}>Ambassadeur</Button>
                   <Button color={isActive('/users') ? 'secondary' : 'inherit'} onClick={go('/users')}>Utilisateurs</Button>
+                  {/* Ecommerce (Overview/Products/Orders/Customers) */}
+                  {showEcommerce && (
+                    <>
+                      <Button color={isActive('/ecommerce') ? 'secondary' : 'inherit'} onClick={go('/ecommerce')}>Boutique en ligne</Button>
+                      <Button color={isActive('/ecommerce/products') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/products')}>Produits</Button>
+                      <Button color={isActive('/ecommerce/orders') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/orders')}>Commandes</Button>
+                      <Button color={isActive('/ecommerce/customers') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/customers')}>Clients</Button>
+                    </>
+                  )}
                 </>
               )}
               {(role === 'super_admin' || role === 'pdg') && (
-                <Button color={isActive('/settings') ? 'secondary' : 'inherit'} onClick={go('/settings')}>Paramètres</Button>
+                <>
+                  <Button color={isActive('/settings') ? 'secondary' : 'inherit'} onClick={go('/settings')}>Paramètres</Button>
+                  {/* Ecommerce Settings */}
+                  {showEcommerce && (
+                    <Button color={isActive('/ecommerce/settings') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/settings')}>E‑commerce: Paramètres</Button>
+                  )}
+                </>
               )}
               {(role === 'super_admin') && (
                 <>
@@ -88,16 +119,37 @@ export default function Layout() {
               <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
                 <MenuItem onClick={() => { navigate('/dashboard'); setMenuAnchor(null) }}>Dashboard</MenuItem>
                 <MenuItem onClick={() => { navigate('/pos'); setMenuAnchor(null) }}>POS</MenuItem>
+                {showMessaging && (
+                  <>
+                    <MenuItem onClick={() => { navigate('/messaging'); setMenuAnchor(null) }}>Messagerie</MenuItem>
+                    <MenuItem onClick={() => { navigate('/messaging/presence'); setMenuAnchor(null) }}>Présence</MenuItem>
+                  </>
+                )}
                 {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
                   <>
                     <MenuItem onClick={() => { navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
                     <MenuItem onClick={() => { navigate('/suppliers'); setMenuAnchor(null) }}>Fournisseurs</MenuItem>
                     <MenuItem onClick={() => { navigate('/ambassador'); setMenuAnchor(null) }}>Ambassadeur</MenuItem>
                     <MenuItem onClick={() => { navigate('/users'); setMenuAnchor(null) }}>Utilisateurs</MenuItem>
+                    {/* Ecommerce (Overview/Products/Orders/Customers) */}
+                    {showEcommerce && (
+                      <>
+                        <MenuItem onClick={() => { navigate('/ecommerce'); setMenuAnchor(null) }}>Boutique en ligne</MenuItem>
+                        <MenuItem onClick={() => { navigate('/ecommerce/products'); setMenuAnchor(null) }}>Produits</MenuItem>
+                        <MenuItem onClick={() => { navigate('/ecommerce/orders'); setMenuAnchor(null) }}>Commandes</MenuItem>
+                        <MenuItem onClick={() => { navigate('/ecommerce/customers'); setMenuAnchor(null) }}>Clients</MenuItem>
+                      </>
+                    )}
                   </>
                 )}
                 {(role === 'super_admin' || role === 'pdg') && (
-                  <MenuItem onClick={() => { navigate('/settings'); setMenuAnchor(null) }}>Paramètres</MenuItem>
+                  <>
+                    <MenuItem onClick={() => { navigate('/settings'); setMenuAnchor(null) }}>Paramètres</MenuItem>
+                    {/* Ecommerce Settings */}
+                    {showEcommerce && (
+                      <MenuItem onClick={() => { navigate('/ecommerce/settings'); setMenuAnchor(null) }}>E‑commerce: Paramètres</MenuItem>
+                    )}
+                  </>
                 )}
                 {(role === 'super_admin') && (
                   <>
