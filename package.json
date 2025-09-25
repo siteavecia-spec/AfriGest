@@ -1,0 +1,14 @@
+{
+  "name": "afrigest",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm -w apps/web run build && npm -w apps/api run build",
+    "dev:web": "npm -w apps/web run dev",
+    "dev:api": "npm -w apps/api run dev"
+  }
+}

@@ -1,0 +1,254 @@
+// Prisma schema for Tenant DB (per company)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../apps/api/src/generated/tenant"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  fullName      String
+  role          Role
+  status        String   @default("active")
+  lastLoginAt   DateTime?
+  emailVerifiedAt DateTime?
+  sales         Sale[]
+  stockEntriesCreated StockEntry[]
+}
+
+enum Role {
+  super_admin
+  pdg
+  dg
+  employee
+}
+
+model Boutique {
+  id       String  @id @default(uuid())
+  name     String
+  code     String  @unique
+  address  String?
+  city     String?
+  country  String?
+  stocks   Stock[]
+  sales    Sale[]
+}
+
+model Product {
+  id        String  @id @default(uuid())
+  sku       String  @unique
+  name      String
+  category  String?
+  price     Decimal @db.Decimal(10,2)
+  cost      Decimal @db.Decimal(10,2)
+  barcode   String?
+  taxRate   Decimal @db.Decimal(5,2)
+  isActive  Boolean @default(true)
+  stocks    Stock[]
+  saleItems SaleItem[]
+  stockEntryItems StockEntryItem[]
+}
+
+model Stock {
+  id          String   @id @default(uuid())
+  boutique    Boutique @relation(fields: [boutiqueId], references: [id])
+  boutiqueId  String
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+  quantity    Int
+
+  @@unique([boutiqueId, productId])
+}
+
+model Supplier {
+  id          String   @id @default(uuid())
+  name        String
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+  entries     StockEntry[]
+}
+
+model StockEntry {
+  id            String     @id @default(uuid())
+  supplier      Supplier?  @relation(fields: [supplierId], references: [id])
+  supplierId    String?
+  reference     String?
+  createdBy     User       @relation(fields: [createdByUserId], references: [id])
+  createdByUserId String
+  createdAt     DateTime   @default(now())
+  items         StockEntryItem[]
+}
+
+model StockEntryItem {
+  id            String    @id @default(uuid())
+  stockEntry    StockEntry @relation(fields: [stockEntryId], references: [id])
+  stockEntryId  String
+  product       Product   @relation(fields: [productId], references: [id])
+  productId     String
+  quantity      Int
+  unitCost      Decimal @db.Decimal(10,2)
+}
+
+model Sale {
+  id             String    @id @default(uuid())
+  boutique       Boutique  @relation(fields: [boutiqueId], references: [id])
+  boutiqueId     String
+  cashier        User      @relation(fields: [cashierUserId], references: [id])
+  cashierUserId  String
+  total          Decimal   @db.Decimal(10,2)
+  paymentMethod  String
+  currency       String    @default("GNF")
+  createdAt      DateTime  @default(now())
+  offlineId      String?   @unique
+  status         String    @default("completed")
+  items          SaleItem[]
+  payments       Payment[]
+}
+
+model SaleItem {
+  id         String   @id @default(uuid())
+  sale       Sale     @relation(fields: [saleId], references: [id])
+  saleId     String
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  String
+  quantity   Int
+  unitPrice  Decimal  @db.Decimal(10,2)
+  discount   Decimal  @db.Decimal(10,2) @default(0)
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  sale      Sale     @relation(fields: [saleId], references: [id])
+  saleId    String
+  method    String
+  amount    Decimal  @db.Decimal(10,2)
+  reference String?
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  role      String?
+  action    String
+  resourceId String?
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+enum ResetMethod {
+  email
+  sms
+}
+
+model PasswordResetRequest {
+  id          String      @id @default(uuid())
+  userEmail   String
+  phone       String?
+  resetMethod ResetMethod
+  resetToken  String?
+  otpCode     String?
+  expiresAt   DateTime
+  used        Boolean     @default(false)
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  @@index([userEmail])
+  @@index([phone])
+  @@index([otpCode])
+  @@index([resetToken])
+}
+
+model RefreshSession {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String   @unique
+  userAgent    String?
+  ip           String?
+  createdAt    DateTime @default(now())
+  revokedAt    DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerification {
+  id         String   @id @default(uuid())
+  userId     String
+  email      String
+  token      String   @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+// Referrals
+enum ReferralRequestStatus {
+  pending
+  approved
+  rejected
+}
+
+enum RewardStatus {
+  pending
+  paid
+  cancelled
+}
+
+model ReferralCode {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([code])
+}
+
+model ReferralRequest {
+  id             String                 @id @default(uuid())
+  referralCodeId String?
+  referralCode   ReferralCode?          @relation(fields: [referralCodeId], references: [id])
+  prospectEmail  String
+  prospectPhone  String?
+  companyName    String?
+  status         ReferralRequestStatus  @default(pending)
+  createdAt      DateTime               @default(now())
+
+  @@index([referralCodeId])
+  @@index([prospectEmail])
+  @@index([status])
+}
+
+model ReferralReward {
+  id             String        @id @default(uuid())
+  referrerId     String
+  referrer       User          @relation("referrer", fields: [referrerId], references: [id])
+  referredUserId String
+  referredUser   User          @relation("referred", fields: [referredUserId], references: [id])
+  rewardType     String
+  rewardValue    Decimal       @db.Decimal(10,2)
+  status         RewardStatus  @default(pending)
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+
+  @@index([referrerId])
+  @@index([referredUserId])
+  @@index([status])
+}

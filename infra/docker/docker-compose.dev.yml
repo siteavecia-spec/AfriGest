@@ -1,0 +1,31 @@
+version: '3.9'
+services:
+  pg-master:
+    image: postgres:16
+    container_name: afrigest-pg-master
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: afrigest_master
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pg-tenant-demo:
+    image: postgres:16
+    container_name: afrigest-pg-tenant-demo
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: afrigest_tenant_demo
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

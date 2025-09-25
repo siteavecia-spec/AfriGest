@@ -1,0 +1,9 @@
+{
+  "name": "AfriGest",
+  "short_name": "AfriGest",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1D4ED8",
+  "icons": []
+}

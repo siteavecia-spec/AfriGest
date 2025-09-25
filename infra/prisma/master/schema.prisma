@@ -1,0 +1,58 @@
+// Prisma schema for Master DB
+// datasource and generator are examples; configure env in CI/Runtime
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../apps/api/src/generated/master"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MASTER_DATABASE_URL")
+}
+
+model Company {
+  id              String   @id @default(uuid())
+  name            String
+  code            String   @unique
+  subdomain       String?  @unique
+  status          String   @default("active")
+  plan            String   @default("starter")
+  contactEmail    String
+  createdAt       DateTime @default(now())
+  tenants         Tenant[]
+  subscriptions   Subscription[]
+}
+
+model Tenant {
+  id           String   @id @default(uuid())
+  company      Company  @relation(fields: [companyId], references: [id])
+  companyId    String
+  dbHost       String
+  dbName       String
+  dbUser       String
+  dbPassword   String   // encrypted at rest
+  region       String
+  createdAt    DateTime @default(now())
+}
+
+model Subscription {
+  id                 String   @id @default(uuid())
+  company            Company  @relation(fields: [companyId], references: [id])
+  companyId          String
+  plan               String
+  status             String
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorEmail String
+  companyId  String?
+  action     String
+  resource   String
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+}
