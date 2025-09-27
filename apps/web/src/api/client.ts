@@ -21,6 +21,7 @@ export async function validateOtp(phone: string, otp: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone, otp })
+  })
   if (!res.ok) throw new Error(await res.text() || 'Invalid OTP')
   return res.json() as Promise<{ ok: true; email: string; token: string }>
 }
@@ -288,12 +289,4 @@ export async function logoutApi() {
   } catch {}
 }
 
-export async function forgotPassword(email: string) {
-  const res = await fetch(`${API_URL}/auth/forgot-password`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email })
-  })
-  if (!res.ok) throw new Error(await res.text() || 'Failed to send password reset email')
-  return res.json() as Promise<{ ok: true }>
-}
+// Note: 'forgotPassword' is already defined above (email flow). Duplicate removed.

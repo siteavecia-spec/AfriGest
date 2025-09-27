@@ -7,6 +7,9 @@ import App from './App'
 import { store } from './store'
 import { theme } from './theme'
 import { setupOfflineSync } from './offline/salesQueue'
+import { BoutiqueProvider } from './context/BoutiqueContext'
+import ConsentBanner from './utils/privacy/ConsentBanner'
+import { I18nProvider } from './i18n/i18n'
 
 // Initialize offline sync once at startup
 setupOfflineSync()
@@ -27,7 +30,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <App />
+          <I18nProvider>
+            <BoutiqueProvider>
+              <App />
+              <ConsentBanner />
+            </BoutiqueProvider>
+          </I18nProvider>
         </ThemeProvider>
       </BrowserRouter>
     </Provider>

@@ -1,14 +1,17 @@
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env'
+import type { SignOptions, Secret } from 'jsonwebtoken'
 
 export type Role = 'super_admin' | 'pdg' | 'dg' | 'employee'
 
 export function signAccessToken(userId: string, role: Role) {
-  return jwt.sign({ sub: userId, role }, env.JWT_ACCESS_SECRET, { expiresIn: '15m' })
+  const opts: SignOptions = { expiresIn: env.ACCESS_TTL as any }
+  return jwt.sign({ sub: userId, role }, env.JWT_ACCESS_SECRET as Secret, opts)
 }
 
 export function signRefreshToken(userId: string, role: Role) {
-  return jwt.sign({ sub: userId, role, typ: 'refresh' }, env.JWT_REFRESH_SECRET, { expiresIn: '30d' })
+  const opts: SignOptions = { expiresIn: env.REFRESH_TTL as any }
+  return jwt.sign({ sub: userId, role, typ: 'refresh' }, env.JWT_REFRESH_SECRET as Secret, opts)
 }
 
 export function verifyRefreshToken(token: string) {

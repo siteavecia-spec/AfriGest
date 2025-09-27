@@ -21,6 +21,9 @@ model User {
   emailVerifiedAt DateTime?
   sales         Sale[]
   stockEntriesCreated StockEntry[]
+  referralCodes ReferralCode[]
+  referrerRewards ReferralReward[] @relation("referrer")
+  referredRewards ReferralReward[] @relation("referred")
 }
 
 enum Role {
@@ -51,6 +54,10 @@ model Product {
   barcode   String?
   taxRate   Decimal @db.Decimal(5,2)
   isActive  Boolean @default(true)
+  // Multi-sector support
+  sector    String?
+  // EAV-like flexible attributes per sector
+  attrs     Json?
   stocks    Stock[]
   saleItems SaleItem[]
   stockEntryItems StockEntryItem[]
@@ -96,6 +103,19 @@ model StockEntryItem {
   productId     String
   quantity      Int
   unitCost      Decimal @db.Decimal(10,2)
+}
+
+model StockAudit {
+  id         String   @id @default(uuid())
+  boutiqueId String
+  productId  String
+  delta      Int
+  reason     String
+  userId     String?
+  createdAt  DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([boutiqueId, createdAt])
 }
 
 model Sale {
@@ -176,6 +196,7 @@ model RefreshSession {
   userAgent    String?
   ip           String?
   createdAt    DateTime @default(now())
+  expiresAt    DateTime
   revokedAt    DateTime?
 
   @@index([userId])
@@ -217,6 +238,8 @@ model ReferralCode {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
+  referralRequests ReferralRequest[]
+
   @@index([userId])
   @@index([code])
 }
@@ -251,4 +274,52 @@ model ReferralReward {
   @@index([referrerId])
   @@index([referredUserId])
   @@index([status])
+}
+
+// --- Multi-sector templates and custom attributes ---
+enum AttrType {
+  string
+  number
+  date
+  text
+}
+
+model SectorTemplate {
+  id        String   @id @default(uuid())
+  // Stable key for the sector, e.g., 'retail', 'restaurant', 'fashion', etc.
+  key       String   @unique
+  name      String
+  // If true, this template is part of the system defaults (read-only for normal users)
+  isSystem  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attributes SectorAttribute[]
+}
+
+model SectorAttribute {
+  id          String        @id @default(uuid())
+  template    SectorTemplate @relation(fields: [templateId], references: [id])
+  templateId  String
+  key         String
+  label       String
+  type        AttrType
+  required    Boolean       @default(false)
+
+  @@unique([templateId, key])
+}
+
+// Per-tenant custom attributes that PDG can add on top of a sector
+model TenantCustomAttribute {
+  id         String   @id @default(uuid())
+  // Sector key these attributes augment, e.g., 'retail', 'pharmacy', etc.
+  sectorKey  String
+  key        String
+  label      String
+  type       AttrType
+  required   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([sectorKey, key])
 }

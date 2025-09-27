@@ -1,0 +1,12 @@
+# Copy as .env in apps/api/ and adjust values per environment
+PORT=4000
+JWT_ACCESS_SECRET=dev_access
+JWT_REFRESH_SECRET=dev_refresh
+# Comma-separated allowed origins for non-dev CORS (e.g., staging/prod frontends)
+ALLOWED_ORIGINS=http://localhost:5173
+# Token TTLs
+ACCESS_TTL=15m
+REFRESH_TTL=30d
+# Optional DB URLs (kept for future Postgres switch)
+MASTER_DATABASE_URL=postgresql://user:pass@localhost:5432/afrigest_master
+TENANT_DATABASE_URL=postgresql://user:pass@localhost:5432/afrigest_tenant_demo

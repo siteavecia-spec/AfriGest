@@ -2,100 +2,163 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth'
 import { requireRole } from '../middleware/rbac'
-import { getStock, products, sales, upsertStock } from '../stores/memory'
+import * as svc from '../services/sales'
+import { products, sales as memorySales } from '../stores/memory'
+import { getTenantClientFromReq } from '../db'
 
 const router = Router()
 
 // GET /sales?limit=...
-router.get('/', requireAuth, (req, res) => {
-  const limit = Number((req.query.limit || 50).toString())
-  res.json(sales.slice(-limit).reverse())
+router.get('/', requireAuth, async (req, res) => {
+  const limit = Math.max(1, Math.min(200, Number((req.query.limit || 50).toString())))
+  const rawOffset = Number((req.query.offset || 0).toString())
+  const offset = Number.isFinite(rawOffset) && rawOffset > 0 ? Math.max(0, rawOffset) : 0
+  const rows = await svc.listSales(req, limit, offset)
+  try {
+    const prisma = getTenantClientFromReq(req)
+    if (prisma) {
+      const total = await (prisma as any).sale.count()
+      res.setHeader('X-Total-Count', String(total))
+    } else {
+      res.setHeader('X-Total-Count', String(memorySales.length))
+    }
+  } catch {
+    res.setHeader('X-Total-Count', String(memorySales.length))
+  }
+  res.json(rows)
 })
 
 // GET /sales/summary — simple KPIs for today (in-memory)
-router.get('/summary', requireAuth, (_req, res) => {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = now.getMonth()
-  const d = now.getDate()
-  const start = new Date(y, m, d).getTime()
+router.get('/summary', requireAuth, async (req, res) => {
+  const boutiqueId = (req.query.boutiqueId || '').toString() || undefined
+  const out = await svc.getSalesSummary(req, boutiqueId)
+  return res.json(out)
+})
+
+// GET /sales/eod?date=YYYY-MM-DD&boutiqueId=ID|all — End-of-day report
+router.get('/eod', requireAuth, async (req, res) => {
+  const dateStr = (req.query.date || '').toString()
+  const boutiqueId = (req.query.boutiqueId || '').toString() || undefined
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return res.status(400).json({ error: 'Invalid or missing date (YYYY-MM-DD)' })
+  const [y, m, d] = dateStr.split('-').map(n => Number(n))
+  const start = new Date(y, m - 1, d).getTime()
   const end = start + 24 * 60 * 60 * 1000
-
-  const todays = sales.filter(s => {
-    const t = new Date(s.createdAt).getTime()
-    return t >= start && t < end
-  })
-  const count = todays.length
-  const total = todays.reduce((sum, s) => sum + (s.total || 0), 0)
-
-  // Aggregate quantities by product
-  const qtyMap = new Map<string, { qty: number; amount: number }>()
-  todays.forEach(s => {
-    s.items.forEach(it => {
-      const v = qtyMap.get(it.productId) || { qty: 0, amount: 0 }
-      v.qty += it.quantity
-      v.amount += it.quantity * it.unitPrice - (it.discount || 0)
-      qtyMap.set(it.productId, v)
-    })
-  })
-
-  let topProduct: any = null
-  qtyMap.forEach((v, pid) => {
-    if (!topProduct || v.qty > topProduct.quantity) topProduct = { productId: pid, quantity: v.qty, total: v.amount }
-  })
-  if (topProduct) {
-    const p = products.find(p => p.id === topProduct.productId)
-    if (p) topProduct = { ...topProduct, sku: p.sku, name: p.name }
+  const prisma: any = getTenantClientFromReq(req)
+  try {
+    let rows: Array<{ id: string; boutiqueId: string; createdAt: string; paymentMethod: string; currency: string; total: number; items: Array<{ productId: string; quantity: number; unitPrice: number; discount?: number }> }>
+    if (prisma?.sale) {
+      const where: any = { createdAt: { gte: new Date(start), lt: new Date(end) } }
+      if (boutiqueId && boutiqueId !== 'all') where.boutiqueId = boutiqueId
+      const found = await prisma.sale.findMany({ where, include: { items: true } })
+      rows = (found || []).map((s: any) => ({ id: s.id, boutiqueId: s.boutiqueId, createdAt: s.createdAt?.toISOString?.() || s.createdAt, paymentMethod: s.paymentMethod, currency: s.currency, total: Number(s.total), items: (s.items || []).map((it: any) => ({ productId: it.productId, quantity: Number(it.quantity), unitPrice: Number(it.unitPrice), discount: Number(it.discount || 0) })) }))
+    } else {
+      rows = (memorySales || []).filter((r: any) => {
+        const t = new Date(r.createdAt).getTime()
+        return t >= start && t < end && (!boutiqueId || boutiqueId === 'all' || r.boutiqueId === boutiqueId)
+      }).map((r: any) => ({ id: r.id, boutiqueId: r.boutiqueId, createdAt: r.createdAt, paymentMethod: r.paymentMethod, currency: r.currency, total: Number(r.total), items: r.items || [] }))
+    }
+    const payments: Record<string, number> = {}
+    let count = 0; let revenue = 0
+    rows.forEach(r => { count += 1; revenue += Number(r.total || 0); payments[r.paymentMethod] = (payments[r.paymentMethod] || 0) + Number(r.total || 0) })
+    const lines = rows.map(r => ({
+      id: r.id,
+      boutiqueId: r.boutiqueId,
+      createdAt: r.createdAt,
+      paymentMethod: r.paymentMethod,
+      currency: r.currency,
+      total: r.total,
+      items: (r.items || []).map((it: any) => `${it.productId}:${it.quantity}x${(it.unitPrice - (it.discount || 0))}`).join('|')
+    }))
+    return res.json({ date: dateStr, boutiqueId: boutiqueId || 'all', totals: { count, revenue, payments }, lines })
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'Failed to compute EOD' })
   }
+})
 
-  return res.json({ today: { count, total }, topProduct })
+// GET /sales/overview?from=YYYY-MM-DD&to=YYYY-MM-DD&boutiqueId=ID|all — Period aggregates for PDG
+router.get('/overview', requireAuth, async (req, res) => {
+  const from = (req.query.from || '').toString()
+  const to = (req.query.to || '').toString()
+  const boutiqueId = (req.query.boutiqueId || '').toString() || undefined
+  if (!from || !to || !/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) return res.status(400).json({ error: 'Invalid or missing from/to (YYYY-MM-DD)' })
+  const [fy, fm, fd] = from.split('-').map(n => Number(n))
+  const [ty, tm, td] = to.split('-').map(n => Number(n))
+  const start = new Date(fy, fm - 1, fd).getTime()
+  const end = new Date(ty, tm - 1, td).getTime() + 24 * 60 * 60 * 1000
+  const prisma: any = getTenantClientFromReq(req)
+  try {
+    let rows: Array<{ id: string; boutiqueId: string; createdAt: string; paymentMethod: string; currency: string; total: number; items: Array<{ productId: string; quantity: number; unitPrice: number; discount?: number }>; skuName?: Record<string, string> }>
+    if (prisma?.sale) {
+      const where: any = { createdAt: { gte: new Date(start), lt: new Date(end) } }
+      if (boutiqueId && boutiqueId !== 'all') where.boutiqueId = boutiqueId
+      const found = await prisma.sale.findMany({ where, include: { items: true } })
+      rows = (found || []).map((s: any) => ({ id: s.id, boutiqueId: s.boutiqueId, createdAt: s.createdAt?.toISOString?.() || s.createdAt, paymentMethod: s.paymentMethod, currency: s.currency, total: Number(s.total), items: (s.items || []).map((it: any) => ({ productId: it.productId, quantity: Number(it.quantity), unitPrice: Number(it.unitPrice), discount: Number(it.discount || 0) })) }))
+    } else {
+      rows = (memorySales || []).filter((r: any) => {
+        const t = new Date(r.createdAt).getTime()
+        return t >= start && t < end && (!boutiqueId || boutiqueId === 'all' || r.boutiqueId === boutiqueId)
+      }).map((r: any) => ({ id: r.id, boutiqueId: r.boutiqueId, createdAt: r.createdAt, paymentMethod: r.paymentMethod, currency: r.currency, total: Number(r.total), items: r.items || [] }))
+    }
+    // Aggregates
+    const payments: Record<string, number> = {}
+    const dailyMap: Record<string, { count: number; revenue: number }> = {}
+    const prodMap: Record<string, { quantity: number; revenue: number }> = {}
+    let count = 0; let revenue = 0
+    rows.forEach(r => {
+      count += 1; revenue += Number(r.total || 0)
+      payments[r.paymentMethod] = (payments[r.paymentMethod] || 0) + Number(r.total || 0)
+      const d = (r.createdAt || '').slice(0, 10)
+      const dm = (dailyMap[d] = dailyMap[d] || { count: 0, revenue: 0 })
+      dm.count += 1; dm.revenue += Number(r.total || 0)
+      ;(r.items || []).forEach((it: any) => {
+        const key = it.productId
+        const pm = (prodMap[key] = prodMap[key] || { quantity: 0, revenue: 0 })
+        const net = Number(it.unitPrice) - Number(it.discount || 0)
+        pm.quantity += Number(it.quantity)
+        pm.revenue += net * Number(it.quantity)
+      })
+    })
+    const dailySeries = Object.entries(dailyMap).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => ({ date, count: v.count, revenue: v.revenue }))
+    const topProducts = Object.entries(prodMap).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 20).map(([productId, v]) => ({ productId, quantity: v.quantity, revenue: v.revenue }))
+    return res.json({ boutiqueId: boutiqueId || 'all', from, to, periodTotals: { count, revenue, payments }, dailySeries, topProducts })
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'Failed to compute overview' })
+  }
 })
 
 const createSchema = z.object({
   boutiqueId: z.string().min(1),
-  items: z.array(z.object({ productId: z.string().min(1), quantity: z.number().int().positive(), unitPrice: z.number().nonnegative(), discount: z.number().nonnegative().optional() })),
-  paymentMethod: z.string().min(1),
-  currency: z.string().default('GNF'),
-  offlineId: z.string().optional()
+  items: z.array(
+    z.object({
+      productId: z.string().min(1),
+      quantity: z.number().int().positive(),
+      unitPrice: z.number().nonnegative(),
+      discount: z.number().nonnegative().optional()
+    })
+  ).min(1).max(100),
+  paymentMethod: z.enum(['cash','mobile_money','card','mixed']).default('cash'),
+  payments: z.array(z.object({ method: z.enum(['cash','mobile_money','card']), amount: z.number().nonnegative(), ref: z.string().optional() })).optional(),
+  currency: z.string().min(3).max(3).default('GNF'),
+  offlineId: z.string().max(120).optional()
 })
 
 // POST /sales (supports offlineId for idempotency)
-router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg', 'employee'), (req, res) => {
+router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg', 'employee'), async (req, res) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
-  const { boutiqueId, items, paymentMethod, currency, offlineId } = parsed.data
-
-  // idempotency for offline sync
-  if (offlineId) {
-    const existing = sales.find(s => s.offlineId === offlineId)
-    if (existing) return res.json(existing)
+  try {
+    const created = await svc.createSale(req, {
+      boutiqueId: parsed.data.boutiqueId,
+      items: parsed.data.items,
+      paymentMethod: parsed.data.paymentMethod,
+      payments: parsed.data.payments,
+      currency: parsed.data.currency,
+      offlineId: parsed.data.offlineId || null
+    })
+    return res.status(201).json(created)
+  } catch (e: any) {
+    return res.status(400).json({ error: e?.message || 'Failed to create sale' })
   }
-
-  // validate products and stock
-  for (const it of items) {
-    const prod = products.find(p => p.id === it.productId)
-    if (!prod) return res.status(400).json({ error: `Invalid product ${it.productId}` })
-    const available = getStock(boutiqueId, it.productId)
-    if (available < it.quantity) return res.status(400).json({ error: `Insufficient stock for ${prod.name}` })
-  }
-
-  // apply stock deduction
-  items.forEach(it => upsertStock(boutiqueId, it.productId, -it.quantity))
-
-  const total = items.reduce((sum, it) => sum + (it.unitPrice * it.quantity - (it.discount || 0)), 0)
-  const sale = {
-    id: `sale-${Date.now()}`,
-    boutiqueId,
-    items,
-    total,
-    paymentMethod,
-    currency,
-    cashierUserId: (req as any).auth?.sub,
-    createdAt: new Date().toISOString(),
-    offlineId: offlineId || null
-  }
-  sales.push(sale)
-  res.status(201).json(sale)
 })
 
 export default router

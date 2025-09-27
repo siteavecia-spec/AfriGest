@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: afrigest-api
+    env: node
+    rootDir: apps/api
+    buildCommand: bash render-build.sh
+    startCommand: node dist/index.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Add your secrets here or via Render dashboard:
+      # - key: MASTER_DATABASE_URL
+      #   sync: false
+      # - key: JWT_ACCESS_SECRET
+      #   sync: false
+      # - key: JWT_REFRESH_SECRET
+      #   sync: false
+
+  - type: static
+    name: afrigest-web
+    rootDir: apps/web
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        # Replace with Render API URL or custom domain
+        value: https://afrigest-api.onrender.com

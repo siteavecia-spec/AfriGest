@@ -11,6 +11,19 @@ export interface LeadPayload {
   createdAt: string
 }
 
+// Generic event notification (MVP)
+export async function notifyEvent(subject: string, text: string, to?: string, html?: string) {
+  const transport = getTransport()
+  const toEmail = to || process.env.MAIL_TO
+  const from = process.env.MAIL_FROM || 'no-reply@afrigest.local'
+  if (!transport || !toEmail) {
+    console.log('[notify:event]', { subject, text })
+    return { ok: false, reason: 'No SMTP configured' }
+  }
+  await transport.sendMail({ from, to: toEmail, subject, text, html: html || undefined })
+  return { ok: true }
+}
+
 export async function sendPasswordResetEmail(toEmail: string, resetLink: string, reason?: string) {
   const transport = getTransport()
   const to = toEmail

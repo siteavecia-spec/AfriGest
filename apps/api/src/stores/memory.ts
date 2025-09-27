@@ -71,7 +71,7 @@ export const referralCodes: ReferralCode[] = [
 ]
 
 // Sector templates (MVP in-memory)
-export interface SectorAttribute { key: string; label: string; type: 'string' | 'number' | 'date' | 'text' }
+export interface SectorAttribute { key: string; label: string; type: 'string' | 'number' | 'date' | 'text'; required?: boolean }
 export interface PublicClient { id: ID; name: string; sector: string; logoUrl?: string; score: number }
 export const publicClients: PublicClient[] = [
   { id: 'cl-1', name: 'Boutique Kankan', sector: 'Retail', score: 92, logoUrl: 'https://example.com/kankan-logo.png' },
@@ -133,11 +133,11 @@ export interface SectorTemplate { key: string; name: string; attributes: SectorA
     { key: 'warranty', label: 'Garantie (mois)', type: 'number' },
   ]},
   { key: 'pharmacy', name: 'Pharmacie', attributes: [
-    { key: 'dci', label: 'DCI', type: 'string' },
+    { key: 'dci', label: 'DCI', type: 'string', required: true },
     { key: 'dosage', label: 'Dosage', type: 'string' },
     { key: 'form', label: 'Forme galénique', type: 'string' },
-    { key: 'batch', label: 'Numéro de lot', type: 'string' },
-    { key: 'expiry', label: 'Date d\'expiration', type: 'date' },
+    { key: 'batch', label: 'Numéro de lot', type: 'string', required: true },
+    { key: 'expiry', label: 'Date d\'expiration', type: 'date', required: true },
   ]},
   { key: 'grocery', name: 'Supérette', attributes: [
     { key: 'category', label: 'Catégorie', type: 'string' },
@@ -169,3 +169,25 @@ export interface EcommerceOrder {
   customerPhone?: string
 }
 export const ecommerceOrders: EcommerceOrder[] = []
+
+// --- TRANSFERS (in-memory MVP) ---
+export type TransferStatus = 'created' | 'in_transit' | 'received'
+export interface TransferItem { productId: ID; quantity: number }
+export interface Transfer {
+  id: ID
+  sourceBoutiqueId: ID
+  destBoutiqueId: ID
+  reference?: string
+  items: TransferItem[]
+  status: TransferStatus
+  token: string // used as QR content in MVP
+  createdAt: string
+  sentAt?: string
+  receivedAt?: string
+}
+export const transfers: Transfer[] = []
+
+// --- RESTOCK REQUESTS (in-memory MVP) ---
+export type RestockStatus = 'pending' | 'approved' | 'rejected' | 'fulfilled'
+export interface RestockRequest { id: ID; boutiqueId: ID; productId: ID; quantity: number; status: RestockStatus; createdAt: string }
+export const restockRequests: RestockRequest[] = []

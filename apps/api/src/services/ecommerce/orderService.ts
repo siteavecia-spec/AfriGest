@@ -7,6 +7,43 @@ export async function listOrders(tenantId: string, limit = 50, offset = 0, prism
       prisma.ecommerceOrder.count()
     ])
     return { items, total }
+
+export async function getTodayTopProducts(tenantId: string, prisma?: any, limit = 5): Promise<Array<{ sku: string; quantity: number; revenue: number }>> {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
+  if (prisma?.ecommerceOrderItem) {
+    // Aggregate items for today's orders
+    const rows = await prisma.ecommerceOrderItem.findMany({
+      where: { createdAt: { gte: start, lt: end } },
+      select: { sku: true, quantity: true, price: true }
+    })
+    const map = new Map<string, { qty: number; rev: number }>()
+    for (const r of rows) {
+      const e = map.get(r.sku) || { qty: 0, rev: 0 }
+      e.qty += Number(r.quantity || 0)
+      e.rev += Number(r.price || 0) * Number(r.quantity || 0)
+      map.set(r.sku, e)
+    }
+    const arr = Array.from(map.entries()).map(([sku, v]) => ({ sku, quantity: v.qty, revenue: v.rev }))
+    arr.sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue)
+    return arr.slice(0, limit)
+  }
+  // Memory mode
+  const todays = ecommerceOrders.filter(o => new Date(o.createdAt).getTime() >= start.getTime() && new Date(o.createdAt).getTime() < end.getTime() && o.tenantId === tenantId)
+  const map = new Map<string, { qty: number; rev: number }>()
+  for (const o of todays) {
+    for (const it of (o.items || [])) {
+      const e = map.get(it.sku) || { qty: 0, rev: 0 }
+      e.qty += Number(it.quantity || 0)
+      e.rev += Number(it.price || 0) * Number(it.quantity || 0)
+      map.set(it.sku, e)
+    }
+  }
+  const arr = Array.from(map.entries()).map(([sku, v]) => ({ sku, quantity: v.qty, revenue: v.rev }))
+  arr.sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue)
+  return arr.slice(0, limit)
+}
   }
   const all = ecommerceOrders.filter(o => o.tenantId === tenantId)
   const total = all.length

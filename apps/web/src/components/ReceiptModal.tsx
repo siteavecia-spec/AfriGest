@@ -17,6 +17,7 @@ export interface ReceiptData {
   currency: string
   paymentMethod: string
   paymentRef?: string
+  payments?: Array<{ method: string; amount: number; ref?: string }>
   items: ReceiptItem[]
   total: number
   offlineId?: string
@@ -28,6 +29,11 @@ export interface ReceiptData {
     logoDataUrl?: string
   }
   receiptNumber?: string
+  vatRate?: number
+  vatAmount?: number
+  totalExclVat?: number
+  totalInclVat?: number
+  vatSummary?: Array<{ rate: number; amount: number }>
 }
 
 export default function ReceiptModal({ open, onClose, data }: { open: boolean; onClose: () => void; data: ReceiptData | null }) {
@@ -103,8 +109,35 @@ export default function ReceiptModal({ open, onClose, data }: { open: boolean; o
             </Stack>
           ))}
           <Divider />
-          <Typography variant="h6" textAlign="right">Total: {data.total.toFixed(2)} {data.currency}</Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="right">Paiement: {data.paymentMethod}{data.paymentRef ? ` • Réf: ${data.paymentRef}` : ''}</Typography>
+          {data.vatRate != null ? (
+            <>
+              <Typography variant="body2" color="text.secondary" textAlign="right">HT: {(data.totalExclVat ?? (data.total - (data.vatAmount || 0))).toFixed(2)} {data.currency}</Typography>
+              <Typography variant="body2" color="text.secondary" textAlign="right">TVA ({data.vatRate}%): {(data.vatAmount ?? 0).toFixed(2)} {data.currency}</Typography>
+              <Typography variant="h6" textAlign="right">TTC: {(data.totalInclVat ?? data.total).toFixed(2)} {data.currency}</Typography>
+              {Array.isArray(data.vatSummary) && data.vatSummary.length > 0 && (
+                <Stack sx={{ mt: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" textAlign="right">Détail TVA par taux:</Typography>
+                  {data.vatSummary.map((v, idx) => (
+                    <Typography key={`${v.rate}-${idx}`} variant="caption" color="text.secondary" textAlign="right">{v.rate}%: {v.amount.toFixed(2)} {data.currency}</Typography>
+                  ))}
+                </Stack>
+              )}
+            </>
+          ) : (
+            <Typography variant="h6" textAlign="right">Total: {data.total.toFixed(2)} {data.currency}</Typography>
+          )}
+          {Array.isArray(data.payments) && data.payments.length > 0 ? (
+            <Stack>
+              <Typography variant="subtitle2" textAlign="right">Paiements</Typography>
+              {data.payments.map((p, i) => (
+                <Typography key={i} variant="body2" color="text.secondary" textAlign="right">
+                  {p.method}: {p.amount.toFixed(2)} {data.currency}{p.ref ? ` • Réf: ${p.ref}` : ''}
+                </Typography>
+              ))}
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary" textAlign="right">Paiement: {data.paymentMethod}{data.paymentRef ? ` • Réf: ${data.paymentRef}` : ''}</Typography>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>

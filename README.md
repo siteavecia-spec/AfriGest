@@ -32,17 +32,22 @@ npm run dev:api
 ```
 npm run dev:web
 ```
-
 4. Prisma (to be configured later with real connection strings)
 
 - Master schema: `infra/prisma/master/schema.prisma`
 - Tenant schema: `infra/prisma/tenant/schema.prisma`
 
+  ## Documentation
+  
+  - Documentation Index: [docs/README.md](docs/README.md)
+  - Phase 1 User Stories & RACI: [docs/phase1-user-stories.md](docs/phase1-user-stories.md)
+  - Phase 2 Plan: [docs/phase2-plan.md](docs/phase2-plan.md)
+  - E‑commerce Module Overview: [docs/ecommerce-overview.md](docs/ecommerce-overview.md)
+  - Private media (S3 via CloudFront signed URLs): [docs/s3-private.md](docs/s3-private.md)
+
 ## Environment Variables
 
 Create `apps/api/.env` with at least:
-
-```
 PORT=4000
 JWT_ACCESS_SECRET=change_me_access
 JWT_REFRESH_SECRET=change_me_refresh

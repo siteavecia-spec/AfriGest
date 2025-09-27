@@ -5,6 +5,8 @@ export type CompanySettings = {
   phone?: string
   logoDataUrl?: string // base64 or external URL
   receiptPrefix?: string // e.g., AG- or store code prefix
+  currency?: string // e.g., XOF, GNF
+  vatRate?: number // e.g., 18 for 18%
 }
 
 const SETTINGS_KEY = 'afrigest_company_settings'
@@ -12,10 +14,11 @@ const SETTINGS_KEY = 'afrigest_company_settings'
 export function loadCompanySettings(): CompanySettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
-    if (!raw) return { name: 'AfriGest Client', slogan: 'La gestion moderne, simple et accessible' }
-    return JSON.parse(raw)
+    if (!raw) return { name: 'AfriGest Client', slogan: 'La gestion moderne, simple et accessible', currency: 'XOF', vatRate: 18 }
+    const parsed = JSON.parse(raw)
+    return { currency: 'XOF', vatRate: 18, ...parsed }
   } catch {
-    return { name: 'AfriGest Client', slogan: 'La gestion moderne, simple et accessible' }
+    return { name: 'AfriGest Client', slogan: 'La gestion moderne, simple et accessible', currency: 'XOF', vatRate: 18 }
   }
 }
 

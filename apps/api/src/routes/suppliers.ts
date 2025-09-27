@@ -2,12 +2,32 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth'
 import { requireRole } from '../middleware/rbac'
-import { suppliers, Supplier } from '../stores/memory'
+import { requirePermission } from '../middleware/authorization'
+import type { Supplier } from '../stores/memory'
+import { suppliers as memorySuppliers } from '../stores/memory'
+import { getTenantClientFromReq } from '../db'
+import * as svc from '../services/suppliers'
 
 const router = Router()
 
-router.get('/', requireAuth, (req, res) => {
-  res.json(suppliers)
+router.get('/', requireAuth, requirePermission('suppliers', 'read'), async (req, res) => {
+  const limitRaw = (req.query.limit || '').toString()
+  const offsetRaw = (req.query.offset || '').toString()
+  const limit = limitRaw ? Math.max(1, Math.min(200, Number(limitRaw))) : undefined
+  const offset = offsetRaw ? Math.max(0, Number(offsetRaw)) : undefined
+  const rows = await svc.listSuppliers(req, { limit, offset })
+  try {
+    const prisma = getTenantClientFromReq(req)
+    if (prisma) {
+      const total = await (prisma as any).supplier.count()
+      res.setHeader('X-Total-Count', String(total))
+    } else {
+      res.setHeader('X-Total-Count', String(memorySuppliers.length))
+    }
+  } catch {
+    res.setHeader('X-Total-Count', String(memorySuppliers.length))
+  }
+  res.json(rows)
 })
 
 const createSchema = z.object({
@@ -18,13 +38,11 @@ const createSchema = z.object({
   address: z.string().optional()
 })
 
-router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), (req, res) => {
+router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), requirePermission('suppliers', 'create'), async (req, res) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
-  const id = `sup-${Date.now()}`
-  const supplier: Supplier = { id, ...parsed.data }
-  suppliers.push(supplier)
-  res.status(201).json(supplier)
+  const created = await svc.createSupplier(req, parsed.data as Omit<Supplier, 'id'>)
+  res.status(201).json(created)
 })
 
 // Update supplier
@@ -36,22 +54,20 @@ const updateSchema = z.object({
   address: z.string().optional()
 })
 
-router.put('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), (req, res) => {
+router.put('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), requirePermission('suppliers', 'update'), async (req, res) => {
   const { id } = req.params
-  const s = suppliers.find(x => x.id === id)
-  if (!s) return res.status(404).json({ error: 'Supplier not found' })
   const parsed = updateSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
-  Object.assign(s, parsed.data)
-  return res.json(s)
+  const updated = await svc.updateSupplier(req, id, parsed.data)
+  if (!updated) return res.status(404).json({ error: 'Supplier not found' })
+  return res.json(updated)
 })
 
 // Delete supplier
-router.delete('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), (req, res) => {
+router.delete('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), requirePermission('suppliers', 'delete'), async (req, res) => {
   const { id } = req.params
-  const idx = suppliers.findIndex(x => x.id === id)
-  if (idx === -1) return res.status(404).json({ error: 'Supplier not found' })
-  suppliers.splice(idx, 1)
+  const ok = await svc.deleteSupplier(req, id)
+  if (!ok) return res.status(404).json({ error: 'Supplier not found' })
   return res.status(204).send()
 })
 

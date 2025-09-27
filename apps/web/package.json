@@ -1,7 +1,7 @@
 {
   "name": "afrigest-web",
-  "version": "0.1.0",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,7 +23,9 @@
     "react-redux": "^9.1.2",
     "react-router-dom": "^6.26.2",
     "socket.io-client": "^4.8.1",
-    "workbox-window": "^7.1.0"
+    "workbox-window": "^7.1.0",
+    "@stripe/stripe-js": "^3.4.1",
+    "@stripe/react-stripe-js": "^2.5.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.11",

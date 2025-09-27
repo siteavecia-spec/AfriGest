@@ -5,17 +5,30 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p .",
-    "seed:tenant": "tsx scripts/seed-demo.ts"
+    "seed:tenant": "tsx scripts/seed-demo.ts",
+    "start:ci": "node dist/index.js",
+    "test:smoke": "node tests/smoke.test.mjs",
+    "bench": "node scripts/bench.mjs",
+    "cron:alerts": "node scripts/alerts-digest.mjs",
+    "test:api:core": "node tests/products.super.test.mjs && node tests/suppliers.super.test.mjs && node tests/stock.super.test.mjs && node tests/sales.super.test.mjs",
+    "test:api:ecom": "node tests/ecommerce.products.super.test.mjs && node tests/ecommerce.orders.super.test.mjs && node tests/ecommerce.products.upsert.super.test.mjs && node tests/ecommerce.products.patch.super.test.mjs && node tests/ecommerce.images.super.test.mjs && node tests/ecommerce.images.cover.super.test.mjs",
+    "test:api": "npm run test:api:core && npm run test:api:ecom",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "compression": "^1.7.4",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "socket.io": "^4.7.5",
     "@prisma/client": "^5.20.0",
+    "@aws-sdk/client-s3": "^3.609.0",
+    "@aws-sdk/s3-request-presigner": "^3.609.0",
+    "@aws-sdk/cloudfront-signer": "^3.609.0",
     "zod": "^3.23.8",
     "nodemailer": "^6.9.14"
   },
@@ -26,8 +39,12 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/morgan": "^1.9.7",
     "@types/node": "^22.5.4",
+    "@types/compression": "^1.7.5",
+    "@types/nodemailer": "^6.4.15",
     "prisma": "^5.20.0",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "supertest": "^7.0.0",
+    "autocannon": "^7.15.0"
   }
 }

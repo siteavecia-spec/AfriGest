@@ -36,6 +36,10 @@ export default function EcommerceOrders() {
 
   const color = (s: string) => s === 'received' ? 'default' : s === 'prepared' ? 'info' : s === 'shipped' ? 'warning' : s === 'delivered' ? 'success' : 'error'
 
+  const filteredOrders = orders
+    .filter(o => (filter === 'all' ? true : (filter === 'paid' ? o.paymentStatus === 'paid' : (o.paymentStatus ?? 'pending') === 'pending')))
+    .filter(o => (statusFilter === 'all' ? true : o.status === statusFilter))
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>Boutique en ligne — Commandes</Typography>
@@ -142,9 +146,7 @@ export default function EcommerceOrders() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders
-                .filter(o => filter === 'all' ? true : filter === 'paid' ? o.paymentStatus === 'paid' : (o.paymentStatus ?? 'pending') === 'pending')
-                .map(o => (
+              {filteredOrders.map(o => (
                 <TableRow key={o.id}>
                   <TableCell>{o.id}</TableCell>
                   <TableCell>{(o as any).customer?.email || (o as any).customer?.firstName || (o as any).customerEmail || '—'}</TableCell>
@@ -172,8 +174,7 @@ export default function EcommerceOrders() {
                   </TableCell>
                 </TableRow>
               ))}
-                .filter(o => statusFilter === 'all' ? true : o.status === statusFilter)
-                .length === 0 && (
+              {!loading && filteredOrders.length === 0 && (
                 <TableRow><TableCell colSpan={6}><Typography color="text.secondary">Aucune commande.</Typography></TableCell></TableRow>
               )}
             </TableBody>

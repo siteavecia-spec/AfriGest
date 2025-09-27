@@ -37,7 +37,10 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_VERSION).then((cache) => cache.put(req, resClone));
           return res;
         })
-        .catch(() => caches.match(req))
+        .catch(async () => {
+          const cached = await caches.match(req);
+          return cached || new Response('', { status: 504, statusText: 'Gateway Timeout (offline)' });
+        })
     );
     return;
   }
@@ -52,9 +55,13 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_VERSION).then((cache) => cache.put(req, resClone));
           return res;
         })
-        .catch(() => {
-          // Fallback to app shell for navigations
-          if (req.mode === 'navigate') return caches.match('/index.html');
+        .catch(async () => {
+          // Fallback to app shell for navigations; otherwise explicit empty 504
+          if (req.mode === 'navigate') {
+            const shell = await caches.match('/index.html');
+            return shell || new Response('', { status: 504, statusText: 'Offline' });
+          }
+          return new Response('', { status: 504, statusText: 'Offline' });
         });
     })
   );

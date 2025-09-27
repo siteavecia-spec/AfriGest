@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Build API
+        run: npm -w apps/api run build
+
+      - name: Build Web
+        run: npm -w apps/web run build
+
+      - name: Smoke test (Supertest, in-process)
+        run: npm -w apps/api run test:smoke
+
+      - name: API tests (Supertest, in-process)
+        run: npm -w apps/api run test:api
+
+      - name: Lint API (optional)
+        run: |
+          if npm -w apps/api run | grep -q "lint"; then npm -w apps/api run lint; else echo "No lint script for API"; fi
+
+      - name: Lint Web (optional)
+        run: |
+          if npm -w apps/web run | grep -q "lint"; then npm -w apps/web run lint; else echo "No lint script for Web"; fi
+
+      - name: Start API (memory mode)
+        run: |
+          nohup npm -w apps/api run start:ci > api.log 2>&1 &
+          echo $! > api.pid
+          for i in {1..30}; do
+            if curl -sS http://localhost:4000/health | grep -q '"status":"ok"'; then
+              echo "API is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API failed to start"
+          cat api.log || true
+          exit 1
+
+      - name: Run happy-path API test
+        env:
+          API_URL: http://localhost:4000
+        run: node apps/api/tests/happy.test.mjs
+
+      - name: Bench (non-blocking)
+        env:
+          API_URL: http://localhost:4000
+        run: |
+          set +e
+          npm -w apps/api run bench || true
+          set -e
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f api.pid ]; then kill $(cat api.pid) || true; fi

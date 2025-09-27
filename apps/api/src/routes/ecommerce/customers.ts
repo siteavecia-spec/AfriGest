@@ -9,8 +9,8 @@ const router = Router({ mergeParams: true })
 router.get('/', requireAuth, async (req, res) => {
   const { tenantId } = req.params as { tenantId: string }
   const prisma = getTenantClientFromReq(req)
-  if (prisma?.ecommerceCustomer) {
-    const items = await prisma.ecommerceCustomer.findMany({ orderBy: { createdAt: 'desc' } })
+  if ((prisma as any)?.ecommerceCustomer) {
+    const items = await (prisma as any).ecommerceCustomer.findMany({ orderBy: { createdAt: 'desc' } })
     return res.json({ items, tenantId })
   }
   return res.json({ items: [], tenantId })
@@ -30,8 +30,8 @@ router.post('/', requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
   const { tenantId } = req.params as { tenantId: string }
   const prisma = getTenantClientFromReq(req)
-  if (prisma?.ecommerceCustomer) {
-    const created = await prisma.ecommerceCustomer.create({ data: { email: parsed.data.email, phone: parsed.data.phone, firstName: parsed.data.firstName, lastName: parsed.data.lastName } })
+  if ((prisma as any)?.ecommerceCustomer) {
+    const created = await (prisma as any).ecommerceCustomer.create({ data: { email: parsed.data.email, phone: parsed.data.phone, firstName: parsed.data.firstName, lastName: parsed.data.lastName } })
     return res.status(201).json(created)
   }
   return res.status(501).json({ error: 'Customers not available in in-memory mode', tenantId })

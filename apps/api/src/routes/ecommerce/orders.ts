@@ -42,8 +42,8 @@ router.post('/', async (req, res) => {
       const currency = parsed.data.items[0]?.currency || 'GNF'
       // If Prisma is available, create a pending order to reconcile on webhook
       let orderId: string | undefined
-      if (prisma?.ecommerceOrder) {
-        const created = await prisma.ecommerceOrder.create({
+      if ((prisma as any)?.ecommerceOrder) {
+        const created = await (prisma as any).ecommerceOrder.create({
           data: {
             total,
             currency,

@@ -1,4 +1,4 @@
-import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Badge } from '@mui/material'
+import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Badge, TextField, Alert, Stack } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,7 +9,10 @@ import { useEffect, useState } from 'react'
 import { messagingConnect } from '../features/messaging/wsMiddleware'
 import { showEcommerce, showMessaging } from '../config/featureFlags'
 import { logoutApi } from '../api/client_clean'
+import { useI18n } from '../i18n/i18n'
 import { getPendingSales, trySyncSales, getSyncErrors, clearSyncErrors } from '../offline/salesQueue'
+import { useBoutique } from '../context/BoutiqueContext'
+import { can } from '../utils/acl'
 
 export default function Layout() {
   const navigate = useNavigate()
@@ -23,6 +26,10 @@ export default function Layout() {
   const [syncing, setSyncing] = useState(false)
   const [openErrors, setOpenErrors] = useState(false)
   const [errors, setErrors] = useState<Array<{ offlineId: string; error: string; at: string }>>([])
+  const { selectedBoutiqueId, setSelectedBoutiqueId, boutiques } = useBoutique()
+  const [impersonating, setImpersonating] = useState(false)
+  const [impersonateCompany, setImpersonateCompany] = useState<string | null>(null)
+  const { locale, setLocale } = useI18n()
 
   async function refreshSyncStatus() {
     try {
@@ -49,6 +56,22 @@ export default function Layout() {
     return () => { clearInterval(timer); window.removeEventListener('online', onOnline) }
   }, [])
 
+  // Detect impersonation (MVP): localStorage flags set by Admin/Companies "Impersonate"
+  useEffect(() => {
+    const load = () => {
+      try {
+        const flag = localStorage.getItem('afrigest_impersonate') === '1'
+        const comp = localStorage.getItem('afrigest_impersonate_company') || null
+        setImpersonating(flag)
+        setImpersonateCompany(comp)
+      } catch {}
+    }
+    load()
+    const onStorage = (e: StorageEvent) => { if (e.key?.startsWith('afrigest_')) load() }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   const go = (path: string) => () => navigate(path)
   const isActive = (path: string) => location.pathname.startsWith(path)
 
@@ -56,7 +79,24 @@ export default function Layout() {
     <Box sx={{ minHeight: '100vh', bgcolor: '#F9FAFB' }}>
       <AppBar position="static" color="primary">
         <Toolbar sx={{ gap: 1 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>AfriGest</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+            <img src="/logo.svg" alt="AfriGest" height={28} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>AfriGest</Typography>
+          </Box>
+          {/* Global boutique selector */}
+          <TextField
+            select
+            size="small"
+            label="Boutique"
+            value={selectedBoutiqueId}
+            onChange={(e) => setSelectedBoutiqueId(e.target.value)}
+            sx={{ minWidth: 180, bgcolor: 'rgba(255,255,255,0.08)', borderRadius: 1, mr: 1 }}
+          >
+            <MenuItem value="all">Toutes boutiques</MenuItem>
+            {boutiques.map(b => (
+              <MenuItem key={b.id} value={b.id}>{b.code ? `${b.code} — ` : ''}{b.name}</MenuItem>
+            ))}
+          </TextField>
           {isDesktop ? (
             <>
               <Button color={isActive('/dashboard') ? 'secondary' : 'inherit'} onClick={go('/dashboard')}>Dashboard</Button>
@@ -71,36 +111,53 @@ export default function Layout() {
                   <Button color={isActive('/messaging/presence') ? 'secondary' : 'inherit'} onClick={go('/messaging/presence')}>Présence</Button>
                 </>
               )}
-              {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
+              {(can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
                 <>
-                  <Button color={isActive('/stock') ? 'secondary' : 'inherit'} onClick={go('/stock')}>Stock</Button>
-                  <Button color={isActive('/suppliers') ? 'secondary' : 'inherit'} onClick={go('/suppliers')}>Fournisseurs</Button>
+                  {can(role as any, 'stock', 'read') && (
+                    <>
+                      <Button color={isActive('/stock') ? 'secondary' : 'inherit'} onClick={go('/stock')}>Stock</Button>
+                      <Button color={isActive('/inventory') ? 'secondary' : 'inherit'} onClick={go('/inventory')}>Inventaire</Button>
+                    </>
+                  )}
+                  {can(role as any, 'suppliers', 'read') && (
+                    <Button color={isActive('/suppliers') ? 'secondary' : 'inherit'} onClick={go('/suppliers')}>Fournisseurs</Button>
+                  )}
+                  <Button color={isActive('/sales') ? 'secondary' : 'inherit'} onClick={go('/sales')}>Ventes</Button>
                   <Button color={isActive('/ambassador') ? 'secondary' : 'inherit'} onClick={go('/ambassador')}>Ambassadeur</Button>
                   <Button color={isActive('/users') ? 'secondary' : 'inherit'} onClick={go('/users')}>Utilisateurs</Button>
                   {/* Ecommerce (Overview/Products/Orders/Customers) */}
                   {showEcommerce && (
                     <>
                       <Button color={isActive('/ecommerce') ? 'secondary' : 'inherit'} onClick={go('/ecommerce')}>Boutique en ligne</Button>
-                      <Button color={isActive('/ecommerce/products') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/products')}>Produits</Button>
-                      <Button color={isActive('/ecommerce/orders') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/orders')}>Commandes</Button>
+                      {can(role as any, 'ecommerce.products', 'read') && (
+                        <Button color={isActive('/ecommerce/products') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/products')}>Produits</Button>
+                      )}
+                      {can(role as any, 'ecommerce.orders', 'read') && (
+                        <Button color={isActive('/ecommerce/orders') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/orders')}>Commandes</Button>
+                      )}
                       <Button color={isActive('/ecommerce/customers') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/customers')}>Clients</Button>
                     </>
                   )}
                 </>
               )}
-              {(role === 'super_admin' || role === 'pdg') && (
+              {(can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
                 <>
-                  <Button color={isActive('/settings') ? 'secondary' : 'inherit'} onClick={go('/settings')}>Paramètres</Button>
+                  {can(role as any, 'settings', 'read') && (
+                    <Button color={isActive('/settings') ? 'secondary' : 'inherit'} onClick={go('/settings')}>Paramètres</Button>
+                  )}
                   {/* Ecommerce Settings */}
-                  {showEcommerce && (
+                  {showEcommerce && can(role as any, 'ecommerce.settings', 'read') && (
                     <Button color={isActive('/ecommerce/settings') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/settings')}>E‑commerce: Paramètres</Button>
                   )}
+                  {/* Dev Tools (Phase 1 QA) */}
+                  <Button color={isActive('/dev-tools') ? 'secondary' : 'inherit'} onClick={go('/dev-tools')}>Dev Tools</Button>
                 </>
               )}
               {(role === 'super_admin') && (
                 <>
                   <Button color={isActive('/leads') ? 'secondary' : 'inherit'} onClick={go('/leads')}>Leads</Button>
                   <Button color={isActive('/admin/password-reset') ? 'secondary' : 'inherit'} onClick={go('/admin/password-reset')}>Reset MDP (Admin)</Button>
+                  <Button color={isActive('/admin/companies') ? 'secondary' : 'inherit'} onClick={go('/admin/companies')}>Entreprises</Button>
                 </>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -125,36 +182,50 @@ export default function Layout() {
                     <MenuItem onClick={() => { navigate('/messaging/presence'); setMenuAnchor(null) }}>Présence</MenuItem>
                   </>
                 )}
-                {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
+                {(can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
                   <>
-                    <MenuItem onClick={() => { navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
-                    <MenuItem onClick={() => { navigate('/suppliers'); setMenuAnchor(null) }}>Fournisseurs</MenuItem>
+                    {can(role as any, 'stock', 'read') && (
+                      <MenuItem onClick={() => { navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
+                    )}
+                    {can(role as any, 'suppliers', 'read') && (
+                      <MenuItem onClick={() => { navigate('/suppliers'); setMenuAnchor(null) }}>Fournisseurs</MenuItem>
+                    )}
+                    <MenuItem onClick={() => { navigate('/sales'); setMenuAnchor(null) }}>Ventes</MenuItem>
                     <MenuItem onClick={() => { navigate('/ambassador'); setMenuAnchor(null) }}>Ambassadeur</MenuItem>
                     <MenuItem onClick={() => { navigate('/users'); setMenuAnchor(null) }}>Utilisateurs</MenuItem>
                     {/* Ecommerce (Overview/Products/Orders/Customers) */}
                     {showEcommerce && (
                       <>
                         <MenuItem onClick={() => { navigate('/ecommerce'); setMenuAnchor(null) }}>Boutique en ligne</MenuItem>
-                        <MenuItem onClick={() => { navigate('/ecommerce/products'); setMenuAnchor(null) }}>Produits</MenuItem>
-                        <MenuItem onClick={() => { navigate('/ecommerce/orders'); setMenuAnchor(null) }}>Commandes</MenuItem>
+                        {can(role as any, 'ecommerce.products', 'read') && (
+                          <MenuItem onClick={() => { navigate('/ecommerce/products'); setMenuAnchor(null) }}>Produits</MenuItem>
+                        )}
+                        {can(role as any, 'ecommerce.orders', 'read') && (
+                          <MenuItem onClick={() => { navigate('/ecommerce/orders'); setMenuAnchor(null) }}>Commandes</MenuItem>
+                        )}
                         <MenuItem onClick={() => { navigate('/ecommerce/customers'); setMenuAnchor(null) }}>Clients</MenuItem>
                       </>
                     )}
                   </>
                 )}
-                {(role === 'super_admin' || role === 'pdg') && (
+                {(can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
                   <>
-                    <MenuItem onClick={() => { navigate('/settings'); setMenuAnchor(null) }}>Paramètres</MenuItem>
+                    {can(role as any, 'settings', 'read') && (
+                      <MenuItem onClick={() => { navigate('/settings'); setMenuAnchor(null) }}>Paramètres</MenuItem>
+                    )}
                     {/* Ecommerce Settings */}
-                    {showEcommerce && (
+                    {showEcommerce && can(role as any, 'ecommerce.settings', 'read') && (
                       <MenuItem onClick={() => { navigate('/ecommerce/settings'); setMenuAnchor(null) }}>E‑commerce: Paramètres</MenuItem>
                     )}
+                    {/* Dev Tools (Phase 1 QA) */}
+                    <MenuItem onClick={() => { navigate('/dev-tools'); setMenuAnchor(null) }}>Dev Tools</MenuItem>
                   </>
                 )}
                 {(role === 'super_admin') && (
                   <>
                     <MenuItem onClick={() => { navigate('/leads'); setMenuAnchor(null) }}>Leads</MenuItem>
                     <MenuItem onClick={() => { navigate('/admin/password-reset'); setMenuAnchor(null) }}>Reset MDP (Admin)</MenuItem>
+                    <MenuItem onClick={() => { navigate('/admin/companies'); setMenuAnchor(null) }}>Entreprises</MenuItem>
                   </>
                 )}
                 {/* Offline controls (mobile) */}
@@ -163,11 +234,39 @@ export default function Layout() {
                 <MenuItem disabled={errorCount === 0} onClick={() => { clearSyncErrors(); refreshSyncStatus(); setMenuAnchor(null) }}>Effacer erreurs</MenuItem>
                 <MenuItem disabled={errorCount === 0} onClick={() => { setErrors(getSyncErrors()); setOpenErrors(true); setMenuAnchor(null) }}>Voir détails</MenuItem>
                 <MenuItem onClick={async () => { setMenuAnchor(null); try { await logoutApi() } catch {}; dispatch(logout()); localStorage.removeItem('afrigest_token'); localStorage.removeItem('afrigest_refresh'); localStorage.removeItem('afrigest_company'); navigate('/login') }}>Déconnexion</MenuItem>
+                <MenuItem>
+                  <TextField select size="small" label="Lang" value={locale} onChange={e => setLocale(e.target.value as any)} sx={{ minWidth: 120 }}>
+                    <MenuItem value="fr">FR</MenuItem>
+                    <MenuItem value="en">EN</MenuItem>
+                  </TextField>
+                </MenuItem>
               </Menu>
             </>
           )}
         </Toolbar>
       </AppBar>
+      {/* Impersonation banner */}
+      {impersonating && (
+        <Box sx={{ px: 2, pt: 1 }}>
+          <Alert severity="warning" action={
+            <Stack direction="row" spacing={1}>
+              <Button size="small" variant="outlined" onClick={() => {
+                try {
+                  localStorage.removeItem('afrigest_impersonate')
+                  localStorage.removeItem('afrigest_impersonate_company')
+                  // Optional: also clear company context
+                  localStorage.removeItem('afrigest_company')
+                } catch {}
+                navigate('/admin/companies')
+                setImpersonating(false)
+                setImpersonateCompany(null)
+              }}>Quitter</Button>
+            </Stack>
+          }>
+            Mode support actif — Entreprise: {impersonateCompany || '—'}
+          </Alert>
+        </Box>
+      )}
       <OfflineBanner />
       <Container sx={{ py: 3 }}>
         <Outlet />

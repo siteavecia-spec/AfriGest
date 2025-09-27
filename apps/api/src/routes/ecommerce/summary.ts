@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { requireAuth } from '../../middleware/auth'
-import { getTodayOnlineKPIs } from '../../services/ecommerce/orderService'
+import { getTodayOnlineKPIs, getTodayTopProducts } from '../../services/ecommerce/orderService'
 import { getTenantClientFromReq } from '../../db'
 
 const router = Router({ mergeParams: true })
@@ -11,9 +11,10 @@ router.get('/', requireAuth, async (req, res) => {
   const { tenantId } = req.params as { tenantId: string }
   const prisma = getTenantClientFromReq(req)
   const { onlineCount, onlineRevenue, paidCount, averageOrderValuePaid } = await getTodayOnlineKPIs(tenantId, prisma)
+  const topProducts = await getTodayTopProducts(tenantId, prisma, 5)
   // MVP: conversionRate placeholder (to be replaced with real analytics)
   const conversionRate = 0
-  return res.json({ tenantId, today: { onlineCount, onlineRevenue, paidCount, averageOrderValuePaid, conversionRate } })
+  return res.json({ tenantId, today: { onlineCount, onlineRevenue, paidCount, averageOrderValuePaid, conversionRate, topProducts } })
 })
 
 export default router

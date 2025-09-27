@@ -129,7 +129,8 @@ exports.Prisma.UserScalarFieldEnum = {
   fullName: 'fullName',
   role: 'role',
   status: 'status',
-  lastLoginAt: 'lastLoginAt'
+  lastLoginAt: 'lastLoginAt',
+  emailVerifiedAt: 'emailVerifiedAt'
 };
 
 exports.Prisma.BoutiqueScalarFieldEnum = {
@@ -185,6 +186,16 @@ exports.Prisma.StockEntryItemScalarFieldEnum = {
   unitCost: 'unitCost'
 };
 
+exports.Prisma.StockAuditScalarFieldEnum = {
+  id: 'id',
+  boutiqueId: 'boutiqueId',
+  productId: 'productId',
+  delta: 'delta',
+  reason: 'reason',
+  userId: 'userId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SaleScalarFieldEnum = {
   id: 'id',
   boutiqueId: 'boutiqueId',
@@ -219,10 +230,74 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   actorId: 'actorId',
   role: 'role',
   action: 'action',
-  resource: 'resource',
   resourceId: 'resourceId',
   metadata: 'metadata',
   ip: 'ip',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PasswordResetRequestScalarFieldEnum = {
+  id: 'id',
+  userEmail: 'userEmail',
+  phone: 'phone',
+  resetMethod: 'resetMethod',
+  resetToken: 'resetToken',
+  otpCode: 'otpCode',
+  expiresAt: 'expiresAt',
+  used: 'used',
+  ip: 'ip',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RefreshSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  refreshToken: 'refreshToken',
+  userAgent: 'userAgent',
+  ip: 'ip',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt'
+};
+
+exports.Prisma.EmailVerificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  email: 'email',
+  token: 'token',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ReferralCodeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  code: 'code',
+  isActive: 'isActive',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ReferralRequestScalarFieldEnum = {
+  id: 'id',
+  referralCodeId: 'referralCodeId',
+  prospectEmail: 'prospectEmail',
+  prospectPhone: 'prospectPhone',
+  companyName: 'companyName',
+  status: 'status',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ReferralRewardScalarFieldEnum = {
+  id: 'id',
+  referrerId: 'referrerId',
+  referredUserId: 'referredUserId',
+  rewardType: 'rewardType',
+  rewardValue: 'rewardValue',
+  status: 'status',
+  paidAt: 'paidAt',
   createdAt: 'createdAt'
 };
 
@@ -258,6 +333,23 @@ exports.Role = exports.$Enums.Role = {
   employee: 'employee'
 };
 
+exports.ResetMethod = exports.$Enums.ResetMethod = {
+  email: 'email',
+  sms: 'sms'
+};
+
+exports.ReferralRequestStatus = exports.$Enums.ReferralRequestStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected'
+};
+
+exports.RewardStatus = exports.$Enums.RewardStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  cancelled: 'cancelled'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   Boutique: 'Boutique',
@@ -266,10 +358,17 @@ exports.Prisma.ModelName = {
   Supplier: 'Supplier',
   StockEntry: 'StockEntry',
   StockEntryItem: 'StockEntryItem',
+  StockAudit: 'StockAudit',
   Sale: 'Sale',
   SaleItem: 'SaleItem',
   Payment: 'Payment',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  PasswordResetRequest: 'PasswordResetRequest',
+  RefreshSession: 'RefreshSession',
+  EmailVerification: 'EmailVerification',
+  ReferralCode: 'ReferralCode',
+  ReferralRequest: 'ReferralRequest',
+  ReferralReward: 'ReferralReward'
 };
 
 /**
