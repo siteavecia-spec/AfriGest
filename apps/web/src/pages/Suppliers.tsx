@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Box, Button, Container, Grid, IconButton, Paper, Stack, TextField, Typography, Snackbar, Alert, CircularProgress } from '@mui/material'
+import { Box, Button, Grid, IconButton, Paper, Stack, TextField, Typography, Snackbar, Alert, CircularProgress, MenuItem } from '@mui/material'
 import { listSuppliersPaged } from '../api/client_clean'
 import { createSupplier, deleteSupplier, updateSupplier } from '../api/suppliers'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import Page from '../components/Page'
+import DataTable from '../components/DataTable'
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Array<any>>([])
@@ -133,8 +135,14 @@ export default function SuppliersPage() {
   }
 
   return (
-    <Container sx={{ py: 3 }}>
-      <Typography variant="h5" gutterBottom>Fournisseurs</Typography>
+    <Page
+      title="Fournisseurs"
+      actions={
+        <>
+          <TextField size="small" placeholder="Rechercher (nom, contact, email, téléphone)" value={search} onChange={e => setSearch(e.target.value)} />
+        </>
+      }
+    >
       {message && (
         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography color="text.secondary" sx={{ wordBreak: 'break-word' }}>{message}</Typography>
@@ -198,60 +206,74 @@ export default function SuppliersPage() {
                 } catch {}
               }} disabled={loading}>Exporter CSV</Button>
             </Box>
-            <TextField size="small" placeholder="Rechercher (nom, contact, email, téléphone)" value={search} onChange={e => setSearch(e.target.value)} sx={{ mt: 2 }} />
-            <Stack spacing={1} sx={{ mt: 2, maxHeight: 420, overflow: 'auto' }}>
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress size={24} />
-                </Box>
-              ) : suppliers.length === 0 ? (
-                <Typography color="text.secondary">Aucun fournisseur.</Typography>
-              ) : (
-                suppliers
-                  .filter((s: any) => {
-                    const q = search.trim().toLowerCase()
-                    if (!q) return true
-                    return (
-                      String(s.name || '').toLowerCase().includes(q) ||
-                      String(s.contactName || '').toLowerCase().includes(q) ||
-                      String(s.email || '').toLowerCase().includes(q) ||
-                      String(s.phone || '').toLowerCase().includes(q)
-                    )
-                  })
-                  .map((s: any) => (
-                  <Box key={s.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, borderRadius: 1, p: 1, border: '1px solid #eee' }}>
-                    {editId === s.id ? (
-                      <Stack spacing={1}>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                          <TextField size="small" label="Nom" value={editValues.name || ''} onChange={e => setEditValues(v => ({ ...v, name: e.target.value }))} sx={{ flex: 1 }} />
-                          <TextField size="small" label="Contact" value={editValues.contactName || ''} onChange={e => setEditValues(v => ({ ...v, contactName: e.target.value }))} />
-                          <TextField size="small" label="Téléphone" value={editValues.phone || ''} onChange={e => setEditValues(v => ({ ...v, phone: e.target.value }))} />
-                        </Stack>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                          <TextField size="small" label="Email" type="email" value={editValues.email || ''} onChange={e => setEditValues(v => ({ ...v, email: e.target.value }))} sx={{ flex: 1 }} />
-                          <TextField size="small" label="Adresse" value={editValues.address || ''} onChange={e => setEditValues(v => ({ ...v, address: e.target.value }))} sx={{ flex: 1 }} />
-                        </Stack>
-                        <Stack direction="row" spacing={1}>
+            <DataTable
+              columns={[
+                { key: 'name', label: 'Nom' },
+                { key: 'contactName', label: 'Contact' },
+                { key: 'phone', label: 'Téléphone' },
+                { key: 'email', label: 'Email' },
+                { key: 'actions', label: 'Actions', align: 'right' }
+              ]}
+              rows={suppliers.filter((s: any) => {
+                const q = search.trim().toLowerCase()
+                if (!q) return true
+                return (
+                  String(s.name || '').toLowerCase().includes(q) ||
+                  String(s.contactName || '').toLowerCase().includes(q) ||
+                  String(s.email || '').toLowerCase().includes(q) ||
+                  String(s.phone || '').toLowerCase().includes(q)
+                )
+              })}
+              loading={loading}
+              error={null}
+            >
+              {suppliers.filter((s: any) => {
+                const q = search.trim().toLowerCase()
+                if (!q) return true
+                return (
+                  String(s.name || '').toLowerCase().includes(q) ||
+                  String(s.contactName || '').toLowerCase().includes(q) ||
+                  String(s.email || '').toLowerCase().includes(q) ||
+                  String(s.phone || '').toLowerCase().includes(q)
+                )
+              }).map((s: any) => (
+                <TableRow key={s.id} hover>
+                  {editId === s.id ? (
+                    <>
+                      <TableCell>
+                        <TextField size="small" label="Nom" value={editValues.name || ''} onChange={e => setEditValues(v => ({ ...v, name: e.target.value }))} />
+                      </TableCell>
+                      <TableCell>
+                        <TextField size="small" label="Contact" value={editValues.contactName || ''} onChange={e => setEditValues(v => ({ ...v, contactName: e.target.value }))} />
+                      </TableCell>
+                      <TableCell>
+                        <TextField size="small" label="Téléphone" value={editValues.phone || ''} onChange={e => setEditValues(v => ({ ...v, phone: e.target.value }))} />
+                      </TableCell>
+                      <TableCell>
+                        <TextField size="small" label="Email" type="email" value={editValues.email || ''} onChange={e => setEditValues(v => ({ ...v, email: e.target.value }))} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
                           <Button size="small" variant="contained" onClick={saveEdit} disabled={loading}>Enregistrer</Button>
                           <Button size="small" variant="text" onClick={cancelEdit}>Annuler</Button>
                         </Stack>
-                      </Stack>
-                    ) : (
-                      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography sx={{ flex: 1, fontWeight: 600 }}>{s.name}</Typography>
-                        <Typography color="text.secondary">{s.contactName || '-'}</Typography>
-                        <Typography color="text.secondary">{s.phone || '-'}</Typography>
-                        <Typography color="text.secondary">{s.email || '-'}</Typography>
-                        <Box>
-                          <IconButton size="small" onClick={() => startEdit(s)} disabled={loading}><EditIcon fontSize="small" /></IconButton>
-                          <IconButton size="small" color="error" onClick={() => removeSupplier(s.id)} disabled={loading}><DeleteIcon fontSize="small" /></IconButton>
-                        </Box>
-                      </Box>
-                    )}
-                  </Box>
-                ))
-              )}
-            </Stack>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell><Typography sx={{ fontWeight: 600 }}>{s.name}</Typography></TableCell>
+                      <TableCell><Typography color="text.secondary">{s.contactName || '-'}</Typography></TableCell>
+                      <TableCell><Typography color="text.secondary">{s.phone || '-'}</Typography></TableCell>
+                      <TableCell><Typography color="text.secondary">{s.email || '-'}</Typography></TableCell>
+                      <TableCell align="right">
+                        <IconButton size="small" onClick={() => startEdit(s)} disabled={loading}><EditIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" color="error" onClick={() => removeSupplier(s.id)} disabled={loading}><DeleteIcon fontSize="small" /></IconButton>
+                      </TableCell>
+                    </>
+                  )}
+                </TableRow>
+              ))}
+            </DataTable>
             {/* Pagination controls */}
             <Stack direction="row" spacing={1} sx={{ mt: 2 }} alignItems="center">
               <Button size="small" disabled={loading || page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Précédent</Button>
@@ -266,6 +288,6 @@ export default function SuppliersPage() {
           </Paper>
         </Grid>
       </Grid>
-    </Container>
+    </Page>
   )
 }

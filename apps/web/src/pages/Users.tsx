@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Paper, Alert, CircularProgress } from '@mui/material'
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, TableRow, TableCell, TextField, Typography, Alert, CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/PersonAddAlt1'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/PersonOff'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { createUser, deactivateUser, listUsers, updateUser, type UserItem } from '../api/client_clean'
+import Page from '../components/Page'
+import DataTable from '../components/DataTable'
 
 export default function UsersPage() {
   const [items, setItems] = useState<UserItem[]>([])
@@ -29,58 +31,57 @@ export default function UsersPage() {
   useEffect(() => { load() }, [])
 
   return (
-    <Stack spacing={2}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Typography variant="h5" fontWeight={700}>Utilisateurs</Typography>
-        <Button startIcon={<AddIcon/>} variant="contained" onClick={() => setOpenCreate(true)}>Créer</Button>
-        <Button startIcon={<RefreshIcon/>} onClick={load} disabled={loading}>Rafraîchir</Button>
-        <Box sx={{ flexGrow: 1 }} />
-        <TextField size="small" placeholder="Rechercher" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') load() }} />
-      </Stack>
-
-      {error && <Alert severity="error" variant="outlined">{error}</Alert>}
-      {loading && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CircularProgress size={16} />
-          <Typography variant="body2" color="text.secondary">Chargement…</Typography>
-        </Box>
-      )}
-
-      <Paper variant="outlined" sx={{ overflowX: 'auto' }}>
-        <Table size="small" aria-label="Liste des utilisateurs">
-          <TableHead>
-            <TableRow>
-              <TableCell>Email</TableCell>
-              <TableCell>Nom</TableCell>
-              <TableCell>Rôle</TableCell>
-              <TableCell>Statut</TableCell>
-              <TableCell>Dernière connexion</TableCell>
-              <TableCell align="right">Actions</TableCell>
+    <Page
+      title="Utilisateurs"
+      actions={
+        <>
+          <Button startIcon={<AddIcon/>} variant="contained" onClick={() => setOpenCreate(true)}>Créer</Button>
+          <Button startIcon={<RefreshIcon/>} onClick={load} disabled={loading}>Rafraîchir</Button>
+          <TextField size="small" placeholder="Rechercher" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') load() }} />
+        </>
+      }
+    >
+      <Stack spacing={2}>
+        {error && <Alert severity="error" variant="outlined">{error}</Alert>}
+        {loading && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CircularProgress size={16} />
+            <Typography variant="body2" color="text.secondary">Chargement…</Typography>
+          </Box>
+        )}
+        <DataTable
+          columns={[
+            { key: 'email', label: 'Email' },
+            { key: 'fullName', label: 'Nom' },
+            { key: 'role', label: 'Rôle' },
+            { key: 'status', label: 'Statut' },
+            { key: 'lastLoginAt', label: 'Dernière connexion' },
+            { key: 'actions', label: 'Actions', align: 'right' }
+          ]}
+          rows={filtered}
+          loading={loading}
+          error={null}
+        >
+          {filtered.map(u => (
+            <TableRow key={u.id} hover>
+              <TableCell>{u.email}</TableCell>
+              <TableCell>{u.fullName}</TableCell>
+              <TableCell><Chip label={u.role} color={u.role === 'super_admin' ? 'primary' : u.role === 'pdg' ? 'secondary' : 'default'} /></TableCell>
+              <TableCell>{u.status === 'active' ? <Chip color="success" label="Actif"/> : <Chip color="warning" label="Désactivé"/>}</TableCell>
+              <TableCell>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</TableCell>
+              <TableCell align="right">
+                <IconButton size="small" aria-label="Modifier" onClick={() => setOpenEdit(u)}><EditIcon fontSize="small" /></IconButton>
+                <IconButton size="small" aria-label="Désactiver" onClick={async () => { if (!confirm('Désactiver cet utilisateur ?')) return; try { await deactivateUser(u.id); await load() } catch (e:any) { alert(e?.message || 'Échec de la désactivation') } }}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {filtered.map(u => (
-              <TableRow key={u.id} hover>
-                <TableCell>{u.email}</TableCell>
-                <TableCell>{u.fullName}</TableCell>
-                <TableCell><Chip size="small" label={u.role} color={u.role === 'super_admin' ? 'primary' : u.role === 'pdg' ? 'secondary' : 'default'} /></TableCell>
-                <TableCell>{u.status === 'active' ? <Chip size="small" color="success" label="Actif"/> : <Chip size="small" color="warning" label="Désactivé"/>}</TableCell>
-                <TableCell>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</TableCell>
-                <TableCell align="right">
-                  <IconButton size="small" aria-label="Modifier" onClick={() => setOpenEdit(u)}><EditIcon fontSize="small" /></IconButton>
-                  <IconButton size="small" aria-label="Désactiver" onClick={async () => { if (!confirm('Désactiver cet utilisateur ?')) return; try { await deactivateUser(u.id); await load() } catch (e:any) { alert(e?.message || 'Échec de la désactivation') } }}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
-
-      {openCreate && <CreateDialog onClose={() => setOpenCreate(false)} onCreated={async () => { setOpenCreate(false); await load() }} />}
-      {openEdit && <EditDialog user={openEdit} onClose={() => setOpenEdit(null)} onSaved={async () => { setOpenEdit(null); await load() }} />}
-    </Stack>
+          ))}
+        </DataTable>
+        {openCreate && <CreateDialog onClose={() => setOpenCreate(false)} onCreated={async () => { setOpenCreate(false); await load() }} />}
+        {openEdit && <EditDialog user={openEdit} onClose={() => setOpenEdit(null)} onSaved={async () => { setOpenEdit(null); await load() }} />}
+      </Stack>
+    </Page>
   )
 }
 

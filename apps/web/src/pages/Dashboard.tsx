@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Box, Button, Card, CardContent, Grid, Typography, TextField } from '@mui/material'
+import { Box, Button, Grid, Typography, TextField } from '@mui/material'
 import { getSalesSummary, getStockSummary, ecomGetSummary, listSales, sendAlertsDigest, API_URL, ecomGetOverview } from '../api/client_clean'
 import { loadCompanySettings } from '../utils/settings'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +8,8 @@ import { showEcommerce } from '../config/featureFlags'
 import { useBoutique } from '../context/BoutiqueContext'
 import ErrorBanner from '../components/ErrorBanner'
 import { useI18n } from '../i18n/i18n'
+import Page from '../components/Page'
+import KpiCard from '../components/KpiCard'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -93,33 +95,17 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>{t('nav.dashboard')}</Typography>
+    <Page title={t('nav.dashboard') || 'Dashboard'}>
       {error && <ErrorBanner message={error} onRetry={fetchAll} />}
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">Ventes du jour</Typography>
-              <Typography variant="h4">{loading ? '…' : count}</Typography>
-            </CardContent>
-          </Card>
+          <KpiCard title="Ventes du jour" value={loading ? undefined : count} loading={loading} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">Chiffre d'affaires ({currency})</Typography>
-              <Typography variant="h4">{loading ? '…' : total.toLocaleString('fr-FR')}</Typography>
-            </CardContent>
-          </Card>
+          <KpiCard title={`Chiffre d'affaires (${currency})`} value={loading ? undefined : total.toLocaleString('fr-FR')} loading={loading} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary">Top produit (Qté)</Typography>
-              <Typography variant="h6">{top ? `${top.name || top.sku || 'Produit'} — ${top.quantity}` : (loading ? '…' : 'N/A')}</Typography>
-            </CardContent>
-          </Card>
+          <KpiCard title="Top produit (Qté)" value={loading ? undefined : (top ? `${top.name || top.sku || 'Produit'} — ${top.quantity}` : 'N/A')} loading={loading} />
         </Grid>
         <Grid item xs={12} md={4}>
           <Card>
@@ -308,44 +294,19 @@ export default function Dashboard() {
         {showEcommerce && (
           <>
             <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary">Ventes en ligne (jour)</Typography>
-                  <Typography variant="h4">{loading ? '…' : onlineCount}</Typography>
-                </CardContent>
-              </Card>
+              <KpiCard title="Ventes en ligne (jour)" value={loading ? undefined : onlineCount} loading={loading} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary">CA en ligne (jour)</Typography>
-                  <Typography variant="h4">{loading ? '…' : onlineRevenue.toLocaleString('fr-FR')} {currency}</Typography>
-                </CardContent>
-              </Card>
+              <KpiCard title="CA en ligne (jour)" value={loading ? undefined : onlineRevenue.toLocaleString('fr-FR')} loading={loading} suffix={currency} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary">Cmd en ligne payées (jour)</Typography>
-                  <Typography variant="h4">{loading ? '…' : onlinePaidCount}</Typography>
-                </CardContent>
-              </Card>
+              <KpiCard title="Cmd en ligne payées (jour)" value={loading ? undefined : onlinePaidCount} loading={loading} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary">Taux de conversion</Typography>
-                  <Typography variant="h4">{loading ? '…' : `${conversion.toFixed(2)}%`}</Typography>
-                </CardContent>
-              </Card>
+              <KpiCard title="Taux de conversion" value={loading ? undefined : `${conversion.toFixed(2)}%`} loading={loading} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary">Panier moyen en ligne (jour)</Typography>
-                  <Typography variant="h4">{loading ? '…' : onlineAOV.toLocaleString('fr-FR')} {currency}</Typography>
-                </CardContent>
-              </Card>
+              <KpiCard title="Panier moyen en ligne (jour)" value={loading ? undefined : onlineAOV.toLocaleString('fr-FR')} loading={loading} suffix={currency} />
             </Grid>
             <Grid item xs={12} md={6}>
               <Card>
@@ -454,6 +415,6 @@ export default function Dashboard() {
           </Card>
         </Grid>
       </Grid>
-    </Box>
+    </Page>
   )
 }

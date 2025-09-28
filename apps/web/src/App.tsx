@@ -42,6 +42,7 @@ import ThankYouPage from './pages/ThankYou'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedByPermission from './components/ProtectedByPermission'
 import CompaniesAdminPage from './pages/Admin/Companies'
+import SuperAdminConsole from './pages/Admin/SuperAdminConsole'
 
 export default function App() {
   return (
@@ -114,6 +115,7 @@ export default function App() {
             <Route path="/dev-tools" element={<DevToolsPage />} />
           </Route>
           <Route element={<ProtectedByRole allow={["super_admin"]} />}>
+            <Route path="/admin/console" element={<SuperAdminConsole />} />
             <Route path="/leads" element={<LeadsPage />} />
             <Route path="/admin/password-reset" element={<AdminPasswordReset />} />
             <Route path="/admin/companies" element={<CompaniesAdminPage />} />

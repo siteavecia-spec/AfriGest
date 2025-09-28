@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Container, IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Tooltip, Chip, CircularProgress } from '@mui/material'
+import { Box, Button, IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Tooltip, Chip, CircularProgress } from '@mui/material'
 import { createSale, listProducts, listSales, API_URL } from '../api/client_clean'
 import { enqueueSale, getPendingSales, removePendingSale, trySyncSales } from '../offline/salesQueue'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -11,6 +11,7 @@ import RemoveIcon from '@mui/icons-material/Remove'
 import { useBoutique } from '../context/BoutiqueContext'
 import ErrorBanner from '../components/ErrorBanner'
 import { useI18n } from '../i18n/i18n'
+import Page from '../components/Page'
 
 export default function PosPage() {
   const { selectedBoutiqueId: boutiqueId, setSelectedBoutiqueId, boutiques } = useBoutique()
@@ -258,7 +259,7 @@ export default function PosPage() {
   }
 
   return (
-    <Container sx={{ py: 3 }}>
+    <Page title={t('nav.pos') || 'Point de Vente'} subtitle={t('pos.subtitle') || 'Enregistrer des ventes rapidement'}>
       {/* Banner for pending offline sales */}
       {pending.length > 0 && (
         <Alert severity="warning" sx={{ mb: 2 }}
@@ -271,7 +272,6 @@ export default function PosPage() {
         >Des ventes en attente seront synchronisées dès que possible: {pending.length}</Alert>
       )}
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>Point de Vente (MVP)</Typography>  
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
           <Button size="small" variant="outlined" onClick={async () => {
             try {
@@ -709,7 +709,6 @@ export default function PosPage() {
           <Button onClick={async () => { setSyncing(true); try { await trySyncSales() } finally { setSyncing(false); try { setPending(await getPendingSales()) } catch {} } }} disabled={syncing}>Synchroniser</Button>
           <Button variant="contained" onClick={() => setPendingOpen(false)}>Fermer</Button>
         </DialogActions>
-      </Dialog>
-    </Container>
+    </Page>
   )
 }

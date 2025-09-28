@@ -41,7 +41,10 @@ export function getTheme(mode: 'light' | 'dark' = 'light') {
           containedSecondary: { ':hover': { backgroundColor: '#047857' } }
         }
       },
-      MuiPaper: { styleOverrides: { root: { borderRadius: 8 } } },
+      MuiPaper: {
+        defaultProps: { elevation: 0 },
+        styleOverrides: { root: { borderRadius: 8 } }
+      },
       MuiOutlinedInput: {
         styleOverrides: {
           root: { borderRadius: 4, height: 40 },
@@ -50,7 +53,26 @@ export function getTheme(mode: 'light' | 'dark' = 'light') {
         }
       },
       MuiFormLabel: { styleOverrides: { root: { color: isDark ? '#E5E7EB' : '#111827' } } },
-      MuiLink: { styleOverrides: { root: { color: '#93C5FD' } } }
+      MuiLink: { styleOverrides: { root: { color: '#93C5FD' } } },
+      MuiTableHead: {
+        styleOverrides: {
+          root: { backgroundColor: isDark ? '#0F172A' : '#F3F4F6' }
+        }
+      },
+      MuiTableCell: {
+        styleOverrides: {
+          head: { fontWeight: 700, color: isDark ? '#E5E7EB' : '#111827' },
+          sizeSmall: { paddingTop: 8, paddingBottom: 8 }
+        }
+      },
+      MuiTableRow: {
+        styleOverrides: {
+          root: { '&:nth-of-type(odd)': { backgroundColor: isDark ? 'transparent' : '#FAFAFA' } }
+        }
+      },
+      MuiChip: {
+        defaultProps: { size: 'small' }
+      }
     }
   })
 }

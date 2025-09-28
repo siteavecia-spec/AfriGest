@@ -111,6 +111,13 @@ export default function Layout() {
                   <Button color={isActive('/pos') ? 'secondary' : 'inherit'} onClick={go('/pos')}>POS</Button>
                 </>
               )}
+              {isMasterContext && (
+                <>
+                  <Button color={isActive('/admin/console') ? 'secondary' : 'inherit'} onClick={go('/admin/console')}>Console</Button>
+                  <Button color={isActive('/admin/companies') ? 'secondary' : 'inherit'} onClick={go('/admin/companies')}>Entreprises</Button>
+                  <Button color={isActive('/leads') ? 'secondary' : 'inherit'} onClick={go('/leads')}>Leads</Button>
+                </>
+              )}
               {showMessaging && (
                 <>
                   <Button color={isActive('/messaging') ? 'secondary' : 'inherit'} onClick={go('/messaging')}>
@@ -188,6 +195,13 @@ export default function Layout() {
                   <>
                     <MenuItem onClick={() => { navigate('/dashboard'); setMenuAnchor(null) }}>Dashboard</MenuItem>
                     <MenuItem onClick={() => { navigate('/pos'); setMenuAnchor(null) }}>POS</MenuItem>
+                  </>
+                )}
+                {isMasterContext && (
+                  <>
+                    <MenuItem onClick={() => { navigate('/admin/console'); setMenuAnchor(null) }}>Console</MenuItem>
+                    <MenuItem onClick={() => { navigate('/admin/companies'); setMenuAnchor(null) }}>Entreprises</MenuItem>
+                    <MenuItem onClick={() => { navigate('/leads'); setMenuAnchor(null) }}>Leads</MenuItem>
                   </>
                 )}
                 {showMessaging && (

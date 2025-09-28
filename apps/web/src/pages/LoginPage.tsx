@@ -39,7 +39,7 @@ export default function LoginPage() {
         try { localStorage.removeItem('afrigest_company') } catch {}
         try { localStorage.removeItem('afrigest_email') } catch {}
         dispatch(setCredentials({ token: res.accessToken, role: res.role }))
-        navigate('/admin/companies')
+        navigate('/admin/console')
         return
       }
       if (remember) {
