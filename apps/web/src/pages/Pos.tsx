@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Container, IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Tooltip, Chip } from '@mui/material'
+import { Box, Button, Container, IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Tooltip, Chip, CircularProgress } from '@mui/material'
 import { createSale, listProducts, listSales, API_URL } from '../api/client_clean'
 import { enqueueSale, getPendingSales, removePendingSale, trySyncSales } from '../offline/salesQueue'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -544,11 +544,11 @@ export default function PosPage() {
                   </TableCell>
                   <TableCell align="right">
                     <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-                      <IconButton size="small" onClick={() => changeQty(idx, i.quantity - 1)}>
+                      <IconButton size="small" aria-label="Diminuer quantité" onClick={() => changeQty(idx, i.quantity - 1)}>
                         <RemoveIcon fontSize="small" />
                       </IconButton>
                       <TextField size="small" type="number" value={i.quantity} onChange={e => changeQty(idx, Number(e.target.value))} inputProps={{ min: 1 }} sx={{ width: 80 }} />
-                      <IconButton size="small" onClick={() => changeQty(idx, i.quantity + 1)}>
+                      <IconButton size="small" aria-label="Augmenter quantité" onClick={() => changeQty(idx, i.quantity + 1)}>
                         <AddIcon fontSize="small" />
                       </IconButton>
                     </Stack>
@@ -562,7 +562,7 @@ export default function PosPage() {
                   </TableCell>
                   <TableCell align="right">{formatGNF(i.quantity * i.unitPrice - (i.discount || 0))}</TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => removeFromCart(i.productId)}>
+                    <IconButton size="small" aria-label="Supprimer ligne" onClick={() => removeFromCart(i.productId)}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -609,8 +609,8 @@ export default function PosPage() {
               )}
               {vatRate <= 0 && <Typography variant="h6">Total: {formatGNF(totalAfterDiscount)} {currency}</Typography>}
             </Stack>
-            <Button variant="contained" onClick={submitSale} disabled={loading || cart.length === 0}>
-              {loading ? 'En cours…' : (t('pos.submit_sale') || 'Valider la vente')}
+            <Button variant="contained" onClick={submitSale} disabled={loading || cart.length === 0} disableElevation>
+              {loading ? (<><CircularProgress size={18} sx={{ mr: 1 }} /> En cours…</>) : (t('pos.submit_sale') || 'Valider la vente')}
             </Button>
           </Stack>
 

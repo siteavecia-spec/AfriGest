@@ -1,7 +1,9 @@
-import { Box, Button, Container, Paper, Stack, TextField, Typography, ToggleButtonGroup, ToggleButton, Alert } from '@mui/material'
+import { Box, Button, Container, Paper, Stack, TextField, Typography, ToggleButtonGroup, ToggleButton, Alert, InputAdornment } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { forgotPassword, forgotPasswordSms, validateOtp } from '../api/client_clean'
+import EmailIcon from '@mui/icons-material/Email'
+import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone'
 
 export default function ForgotPassword() {
   const [method, setMethod] = useState<'email' | 'sms'>('email')
@@ -82,27 +84,49 @@ export default function ForgotPassword() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
-      <Paper elevation={1} sx={{ p: 4, width: '100%' }}>
-        <Stack spacing={3} component="form" onSubmit={onSubmit}>
-          <Box>
-            <Typography variant="h5" fontWeight={700}>Réinitialiser mon mot de passe</Typography>
-            <Typography color="text.secondary">Choisissez la méthode et saisissez vos informations</Typography>
-          </Box>
-          <ToggleButtonGroup value={method} exclusive onChange={(_e, v) => v && setMethod(v)}>
-            <ToggleButton value="email">📧 Par email</ToggleButton>
-            <ToggleButton value="sms" disabled>📱 Par SMS (bientôt)</ToggleButton>
-          </ToggleButtonGroup>
-          {method === 'email' ? (
-            <TextField type="email" label="Votre adresse email" value={email} onChange={e => setEmail(e.target.value)} required />
-          ) : (
-            <TextField type="tel" label="Votre numéro de téléphone" value={phone} onChange={e => setPhone(e.target.value)} required />
-          )}
-          {err && <Alert severity="error">{err}</Alert>}
-          {msg && <Alert severity="success">{msg}</Alert>}
-          <Button type="submit" variant="contained" disabled={loading}>{loading ? 'Envoi…' : 'Envoyer la demande'}</Button>
-        </Stack>
-      </Paper>
-    </Container>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', background: 'linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%)' }}>
+      <Container maxWidth="sm">
+        <Paper elevation={3} sx={{ p: { xs: 3, md: 4 }, borderRadius: 3 }}>
+          <Stack spacing={3} component="form" onSubmit={onSubmit}>
+            <Box>
+              <Typography variant="h5" fontWeight={700}>Réinitialiser mon mot de passe</Typography>
+              <Typography color="text.secondary">Choisissez la méthode et saisissez vos informations</Typography>
+            </Box>
+            <ToggleButtonGroup value={method} exclusive onChange={(_e, v) => v && setMethod(v)}>
+              <ToggleButton value="email">📧 Par email</ToggleButton>
+              <ToggleButton value="sms" disabled>📱 Par SMS (bientôt)</ToggleButton>
+            </ToggleButtonGroup>
+            {method === 'email' ? (
+              <TextField
+                type="email"
+                label="Votre adresse email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                InputProps={{ startAdornment: (
+                  <InputAdornment position="start"><EmailIcon color="action" /></InputAdornment>
+                ) }}
+                helperText="Nous vous enverrons un lien si un compte existe pour cette adresse"
+              />
+            ) : (
+              <TextField
+                type="tel"
+                label="Votre numéro de téléphone"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                required
+                InputProps={{ startAdornment: (
+                  <InputAdornment position="start"><PhoneIphoneIcon color="action" /></InputAdornment>
+                ) }}
+                helperText="Un code OTP vous sera envoyé (bientôt disponible)"
+              />
+            )}
+            {err && <Alert severity="error" variant="outlined">{err}</Alert>}
+            {msg && <Alert severity="success" variant="outlined">{msg}</Alert>}
+            <Button type="submit" variant="contained" disabled={loading} sx={{ py: 1.1 }}>{loading ? 'Envoi…' : 'Envoyer la demande'}</Button>
+          </Stack>
+        </Paper>
+      </Container>
+    </Box>
   )
 }

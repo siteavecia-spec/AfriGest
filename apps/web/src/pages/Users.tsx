@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from '@mui/material'
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Paper, Alert, CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/PersonAddAlt1'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/PersonOff'
@@ -38,10 +38,16 @@ export default function UsersPage() {
         <TextField size="small" placeholder="Rechercher" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') load() }} />
       </Stack>
 
-      {error && <Typography color="error">{error}</Typography>}
+      {error && <Alert severity="error" variant="outlined">{error}</Alert>}
+      {loading && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CircularProgress size={16} />
+          <Typography variant="body2" color="text.secondary">Chargement…</Typography>
+        </Box>
+      )}
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <Table size="small">
+      <Paper variant="outlined" sx={{ overflowX: 'auto' }}>
+        <Table size="small" aria-label="Liste des utilisateurs">
           <TableHead>
             <TableRow>
               <TableCell>Email</TableCell>
@@ -61,8 +67,8 @@ export default function UsersPage() {
                 <TableCell>{u.status === 'active' ? <Chip size="small" color="success" label="Actif"/> : <Chip size="small" color="warning" label="Désactivé"/>}</TableCell>
                 <TableCell>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => setOpenEdit(u)}><EditIcon fontSize="small" /></IconButton>
-                  <IconButton size="small" onClick={async () => { if (!confirm('Désactiver cet utilisateur ?')) return; try { await deactivateUser(u.id); await load() } catch (e:any) { alert(e?.message || 'Échec de la désactivation') } }}>
+                  <IconButton size="small" aria-label="Modifier" onClick={() => setOpenEdit(u)}><EditIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" aria-label="Désactiver" onClick={async () => { if (!confirm('Désactiver cet utilisateur ?')) return; try { await deactivateUser(u.id); await load() } catch (e:any) { alert(e?.message || 'Échec de la désactivation') } }}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </TableCell>
@@ -70,7 +76,7 @@ export default function UsersPage() {
             ))}
           </TableBody>
         </Table>
-      </Box>
+      </Paper>
 
       {openCreate && <CreateDialog onClose={() => setOpenCreate(false)} onCreated={async () => { setOpenCreate(false); await load() }} />}
       {openEdit && <EditDialog user={openEdit} onClose={() => setOpenEdit(null)} onSaved={async () => { setOpenEdit(null); await load() }} />}

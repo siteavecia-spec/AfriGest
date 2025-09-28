@@ -225,3 +225,54 @@ node apps/api/dist/index.js
 ---
 
 Si besoin, je peux fournir un script d’exemple pour le provisioning complet (création DB + migrations + seed) et un guide pour Packager/PM2/systemd pour l’API et l’app Web.
+
+---
+
+## 16) Remaining Steps (Checklist)
+
+- [API Env] Edit `apps/api/.env` (copy from `docs/env/api.env.example`):
+  - Set `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`.
+  - Set `MASTER_DATABASE_URL` for the master DB (optional for MVP).
+  - Set `TENANT_DATABASE_URL` for your demo tenant if you want DB-backed flows.
+  - Optionally set `ALLOWED_ORIGINS` (comma-separated) for non-dev CORS.
+  - Leave Stripe empty until you have real keys.
+
+- [Web Env] Edit `apps/web/.env` (copy from `docs/env/web.env.example`):
+  - Ensure `VITE_API_URL=http://localhost:4000` in dev.
+  - Ensure `VITE_ENABLE_ECOMMERCE=true` and `VITE_ENABLE_STRIPE=false` (until keys).
+
+- [Prisma Clients] Generate Prisma clients (code only):
+  - Tenant schema output: `apps/api/src/generated/tenant` (configured in `infra/prisma/tenant/schema.prisma`).
+  - Master schema output: `apps/api/src/generated/master` (configured in `infra/prisma/master/schema.prisma`).
+  - Commands:
+    - `npm -w apps/api run prisma:generate`
+
+- [Migrations] When DB URLs are ready, deploy tenant migrations:
+  - Per tenant database:
+    - `DATABASE_URL=postgresql://.../afrigest_<code> npx prisma migrate deploy --schema infra/prisma/tenant/schema.prisma`
+
+- [Run] Dev:
+  - API: `npm run dev:api` → http://localhost:4000
+  - Web: `npm run dev:web` → http://localhost:5173
+
+- [QA quick tests]
+  - Payments simulate: POST `/api/tenants/:tenantId/ecommerce/payments/simulate(-mtn|-orange)`
+  - Orders COD: POST `/api/tenants/:tenantId/ecommerce/orders` with `{ payment: { provider: 'cod' } }`
+  - KPIs: GET `/api/tenants/:tenantId/ecommerce/summary` (requires JWT)
+
+## 17) Troubleshooting
+
+- Prisma generate on Windows (EPERM rename in `apps/api/src/generated/tenant`):
+  - Symptom: `EPERM: operation not permitted, rename '...query_engine-windows.dll.node.tmp...'`
+  - Fix:
+    - Stop any running dev servers that may lock the file (e.g., `tsx watch src/index.ts`).
+    - Close any antivirus real-time scanner that may lock DLLs, or add the folder to exclusions.
+    - Re-run: `npm -w apps/api run prisma:generate`.
+  - If still blocked, delete the folder `apps/api/src/generated/tenant` and try again.
+
+- 501/400 on S3/CloudFront media endpoints:
+  - Provide minimal env: `S3_REGION`, `S3_BUCKET` (for uploads presign) and `CLOUDFRONT_*` (for signed URLs), then restart API.
+
+- Stripe 501/Invalid key:
+  - Keep Stripe disabled until you have `STRIPE_SECRET_KEY` (server) and `VITE_STRIPE_PUBLISHABLE_KEY` (web). With flags off, the UI hides card payment.
+

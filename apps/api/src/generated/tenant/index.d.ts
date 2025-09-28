@@ -103,6 +103,21 @@ export type ReferralRequest = $Result.DefaultSelection<Prisma.$ReferralRequestPa
  * 
  */
 export type ReferralReward = $Result.DefaultSelection<Prisma.$ReferralRewardPayload>
+/**
+ * Model SectorTemplate
+ * 
+ */
+export type SectorTemplate = $Result.DefaultSelection<Prisma.$SectorTemplatePayload>
+/**
+ * Model SectorAttribute
+ * 
+ */
+export type SectorAttribute = $Result.DefaultSelection<Prisma.$SectorAttributePayload>
+/**
+ * Model TenantCustomAttribute
+ * 
+ */
+export type TenantCustomAttribute = $Result.DefaultSelection<Prisma.$TenantCustomAttributePayload>
 
 /**
  * Enums
@@ -143,6 +158,16 @@ export const RewardStatus: {
 
 export type RewardStatus = (typeof RewardStatus)[keyof typeof RewardStatus]
 
+
+export const AttrType: {
+  string: 'string',
+  number: 'number',
+  date: 'date',
+  text: 'text'
+};
+
+export type AttrType = (typeof AttrType)[keyof typeof AttrType]
+
 }
 
 export type Role = $Enums.Role
@@ -160,6 +185,10 @@ export const ReferralRequestStatus: typeof $Enums.ReferralRequestStatus
 export type RewardStatus = $Enums.RewardStatus
 
 export const RewardStatus: typeof $Enums.RewardStatus
+
+export type AttrType = $Enums.AttrType
+
+export const AttrType: typeof $Enums.AttrType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -463,6 +492,36 @@ export class PrismaClient<
     * ```
     */
   get referralReward(): Prisma.ReferralRewardDelegate<ExtArgs>;
+
+  /**
+   * `prisma.sectorTemplate`: Exposes CRUD operations for the **SectorTemplate** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SectorTemplates
+    * const sectorTemplates = await prisma.sectorTemplate.findMany()
+    * ```
+    */
+  get sectorTemplate(): Prisma.SectorTemplateDelegate<ExtArgs>;
+
+  /**
+   * `prisma.sectorAttribute`: Exposes CRUD operations for the **SectorAttribute** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SectorAttributes
+    * const sectorAttributes = await prisma.sectorAttribute.findMany()
+    * ```
+    */
+  get sectorAttribute(): Prisma.SectorAttributeDelegate<ExtArgs>;
+
+  /**
+   * `prisma.tenantCustomAttribute`: Exposes CRUD operations for the **TenantCustomAttribute** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TenantCustomAttributes
+    * const tenantCustomAttributes = await prisma.tenantCustomAttribute.findMany()
+    * ```
+    */
+  get tenantCustomAttribute(): Prisma.TenantCustomAttributeDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -921,7 +980,10 @@ export namespace Prisma {
     EmailVerification: 'EmailVerification',
     ReferralCode: 'ReferralCode',
     ReferralRequest: 'ReferralRequest',
-    ReferralReward: 'ReferralReward'
+    ReferralReward: 'ReferralReward',
+    SectorTemplate: 'SectorTemplate',
+    SectorAttribute: 'SectorAttribute',
+    TenantCustomAttribute: 'TenantCustomAttribute'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -937,7 +999,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "boutique" | "product" | "stock" | "supplier" | "stockEntry" | "stockEntryItem" | "stockAudit" | "sale" | "saleItem" | "payment" | "auditLog" | "passwordResetRequest" | "refreshSession" | "emailVerification" | "referralCode" | "referralRequest" | "referralReward"
+      modelProps: "user" | "boutique" | "product" | "stock" | "supplier" | "stockEntry" | "stockEntryItem" | "stockAudit" | "sale" | "saleItem" | "payment" | "auditLog" | "passwordResetRequest" | "refreshSession" | "emailVerification" | "referralCode" | "referralRequest" | "referralReward" | "sectorTemplate" | "sectorAttribute" | "tenantCustomAttribute"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2201,6 +2263,216 @@ export namespace Prisma {
           }
         }
       }
+      SectorTemplate: {
+        payload: Prisma.$SectorTemplatePayload<ExtArgs>
+        fields: Prisma.SectorTemplateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SectorTemplateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SectorTemplateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>
+          }
+          findFirst: {
+            args: Prisma.SectorTemplateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SectorTemplateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>
+          }
+          findMany: {
+            args: Prisma.SectorTemplateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>[]
+          }
+          create: {
+            args: Prisma.SectorTemplateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>
+          }
+          createMany: {
+            args: Prisma.SectorTemplateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SectorTemplateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>[]
+          }
+          delete: {
+            args: Prisma.SectorTemplateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>
+          }
+          update: {
+            args: Prisma.SectorTemplateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>
+          }
+          deleteMany: {
+            args: Prisma.SectorTemplateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SectorTemplateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SectorTemplateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorTemplatePayload>
+          }
+          aggregate: {
+            args: Prisma.SectorTemplateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSectorTemplate>
+          }
+          groupBy: {
+            args: Prisma.SectorTemplateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SectorTemplateGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SectorTemplateCountArgs<ExtArgs>
+            result: $Utils.Optional<SectorTemplateCountAggregateOutputType> | number
+          }
+        }
+      }
+      SectorAttribute: {
+        payload: Prisma.$SectorAttributePayload<ExtArgs>
+        fields: Prisma.SectorAttributeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SectorAttributeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SectorAttributeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>
+          }
+          findFirst: {
+            args: Prisma.SectorAttributeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SectorAttributeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>
+          }
+          findMany: {
+            args: Prisma.SectorAttributeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>[]
+          }
+          create: {
+            args: Prisma.SectorAttributeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>
+          }
+          createMany: {
+            args: Prisma.SectorAttributeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SectorAttributeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>[]
+          }
+          delete: {
+            args: Prisma.SectorAttributeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>
+          }
+          update: {
+            args: Prisma.SectorAttributeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>
+          }
+          deleteMany: {
+            args: Prisma.SectorAttributeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SectorAttributeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SectorAttributeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SectorAttributePayload>
+          }
+          aggregate: {
+            args: Prisma.SectorAttributeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSectorAttribute>
+          }
+          groupBy: {
+            args: Prisma.SectorAttributeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SectorAttributeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SectorAttributeCountArgs<ExtArgs>
+            result: $Utils.Optional<SectorAttributeCountAggregateOutputType> | number
+          }
+        }
+      }
+      TenantCustomAttribute: {
+        payload: Prisma.$TenantCustomAttributePayload<ExtArgs>
+        fields: Prisma.TenantCustomAttributeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TenantCustomAttributeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TenantCustomAttributeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>
+          }
+          findFirst: {
+            args: Prisma.TenantCustomAttributeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TenantCustomAttributeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>
+          }
+          findMany: {
+            args: Prisma.TenantCustomAttributeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>[]
+          }
+          create: {
+            args: Prisma.TenantCustomAttributeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>
+          }
+          createMany: {
+            args: Prisma.TenantCustomAttributeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TenantCustomAttributeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>[]
+          }
+          delete: {
+            args: Prisma.TenantCustomAttributeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>
+          }
+          update: {
+            args: Prisma.TenantCustomAttributeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>
+          }
+          deleteMany: {
+            args: Prisma.TenantCustomAttributeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TenantCustomAttributeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.TenantCustomAttributeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TenantCustomAttributePayload>
+          }
+          aggregate: {
+            args: Prisma.TenantCustomAttributeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTenantCustomAttribute>
+          }
+          groupBy: {
+            args: Prisma.TenantCustomAttributeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TenantCustomAttributeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TenantCustomAttributeCountArgs<ExtArgs>
+            result: $Utils.Optional<TenantCustomAttributeCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2643,6 +2915,37 @@ export namespace Prisma {
    */
   export type ReferralCodeCountOutputTypeCountReferralRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ReferralRequestWhereInput
+  }
+
+
+  /**
+   * Count Type SectorTemplateCountOutputType
+   */
+
+  export type SectorTemplateCountOutputType = {
+    attributes: number
+  }
+
+  export type SectorTemplateCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    attributes?: boolean | SectorTemplateCountOutputTypeCountAttributesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * SectorTemplateCountOutputType without action
+   */
+  export type SectorTemplateCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplateCountOutputType
+     */
+    select?: SectorTemplateCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * SectorTemplateCountOutputType without action
+   */
+  export type SectorTemplateCountOutputTypeCountAttributesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SectorAttributeWhereInput
   }
 
 
@@ -4748,6 +5051,7 @@ export namespace Prisma {
     barcode: string | null
     taxRate: Decimal | null
     isActive: boolean | null
+    sector: string | null
   }
 
   export type ProductMaxAggregateOutputType = {
@@ -4760,6 +5064,7 @@ export namespace Prisma {
     barcode: string | null
     taxRate: Decimal | null
     isActive: boolean | null
+    sector: string | null
   }
 
   export type ProductCountAggregateOutputType = {
@@ -4772,6 +5077,8 @@ export namespace Prisma {
     barcode: number
     taxRate: number
     isActive: number
+    sector: number
+    attrs: number
     _all: number
   }
 
@@ -4798,6 +5105,7 @@ export namespace Prisma {
     barcode?: true
     taxRate?: true
     isActive?: true
+    sector?: true
   }
 
   export type ProductMaxAggregateInputType = {
@@ -4810,6 +5118,7 @@ export namespace Prisma {
     barcode?: true
     taxRate?: true
     isActive?: true
+    sector?: true
   }
 
   export type ProductCountAggregateInputType = {
@@ -4822,6 +5131,8 @@ export namespace Prisma {
     barcode?: true
     taxRate?: true
     isActive?: true
+    sector?: true
+    attrs?: true
     _all?: true
   }
 
@@ -4921,6 +5232,8 @@ export namespace Prisma {
     barcode: string | null
     taxRate: Decimal
     isActive: boolean
+    sector: string | null
+    attrs: JsonValue | null
     _count: ProductCountAggregateOutputType | null
     _avg: ProductAvgAggregateOutputType | null
     _sum: ProductSumAggregateOutputType | null
@@ -4952,6 +5265,8 @@ export namespace Prisma {
     barcode?: boolean
     taxRate?: boolean
     isActive?: boolean
+    sector?: boolean
+    attrs?: boolean
     stocks?: boolean | Product$stocksArgs<ExtArgs>
     saleItems?: boolean | Product$saleItemsArgs<ExtArgs>
     stockEntryItems?: boolean | Product$stockEntryItemsArgs<ExtArgs>
@@ -4968,6 +5283,8 @@ export namespace Prisma {
     barcode?: boolean
     taxRate?: boolean
     isActive?: boolean
+    sector?: boolean
+    attrs?: boolean
   }, ExtArgs["result"]["product"]>
 
   export type ProductSelectScalar = {
@@ -4980,6 +5297,8 @@ export namespace Prisma {
     barcode?: boolean
     taxRate?: boolean
     isActive?: boolean
+    sector?: boolean
+    attrs?: boolean
   }
 
   export type ProductInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5007,6 +5326,8 @@ export namespace Prisma {
       barcode: string | null
       taxRate: Prisma.Decimal
       isActive: boolean
+      sector: string | null
+      attrs: Prisma.JsonValue | null
     }, ExtArgs["result"]["product"]>
     composites: {}
   }
@@ -5412,6 +5733,8 @@ export namespace Prisma {
     readonly barcode: FieldRef<"Product", 'String'>
     readonly taxRate: FieldRef<"Product", 'Decimal'>
     readonly isActive: FieldRef<"Product", 'Boolean'>
+    readonly sector: FieldRef<"Product", 'String'>
+    readonly attrs: FieldRef<"Product", 'Json'>
   }
     
 
@@ -20274,6 +20597,2825 @@ export namespace Prisma {
 
 
   /**
+   * Model SectorTemplate
+   */
+
+  export type AggregateSectorTemplate = {
+    _count: SectorTemplateCountAggregateOutputType | null
+    _min: SectorTemplateMinAggregateOutputType | null
+    _max: SectorTemplateMaxAggregateOutputType | null
+  }
+
+  export type SectorTemplateMinAggregateOutputType = {
+    id: string | null
+    key: string | null
+    name: string | null
+    isSystem: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SectorTemplateMaxAggregateOutputType = {
+    id: string | null
+    key: string | null
+    name: string | null
+    isSystem: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SectorTemplateCountAggregateOutputType = {
+    id: number
+    key: number
+    name: number
+    isSystem: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SectorTemplateMinAggregateInputType = {
+    id?: true
+    key?: true
+    name?: true
+    isSystem?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SectorTemplateMaxAggregateInputType = {
+    id?: true
+    key?: true
+    name?: true
+    isSystem?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SectorTemplateCountAggregateInputType = {
+    id?: true
+    key?: true
+    name?: true
+    isSystem?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SectorTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SectorTemplate to aggregate.
+     */
+    where?: SectorTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorTemplates to fetch.
+     */
+    orderBy?: SectorTemplateOrderByWithRelationInput | SectorTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SectorTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SectorTemplates
+    **/
+    _count?: true | SectorTemplateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SectorTemplateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SectorTemplateMaxAggregateInputType
+  }
+
+  export type GetSectorTemplateAggregateType<T extends SectorTemplateAggregateArgs> = {
+        [P in keyof T & keyof AggregateSectorTemplate]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSectorTemplate[P]>
+      : GetScalarType<T[P], AggregateSectorTemplate[P]>
+  }
+
+
+
+
+  export type SectorTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SectorTemplateWhereInput
+    orderBy?: SectorTemplateOrderByWithAggregationInput | SectorTemplateOrderByWithAggregationInput[]
+    by: SectorTemplateScalarFieldEnum[] | SectorTemplateScalarFieldEnum
+    having?: SectorTemplateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SectorTemplateCountAggregateInputType | true
+    _min?: SectorTemplateMinAggregateInputType
+    _max?: SectorTemplateMaxAggregateInputType
+  }
+
+  export type SectorTemplateGroupByOutputType = {
+    id: string
+    key: string
+    name: string
+    isSystem: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: SectorTemplateCountAggregateOutputType | null
+    _min: SectorTemplateMinAggregateOutputType | null
+    _max: SectorTemplateMaxAggregateOutputType | null
+  }
+
+  type GetSectorTemplateGroupByPayload<T extends SectorTemplateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SectorTemplateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SectorTemplateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SectorTemplateGroupByOutputType[P]>
+            : GetScalarType<T[P], SectorTemplateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SectorTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    name?: boolean
+    isSystem?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    attributes?: boolean | SectorTemplate$attributesArgs<ExtArgs>
+    _count?: boolean | SectorTemplateCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sectorTemplate"]>
+
+  export type SectorTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    name?: boolean
+    isSystem?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["sectorTemplate"]>
+
+  export type SectorTemplateSelectScalar = {
+    id?: boolean
+    key?: boolean
+    name?: boolean
+    isSystem?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SectorTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    attributes?: boolean | SectorTemplate$attributesArgs<ExtArgs>
+    _count?: boolean | SectorTemplateCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type SectorTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $SectorTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SectorTemplate"
+    objects: {
+      attributes: Prisma.$SectorAttributePayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      key: string
+      name: string
+      isSystem: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["sectorTemplate"]>
+    composites: {}
+  }
+
+  type SectorTemplateGetPayload<S extends boolean | null | undefined | SectorTemplateDefaultArgs> = $Result.GetResult<Prisma.$SectorTemplatePayload, S>
+
+  type SectorTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<SectorTemplateFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: SectorTemplateCountAggregateInputType | true
+    }
+
+  export interface SectorTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SectorTemplate'], meta: { name: 'SectorTemplate' } }
+    /**
+     * Find zero or one SectorTemplate that matches the filter.
+     * @param {SectorTemplateFindUniqueArgs} args - Arguments to find a SectorTemplate
+     * @example
+     * // Get one SectorTemplate
+     * const sectorTemplate = await prisma.sectorTemplate.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SectorTemplateFindUniqueArgs>(args: SelectSubset<T, SectorTemplateFindUniqueArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one SectorTemplate that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {SectorTemplateFindUniqueOrThrowArgs} args - Arguments to find a SectorTemplate
+     * @example
+     * // Get one SectorTemplate
+     * const sectorTemplate = await prisma.sectorTemplate.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SectorTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, SectorTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first SectorTemplate that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorTemplateFindFirstArgs} args - Arguments to find a SectorTemplate
+     * @example
+     * // Get one SectorTemplate
+     * const sectorTemplate = await prisma.sectorTemplate.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SectorTemplateFindFirstArgs>(args?: SelectSubset<T, SectorTemplateFindFirstArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first SectorTemplate that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorTemplateFindFirstOrThrowArgs} args - Arguments to find a SectorTemplate
+     * @example
+     * // Get one SectorTemplate
+     * const sectorTemplate = await prisma.sectorTemplate.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SectorTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, SectorTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more SectorTemplates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SectorTemplates
+     * const sectorTemplates = await prisma.sectorTemplate.findMany()
+     * 
+     * // Get first 10 SectorTemplates
+     * const sectorTemplates = await prisma.sectorTemplate.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const sectorTemplateWithIdOnly = await prisma.sectorTemplate.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SectorTemplateFindManyArgs>(args?: SelectSubset<T, SectorTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a SectorTemplate.
+     * @param {SectorTemplateCreateArgs} args - Arguments to create a SectorTemplate.
+     * @example
+     * // Create one SectorTemplate
+     * const SectorTemplate = await prisma.sectorTemplate.create({
+     *   data: {
+     *     // ... data to create a SectorTemplate
+     *   }
+     * })
+     * 
+     */
+    create<T extends SectorTemplateCreateArgs>(args: SelectSubset<T, SectorTemplateCreateArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many SectorTemplates.
+     * @param {SectorTemplateCreateManyArgs} args - Arguments to create many SectorTemplates.
+     * @example
+     * // Create many SectorTemplates
+     * const sectorTemplate = await prisma.sectorTemplate.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SectorTemplateCreateManyArgs>(args?: SelectSubset<T, SectorTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SectorTemplates and returns the data saved in the database.
+     * @param {SectorTemplateCreateManyAndReturnArgs} args - Arguments to create many SectorTemplates.
+     * @example
+     * // Create many SectorTemplates
+     * const sectorTemplate = await prisma.sectorTemplate.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SectorTemplates and only return the `id`
+     * const sectorTemplateWithIdOnly = await prisma.sectorTemplate.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SectorTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, SectorTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a SectorTemplate.
+     * @param {SectorTemplateDeleteArgs} args - Arguments to delete one SectorTemplate.
+     * @example
+     * // Delete one SectorTemplate
+     * const SectorTemplate = await prisma.sectorTemplate.delete({
+     *   where: {
+     *     // ... filter to delete one SectorTemplate
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SectorTemplateDeleteArgs>(args: SelectSubset<T, SectorTemplateDeleteArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one SectorTemplate.
+     * @param {SectorTemplateUpdateArgs} args - Arguments to update one SectorTemplate.
+     * @example
+     * // Update one SectorTemplate
+     * const sectorTemplate = await prisma.sectorTemplate.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SectorTemplateUpdateArgs>(args: SelectSubset<T, SectorTemplateUpdateArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more SectorTemplates.
+     * @param {SectorTemplateDeleteManyArgs} args - Arguments to filter SectorTemplates to delete.
+     * @example
+     * // Delete a few SectorTemplates
+     * const { count } = await prisma.sectorTemplate.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SectorTemplateDeleteManyArgs>(args?: SelectSubset<T, SectorTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SectorTemplates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorTemplateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SectorTemplates
+     * const sectorTemplate = await prisma.sectorTemplate.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SectorTemplateUpdateManyArgs>(args: SelectSubset<T, SectorTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SectorTemplate.
+     * @param {SectorTemplateUpsertArgs} args - Arguments to update or create a SectorTemplate.
+     * @example
+     * // Update or create a SectorTemplate
+     * const sectorTemplate = await prisma.sectorTemplate.upsert({
+     *   create: {
+     *     // ... data to create a SectorTemplate
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SectorTemplate we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SectorTemplateUpsertArgs>(args: SelectSubset<T, SectorTemplateUpsertArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of SectorTemplates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorTemplateCountArgs} args - Arguments to filter SectorTemplates to count.
+     * @example
+     * // Count the number of SectorTemplates
+     * const count = await prisma.sectorTemplate.count({
+     *   where: {
+     *     // ... the filter for the SectorTemplates we want to count
+     *   }
+     * })
+    **/
+    count<T extends SectorTemplateCountArgs>(
+      args?: Subset<T, SectorTemplateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SectorTemplateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SectorTemplate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SectorTemplateAggregateArgs>(args: Subset<T, SectorTemplateAggregateArgs>): Prisma.PrismaPromise<GetSectorTemplateAggregateType<T>>
+
+    /**
+     * Group by SectorTemplate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorTemplateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SectorTemplateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SectorTemplateGroupByArgs['orderBy'] }
+        : { orderBy?: SectorTemplateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SectorTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSectorTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SectorTemplate model
+   */
+  readonly fields: SectorTemplateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SectorTemplate.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SectorTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    attributes<T extends SectorTemplate$attributesArgs<ExtArgs> = {}>(args?: Subset<T, SectorTemplate$attributesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SectorTemplate model
+   */ 
+  interface SectorTemplateFieldRefs {
+    readonly id: FieldRef<"SectorTemplate", 'String'>
+    readonly key: FieldRef<"SectorTemplate", 'String'>
+    readonly name: FieldRef<"SectorTemplate", 'String'>
+    readonly isSystem: FieldRef<"SectorTemplate", 'Boolean'>
+    readonly createdAt: FieldRef<"SectorTemplate", 'DateTime'>
+    readonly updatedAt: FieldRef<"SectorTemplate", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SectorTemplate findUnique
+   */
+  export type SectorTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorTemplate to fetch.
+     */
+    where: SectorTemplateWhereUniqueInput
+  }
+
+  /**
+   * SectorTemplate findUniqueOrThrow
+   */
+  export type SectorTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorTemplate to fetch.
+     */
+    where: SectorTemplateWhereUniqueInput
+  }
+
+  /**
+   * SectorTemplate findFirst
+   */
+  export type SectorTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorTemplate to fetch.
+     */
+    where?: SectorTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorTemplates to fetch.
+     */
+    orderBy?: SectorTemplateOrderByWithRelationInput | SectorTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SectorTemplates.
+     */
+    cursor?: SectorTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SectorTemplates.
+     */
+    distinct?: SectorTemplateScalarFieldEnum | SectorTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * SectorTemplate findFirstOrThrow
+   */
+  export type SectorTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorTemplate to fetch.
+     */
+    where?: SectorTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorTemplates to fetch.
+     */
+    orderBy?: SectorTemplateOrderByWithRelationInput | SectorTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SectorTemplates.
+     */
+    cursor?: SectorTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SectorTemplates.
+     */
+    distinct?: SectorTemplateScalarFieldEnum | SectorTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * SectorTemplate findMany
+   */
+  export type SectorTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorTemplates to fetch.
+     */
+    where?: SectorTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorTemplates to fetch.
+     */
+    orderBy?: SectorTemplateOrderByWithRelationInput | SectorTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SectorTemplates.
+     */
+    cursor?: SectorTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorTemplates.
+     */
+    skip?: number
+    distinct?: SectorTemplateScalarFieldEnum | SectorTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * SectorTemplate create
+   */
+  export type SectorTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SectorTemplate.
+     */
+    data: XOR<SectorTemplateCreateInput, SectorTemplateUncheckedCreateInput>
+  }
+
+  /**
+   * SectorTemplate createMany
+   */
+  export type SectorTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SectorTemplates.
+     */
+    data: SectorTemplateCreateManyInput | SectorTemplateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SectorTemplate createManyAndReturn
+   */
+  export type SectorTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many SectorTemplates.
+     */
+    data: SectorTemplateCreateManyInput | SectorTemplateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SectorTemplate update
+   */
+  export type SectorTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SectorTemplate.
+     */
+    data: XOR<SectorTemplateUpdateInput, SectorTemplateUncheckedUpdateInput>
+    /**
+     * Choose, which SectorTemplate to update.
+     */
+    where: SectorTemplateWhereUniqueInput
+  }
+
+  /**
+   * SectorTemplate updateMany
+   */
+  export type SectorTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SectorTemplates.
+     */
+    data: XOR<SectorTemplateUpdateManyMutationInput, SectorTemplateUncheckedUpdateManyInput>
+    /**
+     * Filter which SectorTemplates to update
+     */
+    where?: SectorTemplateWhereInput
+  }
+
+  /**
+   * SectorTemplate upsert
+   */
+  export type SectorTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SectorTemplate to update in case it exists.
+     */
+    where: SectorTemplateWhereUniqueInput
+    /**
+     * In case the SectorTemplate found by the `where` argument doesn't exist, create a new SectorTemplate with this data.
+     */
+    create: XOR<SectorTemplateCreateInput, SectorTemplateUncheckedCreateInput>
+    /**
+     * In case the SectorTemplate was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SectorTemplateUpdateInput, SectorTemplateUncheckedUpdateInput>
+  }
+
+  /**
+   * SectorTemplate delete
+   */
+  export type SectorTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+    /**
+     * Filter which SectorTemplate to delete.
+     */
+    where: SectorTemplateWhereUniqueInput
+  }
+
+  /**
+   * SectorTemplate deleteMany
+   */
+  export type SectorTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SectorTemplates to delete
+     */
+    where?: SectorTemplateWhereInput
+  }
+
+  /**
+   * SectorTemplate.attributes
+   */
+  export type SectorTemplate$attributesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    where?: SectorAttributeWhereInput
+    orderBy?: SectorAttributeOrderByWithRelationInput | SectorAttributeOrderByWithRelationInput[]
+    cursor?: SectorAttributeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SectorAttributeScalarFieldEnum | SectorAttributeScalarFieldEnum[]
+  }
+
+  /**
+   * SectorTemplate without action
+   */
+  export type SectorTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorTemplate
+     */
+    select?: SectorTemplateSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorTemplateInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SectorAttribute
+   */
+
+  export type AggregateSectorAttribute = {
+    _count: SectorAttributeCountAggregateOutputType | null
+    _min: SectorAttributeMinAggregateOutputType | null
+    _max: SectorAttributeMaxAggregateOutputType | null
+  }
+
+  export type SectorAttributeMinAggregateOutputType = {
+    id: string | null
+    templateId: string | null
+    key: string | null
+    label: string | null
+    type: $Enums.AttrType | null
+    required: boolean | null
+  }
+
+  export type SectorAttributeMaxAggregateOutputType = {
+    id: string | null
+    templateId: string | null
+    key: string | null
+    label: string | null
+    type: $Enums.AttrType | null
+    required: boolean | null
+  }
+
+  export type SectorAttributeCountAggregateOutputType = {
+    id: number
+    templateId: number
+    key: number
+    label: number
+    type: number
+    required: number
+    _all: number
+  }
+
+
+  export type SectorAttributeMinAggregateInputType = {
+    id?: true
+    templateId?: true
+    key?: true
+    label?: true
+    type?: true
+    required?: true
+  }
+
+  export type SectorAttributeMaxAggregateInputType = {
+    id?: true
+    templateId?: true
+    key?: true
+    label?: true
+    type?: true
+    required?: true
+  }
+
+  export type SectorAttributeCountAggregateInputType = {
+    id?: true
+    templateId?: true
+    key?: true
+    label?: true
+    type?: true
+    required?: true
+    _all?: true
+  }
+
+  export type SectorAttributeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SectorAttribute to aggregate.
+     */
+    where?: SectorAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorAttributes to fetch.
+     */
+    orderBy?: SectorAttributeOrderByWithRelationInput | SectorAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SectorAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorAttributes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SectorAttributes
+    **/
+    _count?: true | SectorAttributeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SectorAttributeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SectorAttributeMaxAggregateInputType
+  }
+
+  export type GetSectorAttributeAggregateType<T extends SectorAttributeAggregateArgs> = {
+        [P in keyof T & keyof AggregateSectorAttribute]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSectorAttribute[P]>
+      : GetScalarType<T[P], AggregateSectorAttribute[P]>
+  }
+
+
+
+
+  export type SectorAttributeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SectorAttributeWhereInput
+    orderBy?: SectorAttributeOrderByWithAggregationInput | SectorAttributeOrderByWithAggregationInput[]
+    by: SectorAttributeScalarFieldEnum[] | SectorAttributeScalarFieldEnum
+    having?: SectorAttributeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SectorAttributeCountAggregateInputType | true
+    _min?: SectorAttributeMinAggregateInputType
+    _max?: SectorAttributeMaxAggregateInputType
+  }
+
+  export type SectorAttributeGroupByOutputType = {
+    id: string
+    templateId: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required: boolean
+    _count: SectorAttributeCountAggregateOutputType | null
+    _min: SectorAttributeMinAggregateOutputType | null
+    _max: SectorAttributeMaxAggregateOutputType | null
+  }
+
+  type GetSectorAttributeGroupByPayload<T extends SectorAttributeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SectorAttributeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SectorAttributeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SectorAttributeGroupByOutputType[P]>
+            : GetScalarType<T[P], SectorAttributeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SectorAttributeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    templateId?: boolean
+    key?: boolean
+    label?: boolean
+    type?: boolean
+    required?: boolean
+    template?: boolean | SectorTemplateDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sectorAttribute"]>
+
+  export type SectorAttributeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    templateId?: boolean
+    key?: boolean
+    label?: boolean
+    type?: boolean
+    required?: boolean
+    template?: boolean | SectorTemplateDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sectorAttribute"]>
+
+  export type SectorAttributeSelectScalar = {
+    id?: boolean
+    templateId?: boolean
+    key?: boolean
+    label?: boolean
+    type?: boolean
+    required?: boolean
+  }
+
+  export type SectorAttributeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    template?: boolean | SectorTemplateDefaultArgs<ExtArgs>
+  }
+  export type SectorAttributeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    template?: boolean | SectorTemplateDefaultArgs<ExtArgs>
+  }
+
+  export type $SectorAttributePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SectorAttribute"
+    objects: {
+      template: Prisma.$SectorTemplatePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      templateId: string
+      key: string
+      label: string
+      type: $Enums.AttrType
+      required: boolean
+    }, ExtArgs["result"]["sectorAttribute"]>
+    composites: {}
+  }
+
+  type SectorAttributeGetPayload<S extends boolean | null | undefined | SectorAttributeDefaultArgs> = $Result.GetResult<Prisma.$SectorAttributePayload, S>
+
+  type SectorAttributeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<SectorAttributeFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: SectorAttributeCountAggregateInputType | true
+    }
+
+  export interface SectorAttributeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SectorAttribute'], meta: { name: 'SectorAttribute' } }
+    /**
+     * Find zero or one SectorAttribute that matches the filter.
+     * @param {SectorAttributeFindUniqueArgs} args - Arguments to find a SectorAttribute
+     * @example
+     * // Get one SectorAttribute
+     * const sectorAttribute = await prisma.sectorAttribute.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SectorAttributeFindUniqueArgs>(args: SelectSubset<T, SectorAttributeFindUniqueArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one SectorAttribute that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {SectorAttributeFindUniqueOrThrowArgs} args - Arguments to find a SectorAttribute
+     * @example
+     * // Get one SectorAttribute
+     * const sectorAttribute = await prisma.sectorAttribute.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SectorAttributeFindUniqueOrThrowArgs>(args: SelectSubset<T, SectorAttributeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first SectorAttribute that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorAttributeFindFirstArgs} args - Arguments to find a SectorAttribute
+     * @example
+     * // Get one SectorAttribute
+     * const sectorAttribute = await prisma.sectorAttribute.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SectorAttributeFindFirstArgs>(args?: SelectSubset<T, SectorAttributeFindFirstArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first SectorAttribute that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorAttributeFindFirstOrThrowArgs} args - Arguments to find a SectorAttribute
+     * @example
+     * // Get one SectorAttribute
+     * const sectorAttribute = await prisma.sectorAttribute.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SectorAttributeFindFirstOrThrowArgs>(args?: SelectSubset<T, SectorAttributeFindFirstOrThrowArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more SectorAttributes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorAttributeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SectorAttributes
+     * const sectorAttributes = await prisma.sectorAttribute.findMany()
+     * 
+     * // Get first 10 SectorAttributes
+     * const sectorAttributes = await prisma.sectorAttribute.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const sectorAttributeWithIdOnly = await prisma.sectorAttribute.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SectorAttributeFindManyArgs>(args?: SelectSubset<T, SectorAttributeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a SectorAttribute.
+     * @param {SectorAttributeCreateArgs} args - Arguments to create a SectorAttribute.
+     * @example
+     * // Create one SectorAttribute
+     * const SectorAttribute = await prisma.sectorAttribute.create({
+     *   data: {
+     *     // ... data to create a SectorAttribute
+     *   }
+     * })
+     * 
+     */
+    create<T extends SectorAttributeCreateArgs>(args: SelectSubset<T, SectorAttributeCreateArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many SectorAttributes.
+     * @param {SectorAttributeCreateManyArgs} args - Arguments to create many SectorAttributes.
+     * @example
+     * // Create many SectorAttributes
+     * const sectorAttribute = await prisma.sectorAttribute.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SectorAttributeCreateManyArgs>(args?: SelectSubset<T, SectorAttributeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SectorAttributes and returns the data saved in the database.
+     * @param {SectorAttributeCreateManyAndReturnArgs} args - Arguments to create many SectorAttributes.
+     * @example
+     * // Create many SectorAttributes
+     * const sectorAttribute = await prisma.sectorAttribute.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SectorAttributes and only return the `id`
+     * const sectorAttributeWithIdOnly = await prisma.sectorAttribute.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SectorAttributeCreateManyAndReturnArgs>(args?: SelectSubset<T, SectorAttributeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a SectorAttribute.
+     * @param {SectorAttributeDeleteArgs} args - Arguments to delete one SectorAttribute.
+     * @example
+     * // Delete one SectorAttribute
+     * const SectorAttribute = await prisma.sectorAttribute.delete({
+     *   where: {
+     *     // ... filter to delete one SectorAttribute
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SectorAttributeDeleteArgs>(args: SelectSubset<T, SectorAttributeDeleteArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one SectorAttribute.
+     * @param {SectorAttributeUpdateArgs} args - Arguments to update one SectorAttribute.
+     * @example
+     * // Update one SectorAttribute
+     * const sectorAttribute = await prisma.sectorAttribute.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SectorAttributeUpdateArgs>(args: SelectSubset<T, SectorAttributeUpdateArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more SectorAttributes.
+     * @param {SectorAttributeDeleteManyArgs} args - Arguments to filter SectorAttributes to delete.
+     * @example
+     * // Delete a few SectorAttributes
+     * const { count } = await prisma.sectorAttribute.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SectorAttributeDeleteManyArgs>(args?: SelectSubset<T, SectorAttributeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SectorAttributes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorAttributeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SectorAttributes
+     * const sectorAttribute = await prisma.sectorAttribute.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SectorAttributeUpdateManyArgs>(args: SelectSubset<T, SectorAttributeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SectorAttribute.
+     * @param {SectorAttributeUpsertArgs} args - Arguments to update or create a SectorAttribute.
+     * @example
+     * // Update or create a SectorAttribute
+     * const sectorAttribute = await prisma.sectorAttribute.upsert({
+     *   create: {
+     *     // ... data to create a SectorAttribute
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SectorAttribute we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SectorAttributeUpsertArgs>(args: SelectSubset<T, SectorAttributeUpsertArgs<ExtArgs>>): Prisma__SectorAttributeClient<$Result.GetResult<Prisma.$SectorAttributePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of SectorAttributes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorAttributeCountArgs} args - Arguments to filter SectorAttributes to count.
+     * @example
+     * // Count the number of SectorAttributes
+     * const count = await prisma.sectorAttribute.count({
+     *   where: {
+     *     // ... the filter for the SectorAttributes we want to count
+     *   }
+     * })
+    **/
+    count<T extends SectorAttributeCountArgs>(
+      args?: Subset<T, SectorAttributeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SectorAttributeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SectorAttribute.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorAttributeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SectorAttributeAggregateArgs>(args: Subset<T, SectorAttributeAggregateArgs>): Prisma.PrismaPromise<GetSectorAttributeAggregateType<T>>
+
+    /**
+     * Group by SectorAttribute.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SectorAttributeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SectorAttributeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SectorAttributeGroupByArgs['orderBy'] }
+        : { orderBy?: SectorAttributeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SectorAttributeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSectorAttributeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SectorAttribute model
+   */
+  readonly fields: SectorAttributeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SectorAttribute.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SectorAttributeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    template<T extends SectorTemplateDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SectorTemplateDefaultArgs<ExtArgs>>): Prisma__SectorTemplateClient<$Result.GetResult<Prisma.$SectorTemplatePayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SectorAttribute model
+   */ 
+  interface SectorAttributeFieldRefs {
+    readonly id: FieldRef<"SectorAttribute", 'String'>
+    readonly templateId: FieldRef<"SectorAttribute", 'String'>
+    readonly key: FieldRef<"SectorAttribute", 'String'>
+    readonly label: FieldRef<"SectorAttribute", 'String'>
+    readonly type: FieldRef<"SectorAttribute", 'AttrType'>
+    readonly required: FieldRef<"SectorAttribute", 'Boolean'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SectorAttribute findUnique
+   */
+  export type SectorAttributeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorAttribute to fetch.
+     */
+    where: SectorAttributeWhereUniqueInput
+  }
+
+  /**
+   * SectorAttribute findUniqueOrThrow
+   */
+  export type SectorAttributeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorAttribute to fetch.
+     */
+    where: SectorAttributeWhereUniqueInput
+  }
+
+  /**
+   * SectorAttribute findFirst
+   */
+  export type SectorAttributeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorAttribute to fetch.
+     */
+    where?: SectorAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorAttributes to fetch.
+     */
+    orderBy?: SectorAttributeOrderByWithRelationInput | SectorAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SectorAttributes.
+     */
+    cursor?: SectorAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorAttributes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SectorAttributes.
+     */
+    distinct?: SectorAttributeScalarFieldEnum | SectorAttributeScalarFieldEnum[]
+  }
+
+  /**
+   * SectorAttribute findFirstOrThrow
+   */
+  export type SectorAttributeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorAttribute to fetch.
+     */
+    where?: SectorAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorAttributes to fetch.
+     */
+    orderBy?: SectorAttributeOrderByWithRelationInput | SectorAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SectorAttributes.
+     */
+    cursor?: SectorAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorAttributes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SectorAttributes.
+     */
+    distinct?: SectorAttributeScalarFieldEnum | SectorAttributeScalarFieldEnum[]
+  }
+
+  /**
+   * SectorAttribute findMany
+   */
+  export type SectorAttributeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * Filter, which SectorAttributes to fetch.
+     */
+    where?: SectorAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SectorAttributes to fetch.
+     */
+    orderBy?: SectorAttributeOrderByWithRelationInput | SectorAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SectorAttributes.
+     */
+    cursor?: SectorAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SectorAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SectorAttributes.
+     */
+    skip?: number
+    distinct?: SectorAttributeScalarFieldEnum | SectorAttributeScalarFieldEnum[]
+  }
+
+  /**
+   * SectorAttribute create
+   */
+  export type SectorAttributeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SectorAttribute.
+     */
+    data: XOR<SectorAttributeCreateInput, SectorAttributeUncheckedCreateInput>
+  }
+
+  /**
+   * SectorAttribute createMany
+   */
+  export type SectorAttributeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SectorAttributes.
+     */
+    data: SectorAttributeCreateManyInput | SectorAttributeCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SectorAttribute createManyAndReturn
+   */
+  export type SectorAttributeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many SectorAttributes.
+     */
+    data: SectorAttributeCreateManyInput | SectorAttributeCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SectorAttribute update
+   */
+  export type SectorAttributeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SectorAttribute.
+     */
+    data: XOR<SectorAttributeUpdateInput, SectorAttributeUncheckedUpdateInput>
+    /**
+     * Choose, which SectorAttribute to update.
+     */
+    where: SectorAttributeWhereUniqueInput
+  }
+
+  /**
+   * SectorAttribute updateMany
+   */
+  export type SectorAttributeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SectorAttributes.
+     */
+    data: XOR<SectorAttributeUpdateManyMutationInput, SectorAttributeUncheckedUpdateManyInput>
+    /**
+     * Filter which SectorAttributes to update
+     */
+    where?: SectorAttributeWhereInput
+  }
+
+  /**
+   * SectorAttribute upsert
+   */
+  export type SectorAttributeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SectorAttribute to update in case it exists.
+     */
+    where: SectorAttributeWhereUniqueInput
+    /**
+     * In case the SectorAttribute found by the `where` argument doesn't exist, create a new SectorAttribute with this data.
+     */
+    create: XOR<SectorAttributeCreateInput, SectorAttributeUncheckedCreateInput>
+    /**
+     * In case the SectorAttribute was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SectorAttributeUpdateInput, SectorAttributeUncheckedUpdateInput>
+  }
+
+  /**
+   * SectorAttribute delete
+   */
+  export type SectorAttributeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+    /**
+     * Filter which SectorAttribute to delete.
+     */
+    where: SectorAttributeWhereUniqueInput
+  }
+
+  /**
+   * SectorAttribute deleteMany
+   */
+  export type SectorAttributeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SectorAttributes to delete
+     */
+    where?: SectorAttributeWhereInput
+  }
+
+  /**
+   * SectorAttribute without action
+   */
+  export type SectorAttributeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SectorAttribute
+     */
+    select?: SectorAttributeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SectorAttributeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TenantCustomAttribute
+   */
+
+  export type AggregateTenantCustomAttribute = {
+    _count: TenantCustomAttributeCountAggregateOutputType | null
+    _min: TenantCustomAttributeMinAggregateOutputType | null
+    _max: TenantCustomAttributeMaxAggregateOutputType | null
+  }
+
+  export type TenantCustomAttributeMinAggregateOutputType = {
+    id: string | null
+    sectorKey: string | null
+    key: string | null
+    label: string | null
+    type: $Enums.AttrType | null
+    required: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TenantCustomAttributeMaxAggregateOutputType = {
+    id: string | null
+    sectorKey: string | null
+    key: string | null
+    label: string | null
+    type: $Enums.AttrType | null
+    required: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TenantCustomAttributeCountAggregateOutputType = {
+    id: number
+    sectorKey: number
+    key: number
+    label: number
+    type: number
+    required: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TenantCustomAttributeMinAggregateInputType = {
+    id?: true
+    sectorKey?: true
+    key?: true
+    label?: true
+    type?: true
+    required?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TenantCustomAttributeMaxAggregateInputType = {
+    id?: true
+    sectorKey?: true
+    key?: true
+    label?: true
+    type?: true
+    required?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TenantCustomAttributeCountAggregateInputType = {
+    id?: true
+    sectorKey?: true
+    key?: true
+    label?: true
+    type?: true
+    required?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TenantCustomAttributeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TenantCustomAttribute to aggregate.
+     */
+    where?: TenantCustomAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantCustomAttributes to fetch.
+     */
+    orderBy?: TenantCustomAttributeOrderByWithRelationInput | TenantCustomAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TenantCustomAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantCustomAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantCustomAttributes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TenantCustomAttributes
+    **/
+    _count?: true | TenantCustomAttributeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TenantCustomAttributeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TenantCustomAttributeMaxAggregateInputType
+  }
+
+  export type GetTenantCustomAttributeAggregateType<T extends TenantCustomAttributeAggregateArgs> = {
+        [P in keyof T & keyof AggregateTenantCustomAttribute]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTenantCustomAttribute[P]>
+      : GetScalarType<T[P], AggregateTenantCustomAttribute[P]>
+  }
+
+
+
+
+  export type TenantCustomAttributeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TenantCustomAttributeWhereInput
+    orderBy?: TenantCustomAttributeOrderByWithAggregationInput | TenantCustomAttributeOrderByWithAggregationInput[]
+    by: TenantCustomAttributeScalarFieldEnum[] | TenantCustomAttributeScalarFieldEnum
+    having?: TenantCustomAttributeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TenantCustomAttributeCountAggregateInputType | true
+    _min?: TenantCustomAttributeMinAggregateInputType
+    _max?: TenantCustomAttributeMaxAggregateInputType
+  }
+
+  export type TenantCustomAttributeGroupByOutputType = {
+    id: string
+    sectorKey: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: TenantCustomAttributeCountAggregateOutputType | null
+    _min: TenantCustomAttributeMinAggregateOutputType | null
+    _max: TenantCustomAttributeMaxAggregateOutputType | null
+  }
+
+  type GetTenantCustomAttributeGroupByPayload<T extends TenantCustomAttributeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TenantCustomAttributeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TenantCustomAttributeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TenantCustomAttributeGroupByOutputType[P]>
+            : GetScalarType<T[P], TenantCustomAttributeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TenantCustomAttributeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sectorKey?: boolean
+    key?: boolean
+    label?: boolean
+    type?: boolean
+    required?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["tenantCustomAttribute"]>
+
+  export type TenantCustomAttributeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sectorKey?: boolean
+    key?: boolean
+    label?: boolean
+    type?: boolean
+    required?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["tenantCustomAttribute"]>
+
+  export type TenantCustomAttributeSelectScalar = {
+    id?: boolean
+    sectorKey?: boolean
+    key?: boolean
+    label?: boolean
+    type?: boolean
+    required?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $TenantCustomAttributePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TenantCustomAttribute"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      sectorKey: string
+      key: string
+      label: string
+      type: $Enums.AttrType
+      required: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["tenantCustomAttribute"]>
+    composites: {}
+  }
+
+  type TenantCustomAttributeGetPayload<S extends boolean | null | undefined | TenantCustomAttributeDefaultArgs> = $Result.GetResult<Prisma.$TenantCustomAttributePayload, S>
+
+  type TenantCustomAttributeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<TenantCustomAttributeFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: TenantCustomAttributeCountAggregateInputType | true
+    }
+
+  export interface TenantCustomAttributeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TenantCustomAttribute'], meta: { name: 'TenantCustomAttribute' } }
+    /**
+     * Find zero or one TenantCustomAttribute that matches the filter.
+     * @param {TenantCustomAttributeFindUniqueArgs} args - Arguments to find a TenantCustomAttribute
+     * @example
+     * // Get one TenantCustomAttribute
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TenantCustomAttributeFindUniqueArgs>(args: SelectSubset<T, TenantCustomAttributeFindUniqueArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one TenantCustomAttribute that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {TenantCustomAttributeFindUniqueOrThrowArgs} args - Arguments to find a TenantCustomAttribute
+     * @example
+     * // Get one TenantCustomAttribute
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TenantCustomAttributeFindUniqueOrThrowArgs>(args: SelectSubset<T, TenantCustomAttributeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first TenantCustomAttribute that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantCustomAttributeFindFirstArgs} args - Arguments to find a TenantCustomAttribute
+     * @example
+     * // Get one TenantCustomAttribute
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TenantCustomAttributeFindFirstArgs>(args?: SelectSubset<T, TenantCustomAttributeFindFirstArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first TenantCustomAttribute that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantCustomAttributeFindFirstOrThrowArgs} args - Arguments to find a TenantCustomAttribute
+     * @example
+     * // Get one TenantCustomAttribute
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TenantCustomAttributeFindFirstOrThrowArgs>(args?: SelectSubset<T, TenantCustomAttributeFindFirstOrThrowArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more TenantCustomAttributes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantCustomAttributeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TenantCustomAttributes
+     * const tenantCustomAttributes = await prisma.tenantCustomAttribute.findMany()
+     * 
+     * // Get first 10 TenantCustomAttributes
+     * const tenantCustomAttributes = await prisma.tenantCustomAttribute.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const tenantCustomAttributeWithIdOnly = await prisma.tenantCustomAttribute.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TenantCustomAttributeFindManyArgs>(args?: SelectSubset<T, TenantCustomAttributeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a TenantCustomAttribute.
+     * @param {TenantCustomAttributeCreateArgs} args - Arguments to create a TenantCustomAttribute.
+     * @example
+     * // Create one TenantCustomAttribute
+     * const TenantCustomAttribute = await prisma.tenantCustomAttribute.create({
+     *   data: {
+     *     // ... data to create a TenantCustomAttribute
+     *   }
+     * })
+     * 
+     */
+    create<T extends TenantCustomAttributeCreateArgs>(args: SelectSubset<T, TenantCustomAttributeCreateArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many TenantCustomAttributes.
+     * @param {TenantCustomAttributeCreateManyArgs} args - Arguments to create many TenantCustomAttributes.
+     * @example
+     * // Create many TenantCustomAttributes
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TenantCustomAttributeCreateManyArgs>(args?: SelectSubset<T, TenantCustomAttributeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TenantCustomAttributes and returns the data saved in the database.
+     * @param {TenantCustomAttributeCreateManyAndReturnArgs} args - Arguments to create many TenantCustomAttributes.
+     * @example
+     * // Create many TenantCustomAttributes
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TenantCustomAttributes and only return the `id`
+     * const tenantCustomAttributeWithIdOnly = await prisma.tenantCustomAttribute.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TenantCustomAttributeCreateManyAndReturnArgs>(args?: SelectSubset<T, TenantCustomAttributeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a TenantCustomAttribute.
+     * @param {TenantCustomAttributeDeleteArgs} args - Arguments to delete one TenantCustomAttribute.
+     * @example
+     * // Delete one TenantCustomAttribute
+     * const TenantCustomAttribute = await prisma.tenantCustomAttribute.delete({
+     *   where: {
+     *     // ... filter to delete one TenantCustomAttribute
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TenantCustomAttributeDeleteArgs>(args: SelectSubset<T, TenantCustomAttributeDeleteArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one TenantCustomAttribute.
+     * @param {TenantCustomAttributeUpdateArgs} args - Arguments to update one TenantCustomAttribute.
+     * @example
+     * // Update one TenantCustomAttribute
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TenantCustomAttributeUpdateArgs>(args: SelectSubset<T, TenantCustomAttributeUpdateArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more TenantCustomAttributes.
+     * @param {TenantCustomAttributeDeleteManyArgs} args - Arguments to filter TenantCustomAttributes to delete.
+     * @example
+     * // Delete a few TenantCustomAttributes
+     * const { count } = await prisma.tenantCustomAttribute.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TenantCustomAttributeDeleteManyArgs>(args?: SelectSubset<T, TenantCustomAttributeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TenantCustomAttributes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantCustomAttributeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TenantCustomAttributes
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TenantCustomAttributeUpdateManyArgs>(args: SelectSubset<T, TenantCustomAttributeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one TenantCustomAttribute.
+     * @param {TenantCustomAttributeUpsertArgs} args - Arguments to update or create a TenantCustomAttribute.
+     * @example
+     * // Update or create a TenantCustomAttribute
+     * const tenantCustomAttribute = await prisma.tenantCustomAttribute.upsert({
+     *   create: {
+     *     // ... data to create a TenantCustomAttribute
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TenantCustomAttribute we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TenantCustomAttributeUpsertArgs>(args: SelectSubset<T, TenantCustomAttributeUpsertArgs<ExtArgs>>): Prisma__TenantCustomAttributeClient<$Result.GetResult<Prisma.$TenantCustomAttributePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of TenantCustomAttributes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantCustomAttributeCountArgs} args - Arguments to filter TenantCustomAttributes to count.
+     * @example
+     * // Count the number of TenantCustomAttributes
+     * const count = await prisma.tenantCustomAttribute.count({
+     *   where: {
+     *     // ... the filter for the TenantCustomAttributes we want to count
+     *   }
+     * })
+    **/
+    count<T extends TenantCustomAttributeCountArgs>(
+      args?: Subset<T, TenantCustomAttributeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TenantCustomAttributeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TenantCustomAttribute.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantCustomAttributeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TenantCustomAttributeAggregateArgs>(args: Subset<T, TenantCustomAttributeAggregateArgs>): Prisma.PrismaPromise<GetTenantCustomAttributeAggregateType<T>>
+
+    /**
+     * Group by TenantCustomAttribute.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TenantCustomAttributeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TenantCustomAttributeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TenantCustomAttributeGroupByArgs['orderBy'] }
+        : { orderBy?: TenantCustomAttributeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TenantCustomAttributeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTenantCustomAttributeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TenantCustomAttribute model
+   */
+  readonly fields: TenantCustomAttributeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TenantCustomAttribute.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TenantCustomAttributeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TenantCustomAttribute model
+   */ 
+  interface TenantCustomAttributeFieldRefs {
+    readonly id: FieldRef<"TenantCustomAttribute", 'String'>
+    readonly sectorKey: FieldRef<"TenantCustomAttribute", 'String'>
+    readonly key: FieldRef<"TenantCustomAttribute", 'String'>
+    readonly label: FieldRef<"TenantCustomAttribute", 'String'>
+    readonly type: FieldRef<"TenantCustomAttribute", 'AttrType'>
+    readonly required: FieldRef<"TenantCustomAttribute", 'Boolean'>
+    readonly createdAt: FieldRef<"TenantCustomAttribute", 'DateTime'>
+    readonly updatedAt: FieldRef<"TenantCustomAttribute", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TenantCustomAttribute findUnique
+   */
+  export type TenantCustomAttributeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * Filter, which TenantCustomAttribute to fetch.
+     */
+    where: TenantCustomAttributeWhereUniqueInput
+  }
+
+  /**
+   * TenantCustomAttribute findUniqueOrThrow
+   */
+  export type TenantCustomAttributeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * Filter, which TenantCustomAttribute to fetch.
+     */
+    where: TenantCustomAttributeWhereUniqueInput
+  }
+
+  /**
+   * TenantCustomAttribute findFirst
+   */
+  export type TenantCustomAttributeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * Filter, which TenantCustomAttribute to fetch.
+     */
+    where?: TenantCustomAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantCustomAttributes to fetch.
+     */
+    orderBy?: TenantCustomAttributeOrderByWithRelationInput | TenantCustomAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TenantCustomAttributes.
+     */
+    cursor?: TenantCustomAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantCustomAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantCustomAttributes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TenantCustomAttributes.
+     */
+    distinct?: TenantCustomAttributeScalarFieldEnum | TenantCustomAttributeScalarFieldEnum[]
+  }
+
+  /**
+   * TenantCustomAttribute findFirstOrThrow
+   */
+  export type TenantCustomAttributeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * Filter, which TenantCustomAttribute to fetch.
+     */
+    where?: TenantCustomAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantCustomAttributes to fetch.
+     */
+    orderBy?: TenantCustomAttributeOrderByWithRelationInput | TenantCustomAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TenantCustomAttributes.
+     */
+    cursor?: TenantCustomAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantCustomAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantCustomAttributes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TenantCustomAttributes.
+     */
+    distinct?: TenantCustomAttributeScalarFieldEnum | TenantCustomAttributeScalarFieldEnum[]
+  }
+
+  /**
+   * TenantCustomAttribute findMany
+   */
+  export type TenantCustomAttributeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * Filter, which TenantCustomAttributes to fetch.
+     */
+    where?: TenantCustomAttributeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TenantCustomAttributes to fetch.
+     */
+    orderBy?: TenantCustomAttributeOrderByWithRelationInput | TenantCustomAttributeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TenantCustomAttributes.
+     */
+    cursor?: TenantCustomAttributeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TenantCustomAttributes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TenantCustomAttributes.
+     */
+    skip?: number
+    distinct?: TenantCustomAttributeScalarFieldEnum | TenantCustomAttributeScalarFieldEnum[]
+  }
+
+  /**
+   * TenantCustomAttribute create
+   */
+  export type TenantCustomAttributeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * The data needed to create a TenantCustomAttribute.
+     */
+    data: XOR<TenantCustomAttributeCreateInput, TenantCustomAttributeUncheckedCreateInput>
+  }
+
+  /**
+   * TenantCustomAttribute createMany
+   */
+  export type TenantCustomAttributeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TenantCustomAttributes.
+     */
+    data: TenantCustomAttributeCreateManyInput | TenantCustomAttributeCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TenantCustomAttribute createManyAndReturn
+   */
+  export type TenantCustomAttributeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many TenantCustomAttributes.
+     */
+    data: TenantCustomAttributeCreateManyInput | TenantCustomAttributeCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TenantCustomAttribute update
+   */
+  export type TenantCustomAttributeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * The data needed to update a TenantCustomAttribute.
+     */
+    data: XOR<TenantCustomAttributeUpdateInput, TenantCustomAttributeUncheckedUpdateInput>
+    /**
+     * Choose, which TenantCustomAttribute to update.
+     */
+    where: TenantCustomAttributeWhereUniqueInput
+  }
+
+  /**
+   * TenantCustomAttribute updateMany
+   */
+  export type TenantCustomAttributeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TenantCustomAttributes.
+     */
+    data: XOR<TenantCustomAttributeUpdateManyMutationInput, TenantCustomAttributeUncheckedUpdateManyInput>
+    /**
+     * Filter which TenantCustomAttributes to update
+     */
+    where?: TenantCustomAttributeWhereInput
+  }
+
+  /**
+   * TenantCustomAttribute upsert
+   */
+  export type TenantCustomAttributeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * The filter to search for the TenantCustomAttribute to update in case it exists.
+     */
+    where: TenantCustomAttributeWhereUniqueInput
+    /**
+     * In case the TenantCustomAttribute found by the `where` argument doesn't exist, create a new TenantCustomAttribute with this data.
+     */
+    create: XOR<TenantCustomAttributeCreateInput, TenantCustomAttributeUncheckedCreateInput>
+    /**
+     * In case the TenantCustomAttribute was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TenantCustomAttributeUpdateInput, TenantCustomAttributeUncheckedUpdateInput>
+  }
+
+  /**
+   * TenantCustomAttribute delete
+   */
+  export type TenantCustomAttributeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+    /**
+     * Filter which TenantCustomAttribute to delete.
+     */
+    where: TenantCustomAttributeWhereUniqueInput
+  }
+
+  /**
+   * TenantCustomAttribute deleteMany
+   */
+  export type TenantCustomAttributeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TenantCustomAttributes to delete
+     */
+    where?: TenantCustomAttributeWhereInput
+  }
+
+  /**
+   * TenantCustomAttribute without action
+   */
+  export type TenantCustomAttributeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TenantCustomAttribute
+     */
+    select?: TenantCustomAttributeSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -20322,7 +23464,9 @@ export namespace Prisma {
     cost: 'cost',
     barcode: 'barcode',
     taxRate: 'taxRate',
-    isActive: 'isActive'
+    isActive: 'isActive',
+    sector: 'sector',
+    attrs: 'attrs'
   };
 
   export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -20520,6 +23664,44 @@ export namespace Prisma {
   export type ReferralRewardScalarFieldEnum = (typeof ReferralRewardScalarFieldEnum)[keyof typeof ReferralRewardScalarFieldEnum]
 
 
+  export const SectorTemplateScalarFieldEnum: {
+    id: 'id',
+    key: 'key',
+    name: 'name',
+    isSystem: 'isSystem',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SectorTemplateScalarFieldEnum = (typeof SectorTemplateScalarFieldEnum)[keyof typeof SectorTemplateScalarFieldEnum]
+
+
+  export const SectorAttributeScalarFieldEnum: {
+    id: 'id',
+    templateId: 'templateId',
+    key: 'key',
+    label: 'label',
+    type: 'type',
+    required: 'required'
+  };
+
+  export type SectorAttributeScalarFieldEnum = (typeof SectorAttributeScalarFieldEnum)[keyof typeof SectorAttributeScalarFieldEnum]
+
+
+  export const TenantCustomAttributeScalarFieldEnum: {
+    id: 'id',
+    sectorKey: 'sectorKey',
+    key: 'key',
+    label: 'label',
+    type: 'type',
+    required: 'required',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TenantCustomAttributeScalarFieldEnum = (typeof TenantCustomAttributeScalarFieldEnum)[keyof typeof TenantCustomAttributeScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -20630,6 +23812,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -20640,13 +23829,6 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Json'
-   */
-  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
     
 
 
@@ -20689,6 +23871,20 @@ export namespace Prisma {
    * Reference to a field of type 'RewardStatus[]'
    */
   export type ListEnumRewardStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RewardStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'AttrType'
+   */
+  export type EnumAttrTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AttrType'>
+    
+
+
+  /**
+   * Reference to a field of type 'AttrType[]'
+   */
+  export type ListEnumAttrTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AttrType[]'>
     
 
 
@@ -20867,6 +24063,8 @@ export namespace Prisma {
     barcode?: StringNullableFilter<"Product"> | string | null
     taxRate?: DecimalFilter<"Product"> | Decimal | DecimalJsLike | number | string
     isActive?: BoolFilter<"Product"> | boolean
+    sector?: StringNullableFilter<"Product"> | string | null
+    attrs?: JsonNullableFilter<"Product">
     stocks?: StockListRelationFilter
     saleItems?: SaleItemListRelationFilter
     stockEntryItems?: StockEntryItemListRelationFilter
@@ -20882,6 +24080,8 @@ export namespace Prisma {
     barcode?: SortOrderInput | SortOrder
     taxRate?: SortOrder
     isActive?: SortOrder
+    sector?: SortOrderInput | SortOrder
+    attrs?: SortOrderInput | SortOrder
     stocks?: StockOrderByRelationAggregateInput
     saleItems?: SaleItemOrderByRelationAggregateInput
     stockEntryItems?: StockEntryItemOrderByRelationAggregateInput
@@ -20900,6 +24100,8 @@ export namespace Prisma {
     barcode?: StringNullableFilter<"Product"> | string | null
     taxRate?: DecimalFilter<"Product"> | Decimal | DecimalJsLike | number | string
     isActive?: BoolFilter<"Product"> | boolean
+    sector?: StringNullableFilter<"Product"> | string | null
+    attrs?: JsonNullableFilter<"Product">
     stocks?: StockListRelationFilter
     saleItems?: SaleItemListRelationFilter
     stockEntryItems?: StockEntryItemListRelationFilter
@@ -20915,6 +24117,8 @@ export namespace Prisma {
     barcode?: SortOrderInput | SortOrder
     taxRate?: SortOrder
     isActive?: SortOrder
+    sector?: SortOrderInput | SortOrder
+    attrs?: SortOrderInput | SortOrder
     _count?: ProductCountOrderByAggregateInput
     _avg?: ProductAvgOrderByAggregateInput
     _max?: ProductMaxOrderByAggregateInput
@@ -20935,6 +24139,8 @@ export namespace Prisma {
     barcode?: StringNullableWithAggregatesFilter<"Product"> | string | null
     taxRate?: DecimalWithAggregatesFilter<"Product"> | Decimal | DecimalJsLike | number | string
     isActive?: BoolWithAggregatesFilter<"Product"> | boolean
+    sector?: StringNullableWithAggregatesFilter<"Product"> | string | null
+    attrs?: JsonNullableWithAggregatesFilter<"Product">
   }
 
   export type StockWhereInput = {
@@ -21927,6 +25133,195 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"ReferralReward"> | Date | string
   }
 
+  export type SectorTemplateWhereInput = {
+    AND?: SectorTemplateWhereInput | SectorTemplateWhereInput[]
+    OR?: SectorTemplateWhereInput[]
+    NOT?: SectorTemplateWhereInput | SectorTemplateWhereInput[]
+    id?: StringFilter<"SectorTemplate"> | string
+    key?: StringFilter<"SectorTemplate"> | string
+    name?: StringFilter<"SectorTemplate"> | string
+    isSystem?: BoolFilter<"SectorTemplate"> | boolean
+    createdAt?: DateTimeFilter<"SectorTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"SectorTemplate"> | Date | string
+    attributes?: SectorAttributeListRelationFilter
+  }
+
+  export type SectorTemplateOrderByWithRelationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    name?: SortOrder
+    isSystem?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    attributes?: SectorAttributeOrderByRelationAggregateInput
+  }
+
+  export type SectorTemplateWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    key?: string
+    AND?: SectorTemplateWhereInput | SectorTemplateWhereInput[]
+    OR?: SectorTemplateWhereInput[]
+    NOT?: SectorTemplateWhereInput | SectorTemplateWhereInput[]
+    name?: StringFilter<"SectorTemplate"> | string
+    isSystem?: BoolFilter<"SectorTemplate"> | boolean
+    createdAt?: DateTimeFilter<"SectorTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"SectorTemplate"> | Date | string
+    attributes?: SectorAttributeListRelationFilter
+  }, "id" | "key">
+
+  export type SectorTemplateOrderByWithAggregationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    name?: SortOrder
+    isSystem?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: SectorTemplateCountOrderByAggregateInput
+    _max?: SectorTemplateMaxOrderByAggregateInput
+    _min?: SectorTemplateMinOrderByAggregateInput
+  }
+
+  export type SectorTemplateScalarWhereWithAggregatesInput = {
+    AND?: SectorTemplateScalarWhereWithAggregatesInput | SectorTemplateScalarWhereWithAggregatesInput[]
+    OR?: SectorTemplateScalarWhereWithAggregatesInput[]
+    NOT?: SectorTemplateScalarWhereWithAggregatesInput | SectorTemplateScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SectorTemplate"> | string
+    key?: StringWithAggregatesFilter<"SectorTemplate"> | string
+    name?: StringWithAggregatesFilter<"SectorTemplate"> | string
+    isSystem?: BoolWithAggregatesFilter<"SectorTemplate"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"SectorTemplate"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SectorTemplate"> | Date | string
+  }
+
+  export type SectorAttributeWhereInput = {
+    AND?: SectorAttributeWhereInput | SectorAttributeWhereInput[]
+    OR?: SectorAttributeWhereInput[]
+    NOT?: SectorAttributeWhereInput | SectorAttributeWhereInput[]
+    id?: StringFilter<"SectorAttribute"> | string
+    templateId?: StringFilter<"SectorAttribute"> | string
+    key?: StringFilter<"SectorAttribute"> | string
+    label?: StringFilter<"SectorAttribute"> | string
+    type?: EnumAttrTypeFilter<"SectorAttribute"> | $Enums.AttrType
+    required?: BoolFilter<"SectorAttribute"> | boolean
+    template?: XOR<SectorTemplateRelationFilter, SectorTemplateWhereInput>
+  }
+
+  export type SectorAttributeOrderByWithRelationInput = {
+    id?: SortOrder
+    templateId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+    template?: SectorTemplateOrderByWithRelationInput
+  }
+
+  export type SectorAttributeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    templateId_key?: SectorAttributeTemplateIdKeyCompoundUniqueInput
+    AND?: SectorAttributeWhereInput | SectorAttributeWhereInput[]
+    OR?: SectorAttributeWhereInput[]
+    NOT?: SectorAttributeWhereInput | SectorAttributeWhereInput[]
+    templateId?: StringFilter<"SectorAttribute"> | string
+    key?: StringFilter<"SectorAttribute"> | string
+    label?: StringFilter<"SectorAttribute"> | string
+    type?: EnumAttrTypeFilter<"SectorAttribute"> | $Enums.AttrType
+    required?: BoolFilter<"SectorAttribute"> | boolean
+    template?: XOR<SectorTemplateRelationFilter, SectorTemplateWhereInput>
+  }, "id" | "templateId_key">
+
+  export type SectorAttributeOrderByWithAggregationInput = {
+    id?: SortOrder
+    templateId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+    _count?: SectorAttributeCountOrderByAggregateInput
+    _max?: SectorAttributeMaxOrderByAggregateInput
+    _min?: SectorAttributeMinOrderByAggregateInput
+  }
+
+  export type SectorAttributeScalarWhereWithAggregatesInput = {
+    AND?: SectorAttributeScalarWhereWithAggregatesInput | SectorAttributeScalarWhereWithAggregatesInput[]
+    OR?: SectorAttributeScalarWhereWithAggregatesInput[]
+    NOT?: SectorAttributeScalarWhereWithAggregatesInput | SectorAttributeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SectorAttribute"> | string
+    templateId?: StringWithAggregatesFilter<"SectorAttribute"> | string
+    key?: StringWithAggregatesFilter<"SectorAttribute"> | string
+    label?: StringWithAggregatesFilter<"SectorAttribute"> | string
+    type?: EnumAttrTypeWithAggregatesFilter<"SectorAttribute"> | $Enums.AttrType
+    required?: BoolWithAggregatesFilter<"SectorAttribute"> | boolean
+  }
+
+  export type TenantCustomAttributeWhereInput = {
+    AND?: TenantCustomAttributeWhereInput | TenantCustomAttributeWhereInput[]
+    OR?: TenantCustomAttributeWhereInput[]
+    NOT?: TenantCustomAttributeWhereInput | TenantCustomAttributeWhereInput[]
+    id?: StringFilter<"TenantCustomAttribute"> | string
+    sectorKey?: StringFilter<"TenantCustomAttribute"> | string
+    key?: StringFilter<"TenantCustomAttribute"> | string
+    label?: StringFilter<"TenantCustomAttribute"> | string
+    type?: EnumAttrTypeFilter<"TenantCustomAttribute"> | $Enums.AttrType
+    required?: BoolFilter<"TenantCustomAttribute"> | boolean
+    createdAt?: DateTimeFilter<"TenantCustomAttribute"> | Date | string
+    updatedAt?: DateTimeFilter<"TenantCustomAttribute"> | Date | string
+  }
+
+  export type TenantCustomAttributeOrderByWithRelationInput = {
+    id?: SortOrder
+    sectorKey?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TenantCustomAttributeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    sectorKey_key?: TenantCustomAttributeSectorKeyKeyCompoundUniqueInput
+    AND?: TenantCustomAttributeWhereInput | TenantCustomAttributeWhereInput[]
+    OR?: TenantCustomAttributeWhereInput[]
+    NOT?: TenantCustomAttributeWhereInput | TenantCustomAttributeWhereInput[]
+    sectorKey?: StringFilter<"TenantCustomAttribute"> | string
+    key?: StringFilter<"TenantCustomAttribute"> | string
+    label?: StringFilter<"TenantCustomAttribute"> | string
+    type?: EnumAttrTypeFilter<"TenantCustomAttribute"> | $Enums.AttrType
+    required?: BoolFilter<"TenantCustomAttribute"> | boolean
+    createdAt?: DateTimeFilter<"TenantCustomAttribute"> | Date | string
+    updatedAt?: DateTimeFilter<"TenantCustomAttribute"> | Date | string
+  }, "id" | "sectorKey_key">
+
+  export type TenantCustomAttributeOrderByWithAggregationInput = {
+    id?: SortOrder
+    sectorKey?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TenantCustomAttributeCountOrderByAggregateInput
+    _max?: TenantCustomAttributeMaxOrderByAggregateInput
+    _min?: TenantCustomAttributeMinOrderByAggregateInput
+  }
+
+  export type TenantCustomAttributeScalarWhereWithAggregatesInput = {
+    AND?: TenantCustomAttributeScalarWhereWithAggregatesInput | TenantCustomAttributeScalarWhereWithAggregatesInput[]
+    OR?: TenantCustomAttributeScalarWhereWithAggregatesInput[]
+    NOT?: TenantCustomAttributeScalarWhereWithAggregatesInput | TenantCustomAttributeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TenantCustomAttribute"> | string
+    sectorKey?: StringWithAggregatesFilter<"TenantCustomAttribute"> | string
+    key?: StringWithAggregatesFilter<"TenantCustomAttribute"> | string
+    label?: StringWithAggregatesFilter<"TenantCustomAttribute"> | string
+    type?: EnumAttrTypeWithAggregatesFilter<"TenantCustomAttribute"> | $Enums.AttrType
+    required?: BoolWithAggregatesFilter<"TenantCustomAttribute"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"TenantCustomAttribute"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TenantCustomAttribute"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -22105,6 +25500,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockCreateNestedManyWithoutProductInput
     saleItems?: SaleItemCreateNestedManyWithoutProductInput
     stockEntryItems?: StockEntryItemCreateNestedManyWithoutProductInput
@@ -22120,6 +25517,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUncheckedCreateNestedManyWithoutProductInput
     saleItems?: SaleItemUncheckedCreateNestedManyWithoutProductInput
     stockEntryItems?: StockEntryItemUncheckedCreateNestedManyWithoutProductInput
@@ -22135,6 +25534,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUpdateManyWithoutProductNestedInput
     saleItems?: SaleItemUpdateManyWithoutProductNestedInput
     stockEntryItems?: StockEntryItemUpdateManyWithoutProductNestedInput
@@ -22150,6 +25551,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUncheckedUpdateManyWithoutProductNestedInput
     saleItems?: SaleItemUncheckedUpdateManyWithoutProductNestedInput
     stockEntryItems?: StockEntryItemUncheckedUpdateManyWithoutProductNestedInput
@@ -22165,6 +25568,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type ProductUpdateManyMutationInput = {
@@ -22177,6 +25582,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type ProductUncheckedUpdateManyInput = {
@@ -22189,6 +25596,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type StockCreateInput = {
@@ -23225,6 +26634,212 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type SectorTemplateCreateInput = {
+    id?: string
+    key: string
+    name: string
+    isSystem?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    attributes?: SectorAttributeCreateNestedManyWithoutTemplateInput
+  }
+
+  export type SectorTemplateUncheckedCreateInput = {
+    id?: string
+    key: string
+    name: string
+    isSystem?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    attributes?: SectorAttributeUncheckedCreateNestedManyWithoutTemplateInput
+  }
+
+  export type SectorTemplateUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isSystem?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attributes?: SectorAttributeUpdateManyWithoutTemplateNestedInput
+  }
+
+  export type SectorTemplateUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isSystem?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attributes?: SectorAttributeUncheckedUpdateManyWithoutTemplateNestedInput
+  }
+
+  export type SectorTemplateCreateManyInput = {
+    id?: string
+    key: string
+    name: string
+    isSystem?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SectorTemplateUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isSystem?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SectorTemplateUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isSystem?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SectorAttributeCreateInput = {
+    id?: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+    template: SectorTemplateCreateNestedOneWithoutAttributesInput
+  }
+
+  export type SectorAttributeUncheckedCreateInput = {
+    id?: string
+    templateId: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+  }
+
+  export type SectorAttributeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+    template?: SectorTemplateUpdateOneRequiredWithoutAttributesNestedInput
+  }
+
+  export type SectorAttributeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    templateId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type SectorAttributeCreateManyInput = {
+    id?: string
+    templateId: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+  }
+
+  export type SectorAttributeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type SectorAttributeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    templateId?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type TenantCustomAttributeCreateInput = {
+    id?: string
+    sectorKey: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TenantCustomAttributeUncheckedCreateInput = {
+    id?: string
+    sectorKey: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TenantCustomAttributeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sectorKey?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantCustomAttributeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sectorKey?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantCustomAttributeCreateManyInput = {
+    id?: string
+    sectorKey: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TenantCustomAttributeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sectorKey?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TenantCustomAttributeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sectorKey?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -23463,6 +27078,28 @@ export namespace Prisma {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
+  export type JsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type SaleItemListRelationFilter = {
     every?: SaleItemWhereInput
@@ -23494,6 +27131,8 @@ export namespace Prisma {
     barcode?: SortOrder
     taxRate?: SortOrder
     isActive?: SortOrder
+    sector?: SortOrder
+    attrs?: SortOrder
   }
 
   export type ProductAvgOrderByAggregateInput = {
@@ -23512,6 +27151,7 @@ export namespace Prisma {
     barcode?: SortOrder
     taxRate?: SortOrder
     isActive?: SortOrder
+    sector?: SortOrder
   }
 
   export type ProductMinOrderByAggregateInput = {
@@ -23524,6 +27164,7 @@ export namespace Prisma {
     barcode?: SortOrder
     taxRate?: SortOrder
     isActive?: SortOrder
+    sector?: SortOrder
   }
 
   export type ProductSumOrderByAggregateInput = {
@@ -23554,6 +27195,31 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -23919,28 +27585,6 @@ export namespace Prisma {
   export type PaymentSumOrderByAggregateInput = {
     amount?: SortOrder
   }
-  export type JsonNullableFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type AuditLogCountOrderByAggregateInput = {
     id?: SortOrder
@@ -23971,31 +27615,6 @@ export namespace Prisma {
     resourceId?: SortOrder
     ip?: SortOrder
     createdAt?: SortOrder
-  }
-  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedJsonNullableFilter<$PrismaModel>
-    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type EnumResetMethodFilter<$PrismaModel = never> = {
@@ -24265,6 +27884,135 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRewardStatusFilter<$PrismaModel>
     _max?: NestedEnumRewardStatusFilter<$PrismaModel>
+  }
+
+  export type SectorAttributeListRelationFilter = {
+    every?: SectorAttributeWhereInput
+    some?: SectorAttributeWhereInput
+    none?: SectorAttributeWhereInput
+  }
+
+  export type SectorAttributeOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SectorTemplateCountOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    name?: SortOrder
+    isSystem?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SectorTemplateMaxOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    name?: SortOrder
+    isSystem?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SectorTemplateMinOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    name?: SortOrder
+    isSystem?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumAttrTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.AttrType | EnumAttrTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumAttrTypeFilter<$PrismaModel> | $Enums.AttrType
+  }
+
+  export type SectorTemplateRelationFilter = {
+    is?: SectorTemplateWhereInput
+    isNot?: SectorTemplateWhereInput
+  }
+
+  export type SectorAttributeTemplateIdKeyCompoundUniqueInput = {
+    templateId: string
+    key: string
+  }
+
+  export type SectorAttributeCountOrderByAggregateInput = {
+    id?: SortOrder
+    templateId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+  }
+
+  export type SectorAttributeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    templateId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+  }
+
+  export type SectorAttributeMinOrderByAggregateInput = {
+    id?: SortOrder
+    templateId?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+  }
+
+  export type EnumAttrTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AttrType | EnumAttrTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumAttrTypeWithAggregatesFilter<$PrismaModel> | $Enums.AttrType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAttrTypeFilter<$PrismaModel>
+    _max?: NestedEnumAttrTypeFilter<$PrismaModel>
+  }
+
+  export type TenantCustomAttributeSectorKeyKeyCompoundUniqueInput = {
+    sectorKey: string
+    key: string
+  }
+
+  export type TenantCustomAttributeCountOrderByAggregateInput = {
+    id?: SortOrder
+    sectorKey?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TenantCustomAttributeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sectorKey?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TenantCustomAttributeMinOrderByAggregateInput = {
+    id?: SortOrder
+    sectorKey?: SortOrder
+    key?: SortOrder
+    label?: SortOrder
+    type?: SortOrder
+    required?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SaleCreateNestedManyWithoutCashierInput = {
@@ -25163,6 +28911,66 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReferredRewardsInput, UserUpdateWithoutReferredRewardsInput>, UserUncheckedUpdateWithoutReferredRewardsInput>
   }
 
+  export type SectorAttributeCreateNestedManyWithoutTemplateInput = {
+    create?: XOR<SectorAttributeCreateWithoutTemplateInput, SectorAttributeUncheckedCreateWithoutTemplateInput> | SectorAttributeCreateWithoutTemplateInput[] | SectorAttributeUncheckedCreateWithoutTemplateInput[]
+    connectOrCreate?: SectorAttributeCreateOrConnectWithoutTemplateInput | SectorAttributeCreateOrConnectWithoutTemplateInput[]
+    createMany?: SectorAttributeCreateManyTemplateInputEnvelope
+    connect?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+  }
+
+  export type SectorAttributeUncheckedCreateNestedManyWithoutTemplateInput = {
+    create?: XOR<SectorAttributeCreateWithoutTemplateInput, SectorAttributeUncheckedCreateWithoutTemplateInput> | SectorAttributeCreateWithoutTemplateInput[] | SectorAttributeUncheckedCreateWithoutTemplateInput[]
+    connectOrCreate?: SectorAttributeCreateOrConnectWithoutTemplateInput | SectorAttributeCreateOrConnectWithoutTemplateInput[]
+    createMany?: SectorAttributeCreateManyTemplateInputEnvelope
+    connect?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+  }
+
+  export type SectorAttributeUpdateManyWithoutTemplateNestedInput = {
+    create?: XOR<SectorAttributeCreateWithoutTemplateInput, SectorAttributeUncheckedCreateWithoutTemplateInput> | SectorAttributeCreateWithoutTemplateInput[] | SectorAttributeUncheckedCreateWithoutTemplateInput[]
+    connectOrCreate?: SectorAttributeCreateOrConnectWithoutTemplateInput | SectorAttributeCreateOrConnectWithoutTemplateInput[]
+    upsert?: SectorAttributeUpsertWithWhereUniqueWithoutTemplateInput | SectorAttributeUpsertWithWhereUniqueWithoutTemplateInput[]
+    createMany?: SectorAttributeCreateManyTemplateInputEnvelope
+    set?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    disconnect?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    delete?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    connect?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    update?: SectorAttributeUpdateWithWhereUniqueWithoutTemplateInput | SectorAttributeUpdateWithWhereUniqueWithoutTemplateInput[]
+    updateMany?: SectorAttributeUpdateManyWithWhereWithoutTemplateInput | SectorAttributeUpdateManyWithWhereWithoutTemplateInput[]
+    deleteMany?: SectorAttributeScalarWhereInput | SectorAttributeScalarWhereInput[]
+  }
+
+  export type SectorAttributeUncheckedUpdateManyWithoutTemplateNestedInput = {
+    create?: XOR<SectorAttributeCreateWithoutTemplateInput, SectorAttributeUncheckedCreateWithoutTemplateInput> | SectorAttributeCreateWithoutTemplateInput[] | SectorAttributeUncheckedCreateWithoutTemplateInput[]
+    connectOrCreate?: SectorAttributeCreateOrConnectWithoutTemplateInput | SectorAttributeCreateOrConnectWithoutTemplateInput[]
+    upsert?: SectorAttributeUpsertWithWhereUniqueWithoutTemplateInput | SectorAttributeUpsertWithWhereUniqueWithoutTemplateInput[]
+    createMany?: SectorAttributeCreateManyTemplateInputEnvelope
+    set?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    disconnect?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    delete?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    connect?: SectorAttributeWhereUniqueInput | SectorAttributeWhereUniqueInput[]
+    update?: SectorAttributeUpdateWithWhereUniqueWithoutTemplateInput | SectorAttributeUpdateWithWhereUniqueWithoutTemplateInput[]
+    updateMany?: SectorAttributeUpdateManyWithWhereWithoutTemplateInput | SectorAttributeUpdateManyWithWhereWithoutTemplateInput[]
+    deleteMany?: SectorAttributeScalarWhereInput | SectorAttributeScalarWhereInput[]
+  }
+
+  export type SectorTemplateCreateNestedOneWithoutAttributesInput = {
+    create?: XOR<SectorTemplateCreateWithoutAttributesInput, SectorTemplateUncheckedCreateWithoutAttributesInput>
+    connectOrCreate?: SectorTemplateCreateOrConnectWithoutAttributesInput
+    connect?: SectorTemplateWhereUniqueInput
+  }
+
+  export type EnumAttrTypeFieldUpdateOperationsInput = {
+    set?: $Enums.AttrType
+  }
+
+  export type SectorTemplateUpdateOneRequiredWithoutAttributesNestedInput = {
+    create?: XOR<SectorTemplateCreateWithoutAttributesInput, SectorTemplateUncheckedCreateWithoutAttributesInput>
+    connectOrCreate?: SectorTemplateCreateOrConnectWithoutAttributesInput
+    upsert?: SectorTemplateUpsertWithoutAttributesInput
+    connect?: SectorTemplateWhereUniqueInput
+    update?: XOR<XOR<SectorTemplateUpdateToOneWithWhereWithoutAttributesInput, SectorTemplateUpdateWithoutAttributesInput>, SectorTemplateUncheckedUpdateWithoutAttributesInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -25328,6 +29136,28 @@ export namespace Prisma {
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
@@ -25380,28 +29210,6 @@ export namespace Prisma {
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
-  export type NestedJsonNullableFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type NestedEnumResetMethodFilter<$PrismaModel = never> = {
     equals?: $Enums.ResetMethod | EnumResetMethodFieldRefInput<$PrismaModel>
@@ -25452,6 +29260,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumRewardStatusFilter<$PrismaModel>
     _max?: NestedEnumRewardStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumAttrTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.AttrType | EnumAttrTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumAttrTypeFilter<$PrismaModel> | $Enums.AttrType
+  }
+
+  export type NestedEnumAttrTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AttrType | EnumAttrTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AttrType[] | ListEnumAttrTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumAttrTypeWithAggregatesFilter<$PrismaModel> | $Enums.AttrType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAttrTypeFilter<$PrismaModel>
+    _max?: NestedEnumAttrTypeFilter<$PrismaModel>
   }
 
   export type SaleCreateWithoutCashierInput = {
@@ -26011,6 +29836,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     saleItems?: SaleItemCreateNestedManyWithoutProductInput
     stockEntryItems?: StockEntryItemCreateNestedManyWithoutProductInput
   }
@@ -26025,6 +29852,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     saleItems?: SaleItemUncheckedCreateNestedManyWithoutProductInput
     stockEntryItems?: StockEntryItemUncheckedCreateNestedManyWithoutProductInput
   }
@@ -26086,6 +29915,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     saleItems?: SaleItemUpdateManyWithoutProductNestedInput
     stockEntryItems?: StockEntryItemUpdateManyWithoutProductNestedInput
   }
@@ -26100,6 +29931,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     saleItems?: SaleItemUncheckedUpdateManyWithoutProductNestedInput
     stockEntryItems?: StockEntryItemUncheckedUpdateManyWithoutProductNestedInput
   }
@@ -26345,6 +30178,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockCreateNestedManyWithoutProductInput
     saleItems?: SaleItemCreateNestedManyWithoutProductInput
   }
@@ -26359,6 +30194,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUncheckedCreateNestedManyWithoutProductInput
     saleItems?: SaleItemUncheckedCreateNestedManyWithoutProductInput
   }
@@ -26416,6 +30253,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUpdateManyWithoutProductNestedInput
     saleItems?: SaleItemUpdateManyWithoutProductNestedInput
   }
@@ -26430,6 +30269,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUncheckedUpdateManyWithoutProductNestedInput
     saleItems?: SaleItemUncheckedUpdateManyWithoutProductNestedInput
   }
@@ -26700,6 +30541,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockCreateNestedManyWithoutProductInput
     stockEntryItems?: StockEntryItemCreateNestedManyWithoutProductInput
   }
@@ -26714,6 +30557,8 @@ export namespace Prisma {
     barcode?: string | null
     taxRate: Decimal | DecimalJsLike | number | string
     isActive?: boolean
+    sector?: string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUncheckedCreateNestedManyWithoutProductInput
     stockEntryItems?: StockEntryItemUncheckedCreateNestedManyWithoutProductInput
   }
@@ -26781,6 +30626,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUpdateManyWithoutProductNestedInput
     stockEntryItems?: StockEntryItemUpdateManyWithoutProductNestedInput
   }
@@ -26795,6 +30642,8 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    sector?: NullableStringFieldUpdateOperationsInput | string | null
+    attrs?: NullableJsonNullValueInput | InputJsonValue
     stocks?: StockUncheckedUpdateManyWithoutProductNestedInput
     stockEntryItems?: StockEntryItemUncheckedUpdateManyWithoutProductNestedInput
   }
@@ -27198,6 +31047,112 @@ export namespace Prisma {
     stockEntriesCreated?: StockEntryUncheckedUpdateManyWithoutCreatedByNestedInput
     referralCodes?: ReferralCodeUncheckedUpdateManyWithoutUserNestedInput
     referrerRewards?: ReferralRewardUncheckedUpdateManyWithoutReferrerNestedInput
+  }
+
+  export type SectorAttributeCreateWithoutTemplateInput = {
+    id?: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+  }
+
+  export type SectorAttributeUncheckedCreateWithoutTemplateInput = {
+    id?: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+  }
+
+  export type SectorAttributeCreateOrConnectWithoutTemplateInput = {
+    where: SectorAttributeWhereUniqueInput
+    create: XOR<SectorAttributeCreateWithoutTemplateInput, SectorAttributeUncheckedCreateWithoutTemplateInput>
+  }
+
+  export type SectorAttributeCreateManyTemplateInputEnvelope = {
+    data: SectorAttributeCreateManyTemplateInput | SectorAttributeCreateManyTemplateInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type SectorAttributeUpsertWithWhereUniqueWithoutTemplateInput = {
+    where: SectorAttributeWhereUniqueInput
+    update: XOR<SectorAttributeUpdateWithoutTemplateInput, SectorAttributeUncheckedUpdateWithoutTemplateInput>
+    create: XOR<SectorAttributeCreateWithoutTemplateInput, SectorAttributeUncheckedCreateWithoutTemplateInput>
+  }
+
+  export type SectorAttributeUpdateWithWhereUniqueWithoutTemplateInput = {
+    where: SectorAttributeWhereUniqueInput
+    data: XOR<SectorAttributeUpdateWithoutTemplateInput, SectorAttributeUncheckedUpdateWithoutTemplateInput>
+  }
+
+  export type SectorAttributeUpdateManyWithWhereWithoutTemplateInput = {
+    where: SectorAttributeScalarWhereInput
+    data: XOR<SectorAttributeUpdateManyMutationInput, SectorAttributeUncheckedUpdateManyWithoutTemplateInput>
+  }
+
+  export type SectorAttributeScalarWhereInput = {
+    AND?: SectorAttributeScalarWhereInput | SectorAttributeScalarWhereInput[]
+    OR?: SectorAttributeScalarWhereInput[]
+    NOT?: SectorAttributeScalarWhereInput | SectorAttributeScalarWhereInput[]
+    id?: StringFilter<"SectorAttribute"> | string
+    templateId?: StringFilter<"SectorAttribute"> | string
+    key?: StringFilter<"SectorAttribute"> | string
+    label?: StringFilter<"SectorAttribute"> | string
+    type?: EnumAttrTypeFilter<"SectorAttribute"> | $Enums.AttrType
+    required?: BoolFilter<"SectorAttribute"> | boolean
+  }
+
+  export type SectorTemplateCreateWithoutAttributesInput = {
+    id?: string
+    key: string
+    name: string
+    isSystem?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SectorTemplateUncheckedCreateWithoutAttributesInput = {
+    id?: string
+    key: string
+    name: string
+    isSystem?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SectorTemplateCreateOrConnectWithoutAttributesInput = {
+    where: SectorTemplateWhereUniqueInput
+    create: XOR<SectorTemplateCreateWithoutAttributesInput, SectorTemplateUncheckedCreateWithoutAttributesInput>
+  }
+
+  export type SectorTemplateUpsertWithoutAttributesInput = {
+    update: XOR<SectorTemplateUpdateWithoutAttributesInput, SectorTemplateUncheckedUpdateWithoutAttributesInput>
+    create: XOR<SectorTemplateCreateWithoutAttributesInput, SectorTemplateUncheckedCreateWithoutAttributesInput>
+    where?: SectorTemplateWhereInput
+  }
+
+  export type SectorTemplateUpdateToOneWithWhereWithoutAttributesInput = {
+    where?: SectorTemplateWhereInput
+    data: XOR<SectorTemplateUpdateWithoutAttributesInput, SectorTemplateUncheckedUpdateWithoutAttributesInput>
+  }
+
+  export type SectorTemplateUpdateWithoutAttributesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isSystem?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SectorTemplateUncheckedUpdateWithoutAttributesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isSystem?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SaleCreateManyCashierInput = {
@@ -27698,6 +31653,38 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type SectorAttributeCreateManyTemplateInput = {
+    id?: string
+    key: string
+    label: string
+    type: $Enums.AttrType
+    required?: boolean
+  }
+
+  export type SectorAttributeUpdateWithoutTemplateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type SectorAttributeUncheckedUpdateWithoutTemplateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type SectorAttributeUncheckedUpdateManyWithoutTemplateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    type?: EnumAttrTypeFieldUpdateOperationsInput | $Enums.AttrType
+    required?: BoolFieldUpdateOperationsInput | boolean
+  }
+
 
 
   /**
@@ -27731,6 +31718,10 @@ export namespace Prisma {
      * @deprecated Use ReferralCodeCountOutputTypeDefaultArgs instead
      */
     export type ReferralCodeCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ReferralCodeCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use SectorTemplateCountOutputTypeDefaultArgs instead
+     */
+    export type SectorTemplateCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SectorTemplateCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use UserDefaultArgs instead
      */
@@ -27803,6 +31794,18 @@ export namespace Prisma {
      * @deprecated Use ReferralRewardDefaultArgs instead
      */
     export type ReferralRewardArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ReferralRewardDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use SectorTemplateDefaultArgs instead
+     */
+    export type SectorTemplateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SectorTemplateDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use SectorAttributeDefaultArgs instead
+     */
+    export type SectorAttributeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SectorAttributeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use TenantCustomAttributeDefaultArgs instead
+     */
+    export type TenantCustomAttributeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TenantCustomAttributeDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

@@ -7,6 +7,12 @@ export async function listOrders(tenantId: string, limit = 50, offset = 0, prism
       prisma.ecommerceOrder.count()
     ])
     return { items, total }
+  }
+  const all = ecommerceOrders.filter(o => o.tenantId === tenantId)
+  const total = all.length
+  const items = all.slice().reverse().slice(offset, offset + limit)
+  return { items, total }
+}
 
 export async function getTodayTopProducts(tenantId: string, prisma?: any, limit = 5): Promise<Array<{ sku: string; quantity: number; revenue: number }>> {
   const now = new Date()
@@ -43,12 +49,6 @@ export async function getTodayTopProducts(tenantId: string, prisma?: any, limit 
   const arr = Array.from(map.entries()).map(([sku, v]) => ({ sku, quantity: v.qty, revenue: v.rev }))
   arr.sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue)
   return arr.slice(0, limit)
-}
-  }
-  const all = ecommerceOrders.filter(o => o.tenantId === tenantId)
-  const total = all.length
-  const items = all.slice().reverse().slice(offset, offset + limit)
-  return { items, total }
 }
 
 export async function createOrder(params: { tenantId: string; items: EcommerceOrderItem[]; customerEmail?: string; customerPhone?: string; currency?: string }, prisma?: any): Promise<any> {

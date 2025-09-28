@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="48" rx="8" fill="#1D4ED8"/>
+  <g font-family="Inter, Arial, sans-serif" font-weight="700" fill="#FFFFFF">
+    <text x="16" y="30" font-size="20">AfriGest</text>
+  </g>
+  <circle cx="150" cy="24" r="10" fill="#059669"/>
+  <path d="M150 18 L154 24 L150 30 L146 24 Z" fill="#FFFFFF"/>
+</svg>

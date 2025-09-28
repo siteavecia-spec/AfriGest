@@ -8,6 +8,14 @@ import crypto from 'crypto'
 import { sendEmailVerification } from '../services/notify'
 
 const router = Router()
+const useDb = String(process.env.USE_DB || 'false').toLowerCase() === 'true'
+// In-memory demo users (when USE_DB !== 'true')
+const demoUsers: Record<string, Role> = {
+  'admin@demo.local': 'super_admin',
+  'pdg@demo.local': 'pdg',
+  'dg@demo.local': 'dg',
+  'employee@demo.local': 'employee'
+}
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -24,6 +32,28 @@ router.post('/login', async (req, res) => {
   // Resolve tenant DB URL (MVP: support demo tenant)
   const headerDbUrl = (req as any).tenantDbUrl as string | undefined
   const dbUrl = headerDbUrl || (company.toLowerCase() === 'demo' ? env.TENANT_DATABASE_URL : undefined)
+  if (!useDb) {
+    // In-memory login (no DB required)
+    const companyKey = company.toLowerCase()
+    const emailLc = email.toLowerCase()
+    if (companyKey === 'master') {
+      // Only allow super admin for master context
+      if (emailLc !== 'admin@demo.local' || password !== 'Admin123!') return res.status(401).json({ error: 'Invalid credentials' })
+      const role: Role = 'super_admin'
+      const uid = `mem-${role}-master`
+      const accessToken = signAccessToken(uid, role)
+      const refreshToken = signRefreshToken(uid, role)
+      return res.json({ accessToken, refreshToken, role })
+    }
+    if (companyKey !== 'demo') return res.status(400).json({ error: 'Unknown company/tenant' })
+    const role = demoUsers[emailLc]
+    const ok = !!role && password === 'Admin123!'
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
+    const uid = `mem-${role}`
+    const accessToken = signAccessToken(uid, role)
+    const refreshToken = signRefreshToken(uid, role)
+    return res.json({ accessToken, refreshToken, role })
+  }
   if (!dbUrl) return res.status(400).json({ error: 'Unknown company/tenant' })
 
   try {
@@ -57,6 +87,12 @@ router.post('/refresh', async (req, res) => {
   try {
     const token = parsed.data.refreshToken
     const payload = verifyRefreshToken(token)
+    if (!useDb) {
+      // In-memory rotate without session persistence
+      const newAccess = signAccessToken(payload.sub, payload.role as Role)
+      const newRefresh = signRefreshToken(payload.sub, payload.role as Role)
+      return res.json({ accessToken: newAccess, refreshToken: newRefresh })
+    }
     // Check session in tenant DB
     const dbUrl = (req as any).tenantDbUrl || env.TENANT_DATABASE_URL
     const prisma = getTenantPrisma(dbUrl)
@@ -84,7 +120,7 @@ router.post('/logout', async (req, res) => {
   // Prefer revoking the refresh token if provided; still respond ok if not
   const parsed = logoutSchema.safeParse(req.body || {})
   const token = parsed.success ? parsed.data.refreshToken : undefined
-  if (token) {
+  if (useDb && token) {
     try {
       const dbUrl = (req as any).tenantDbUrl || env.TENANT_DATABASE_URL
       const prisma = getTenantPrisma(dbUrl)

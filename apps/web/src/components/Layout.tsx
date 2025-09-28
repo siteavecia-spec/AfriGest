@@ -30,6 +30,7 @@ export default function Layout() {
   const [impersonating, setImpersonating] = useState(false)
   const [impersonateCompany, setImpersonateCompany] = useState<string | null>(null)
   const { locale, setLocale } = useI18n()
+  const [companyKey, setCompanyKey] = useState<string | null>(null)
 
   async function refreshSyncStatus() {
     try {
@@ -64,6 +65,8 @@ export default function Layout() {
         const comp = localStorage.getItem('afrigest_impersonate_company') || null
         setImpersonating(flag)
         setImpersonateCompany(comp)
+        const c = (localStorage.getItem('afrigest_company') || '').toLowerCase()
+        setCompanyKey(c || null)
       } catch {}
     }
     load()
@@ -74,33 +77,40 @@ export default function Layout() {
 
   const go = (path: string) => () => navigate(path)
   const isActive = (path: string) => location.pathname.startsWith(path)
+  const isMasterContext = (role === 'super_admin') && !impersonating && (!companyKey || companyKey === 'master')
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#F9FAFB' }}>
-      <AppBar position="static" color="primary">
+      <AppBar position="sticky" color="primary">
         <Toolbar sx={{ gap: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <img src="/logo.svg" alt="AfriGest" height={28} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+            <img src="/logo-afrigest.svg" alt="AfriGest" height={28} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>AfriGest</Typography>
           </Box>
-          {/* Global boutique selector */}
-          <TextField
-            select
-            size="small"
-            label="Boutique"
-            value={selectedBoutiqueId}
-            onChange={(e) => setSelectedBoutiqueId(e.target.value)}
-            sx={{ minWidth: 180, bgcolor: 'rgba(255,255,255,0.08)', borderRadius: 1, mr: 1 }}
-          >
-            <MenuItem value="all">Toutes boutiques</MenuItem>
-            {boutiques.map(b => (
-              <MenuItem key={b.id} value={b.id}>{b.code ? `${b.code} — ` : ''}{b.name}</MenuItem>
-            ))}
-          </TextField>
+          {/* Global boutique selector (hidden in super admin master context) */}
+          {!isMasterContext && (
+            <TextField
+              select
+              size="small"
+              label="Boutique"
+              value={selectedBoutiqueId}
+              onChange={(e) => setSelectedBoutiqueId(e.target.value)}
+              sx={{ minWidth: 180, bgcolor: 'rgba(255,255,255,0.08)', borderRadius: 1, mr: 1 }}
+            >
+              <MenuItem value="all">Toutes boutiques</MenuItem>
+              {boutiques.map(b => (
+                <MenuItem key={b.id} value={b.id}>{b.code ? `${b.code} — ` : ''}{b.name}</MenuItem>
+              ))}
+            </TextField>
+          )}
           {isDesktop ? (
             <>
-              <Button color={isActive('/dashboard') ? 'secondary' : 'inherit'} onClick={go('/dashboard')}>Dashboard</Button>
-              <Button color={isActive('/pos') ? 'secondary' : 'inherit'} onClick={go('/pos')}>POS</Button>
+              {!isMasterContext && (
+                <>
+                  <Button color={isActive('/dashboard') ? 'secondary' : 'inherit'} onClick={go('/dashboard')}>Dashboard</Button>
+                  <Button color={isActive('/pos') ? 'secondary' : 'inherit'} onClick={go('/pos')}>POS</Button>
+                </>
+              )}
               {showMessaging && (
                 <>
                   <Button color={isActive('/messaging') ? 'secondary' : 'inherit'} onClick={go('/messaging')}>
@@ -111,7 +121,7 @@ export default function Layout() {
                   <Button color={isActive('/messaging/presence') ? 'secondary' : 'inherit'} onClick={go('/messaging/presence')}>Présence</Button>
                 </>
               )}
-              {(can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
+              {!isMasterContext && (can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
                 <>
                   {can(role as any, 'stock', 'read') && (
                     <>
@@ -140,7 +150,7 @@ export default function Layout() {
                   )}
                 </>
               )}
-              {(can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
+              {!isMasterContext && (can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
                 <>
                   {can(role as any, 'settings', 'read') && (
                     <Button color={isActive('/settings') ? 'secondary' : 'inherit'} onClick={go('/settings')}>Paramètres</Button>
@@ -174,15 +184,19 @@ export default function Layout() {
                 <MenuIcon />
               </IconButton>
               <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-                <MenuItem onClick={() => { navigate('/dashboard'); setMenuAnchor(null) }}>Dashboard</MenuItem>
-                <MenuItem onClick={() => { navigate('/pos'); setMenuAnchor(null) }}>POS</MenuItem>
+                {!isMasterContext && (
+                  <>
+                    <MenuItem onClick={() => { navigate('/dashboard'); setMenuAnchor(null) }}>Dashboard</MenuItem>
+                    <MenuItem onClick={() => { navigate('/pos'); setMenuAnchor(null) }}>POS</MenuItem>
+                  </>
+                )}
                 {showMessaging && (
                   <>
                     <MenuItem onClick={() => { navigate('/messaging'); setMenuAnchor(null) }}>Messagerie</MenuItem>
                     <MenuItem onClick={() => { navigate('/messaging/presence'); setMenuAnchor(null) }}>Présence</MenuItem>
                   </>
                 )}
-                {(can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
+                {!isMasterContext && (can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
                   <>
                     {can(role as any, 'stock', 'read') && (
                       <MenuItem onClick={() => { navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
@@ -208,7 +222,7 @@ export default function Layout() {
                     )}
                   </>
                 )}
-                {(can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
+                {!isMasterContext && (can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
                   <>
                     {can(role as any, 'settings', 'read') && (
                       <MenuItem onClick={() => { navigate('/settings'); setMenuAnchor(null) }}>Paramètres</MenuItem>
@@ -268,7 +282,7 @@ export default function Layout() {
         </Box>
       )}
       <OfflineBanner />
-      <Container sx={{ py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         <Outlet />
       </Container>
       <Dialog open={openErrors} onClose={() => setOpenErrors(false)} maxWidth="sm" fullWidth>

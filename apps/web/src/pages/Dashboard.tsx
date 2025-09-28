@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Box, Button, Card, CardContent, Grid, Typography } from '@mui/material'
+import { Box, Button, Card, CardContent, Grid, Typography, TextField } from '@mui/material'
 import { getSalesSummary, getStockSummary, ecomGetSummary, listSales, sendAlertsDigest, API_URL, ecomGetOverview } from '../api/client_clean'
 import { loadCompanySettings } from '../utils/settings'
 import { useNavigate } from 'react-router-dom'
@@ -259,9 +259,23 @@ export default function Dashboard() {
                   }
                 }}>{t('dashboard.send_alerts_digest') || 'Envoyer digest alertes'}</Button>
                 {digestMsg && <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>{digestMsg}</Typography>}
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
-                  <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <TextField
+                    label="Du"
+                    type="date"
+                    size="small"
+                    value={fromDate}
+                    onChange={e => setFromDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    label="Au"
+                    type="date"
+                    size="small"
+                    value={toDate}
+                    onChange={e => setToDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                  />
                   <Button size="small" variant="outlined" onClick={async () => {
                     try {
                       if (!fromDate || !toDate) return

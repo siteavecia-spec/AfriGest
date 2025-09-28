@@ -257,7 +257,9 @@ export default function SuppliersPage() {
               <Button size="small" disabled={loading || page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Précédent</Button>
               <Button size="small" disabled={loading || !hasMore} onClick={() => setPage(p => p + 1)}>Suivant</Button>
               <TextField size="small" select label="Par page" value={limit} onChange={e => { setPage(0); setLimit(Number(e.target.value)) }} sx={{ width: 140 }}>
-                {[20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+                {[20, 50, 100].map(n => (
+                  <MenuItem key={n} value={n}>{n}</MenuItem>
+                ))}
               </TextField>
               <Typography variant="caption" color="text.secondary">Page {page + 1}{total != null ? ` / ${Math.max(1, Math.ceil(total / limit))}` : ''}</Typography>
             </Stack>

@@ -151,7 +151,9 @@ exports.Prisma.ProductScalarFieldEnum = {
   cost: 'cost',
   barcode: 'barcode',
   taxRate: 'taxRate',
-  isActive: 'isActive'
+  isActive: 'isActive',
+  sector: 'sector',
+  attrs: 'attrs'
 };
 
 exports.Prisma.StockScalarFieldEnum = {
@@ -301,6 +303,35 @@ exports.Prisma.ReferralRewardScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.SectorTemplateScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  name: 'name',
+  isSystem: 'isSystem',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SectorAttributeScalarFieldEnum = {
+  id: 'id',
+  templateId: 'templateId',
+  key: 'key',
+  label: 'label',
+  type: 'type',
+  required: 'required'
+};
+
+exports.Prisma.TenantCustomAttributeScalarFieldEnum = {
+  id: 'id',
+  sectorKey: 'sectorKey',
+  key: 'key',
+  label: 'label',
+  type: 'type',
+  required: 'required',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -350,6 +381,13 @@ exports.RewardStatus = exports.$Enums.RewardStatus = {
   cancelled: 'cancelled'
 };
 
+exports.AttrType = exports.$Enums.AttrType = {
+  string: 'string',
+  number: 'number',
+  date: 'date',
+  text: 'text'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   Boutique: 'Boutique',
@@ -368,7 +406,10 @@ exports.Prisma.ModelName = {
   EmailVerification: 'EmailVerification',
   ReferralCode: 'ReferralCode',
   ReferralRequest: 'ReferralRequest',
-  ReferralReward: 'ReferralReward'
+  ReferralReward: 'ReferralReward',
+  SectorTemplate: 'SectorTemplate',
+  SectorAttribute: 'SectorAttribute',
+  TenantCustomAttribute: 'TenantCustomAttribute'
 };
 
 /**
