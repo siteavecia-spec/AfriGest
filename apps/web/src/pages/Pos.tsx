@@ -709,6 +709,7 @@ export default function PosPage() {
           <Button onClick={async () => { setSyncing(true); try { await trySyncSales() } finally { setSyncing(false); try { setPending(await getPendingSales()) } catch {} } }} disabled={syncing}>Synchroniser</Button>
           <Button variant="contained" onClick={() => setPendingOpen(false)}>Fermer</Button>
         </DialogActions>
+      </Dialog>
     </Page>
   )
 }
