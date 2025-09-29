@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Box, Button, Card, CardContent, Stack, TextField, Typography, Snackbar, Alert } from '@mui/material'
 import { ecomCreateOrder, ecomGetSignedMediaUrl, API_URL, getTenantId } from '../../api/client_clean'
 import StorefrontHeader from '../../components/Storefront/Header'
-import { enableStripe } from '../../config/featureFlags'
+import { enableStripe, showMobileMoney } from '../../config/featureFlags'
 import { setMetaDescription } from '../../utils/seo'
 import { Elements, useElements, useStripe, CardElement } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
@@ -212,8 +212,12 @@ export default function StorefrontCheckout() {
                 {enableStripe && (
                   <Button variant="outlined" disabled={submitting} onClick={onStripeTest}>Payer par carte (test)</Button>
                 )}
-                <Button variant="outlined" disabled={submitting} onClick={simulateMtn}>Payer (simulate MTN)</Button>
-                <Button variant="outlined" disabled={submitting} onClick={simulateOrange}>Payer (simulate Orange)</Button>
+                {showMobileMoney && (
+                  <>
+                    <Button variant="outlined" disabled={submitting} onClick={simulateMtn}>Payer (simulate MTN)</Button>
+                    <Button variant="outlined" disabled={submitting} onClick={simulateOrange}>Payer (simulate Orange)</Button>
+                  </>
+                )}
               </Stack>
               {enableStripe && clientSecret && stripePromise && (
                 <Elements stripe={stripePromise} options={{ clientSecret }}>

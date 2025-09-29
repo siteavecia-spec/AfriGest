@@ -48,6 +48,8 @@ export async function createRestockRequest(data: { boutiqueId: string; productId
   return res.json() as Promise<{ id: string; status: string }>
 }
 
+ 
+
 export async function approveRestockRequest(id: string) {
   const res = await fetch(`${API_URL}/restock/${encodeURIComponent(id)}/approve`, { method: 'PATCH', headers: authHeaders() })
   if (!res.ok) throw new Error(await res.text() || 'Failed to approve restock request')
@@ -947,3 +949,100 @@ export async function devGetStatus() {
   if (!res.ok) throw new Error(await res.text() || 'Failed to load dev status')
   return res.json() as Promise<{ ok: true; counts: { products: number; suppliers: number; sales: number; stockAudits: number; lowAlerts: number } }>
 }
+
+// --- Phase 2: Purchase Orders (PO) & Receiving ---
+export interface PurchaseOrderLine { productId: string; sku?: string; name?: string; quantity: number; unitCost: number; taxRate?: number; received?: number }
+export interface PurchaseOrderItem { id: string; supplierId?: string; reference?: string; status: 'draft'|'sent'|'partially_received'|'received'|'cancelled'; currency?: string; createdAt: string; updatedAt?: string; lines: PurchaseOrderLine[] }
+
+export async function listPurchaseOrders(params?: { status?: string; limit?: number; offset?: number }) {
+  const q = new URLSearchParams()
+  if (params?.status) q.set('status', params.status)
+  if (params?.limit != null) q.set('limit', String(params.limit))
+  if (params?.offset != null) q.set('offset', String(params.offset))
+  const res = await authFetch(`${API_URL}/purchase-orders?${q.toString()}`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to load purchase orders')
+  return res.json() as Promise<{ items: PurchaseOrderItem[]; total?: number }>
+}
+
+export async function createPurchaseOrder(payload: { supplierId?: string; reference?: string; currency?: string; lines: Array<{ productId: string; quantity: number; unitCost: number; taxRate?: number }> }) {
+  const res = await authFetch(`${API_URL}/purchase-orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to create purchase order')
+  return res.json() as Promise<PurchaseOrderItem>
+}
+
+export async function updatePurchaseOrder(id: string, payload: { status?: 'draft'|'sent'|'cancelled'; reference?: string; currency?: string }) {
+  const res = await authFetch(`${API_URL}/purchase-orders/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to update purchase order')
+  return res.json() as Promise<PurchaseOrderItem>
+}
+
+export async function receivePurchaseOrder(id: string, payload: { items: Array<{ productId: string; received: number }>; note?: string; boutiqueId?: string }) {
+  const res = await authFetch(`${API_URL}/purchase-orders/${encodeURIComponent(id)}/receive`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to receive purchase order')
+  return res.json() as Promise<{ ok: true; id: string; status: string }>
+}
+
+// --- Phase 2: Returns (clients & fournisseurs) ---
+export interface ReturnItem { id: string; type: 'customer'|'supplier'; reference?: string; boutiqueId?: string; relatedId?: string; createdAt: string; items: Array<{ productId: string; quantity: number; unitPrice?: number; reason?: string }> }
+
+export async function listReturns(params?: { type?: 'customer'|'supplier'; limit?: number; offset?: number }) {
+  const q = new URLSearchParams()
+  if (params?.type) q.set('type', params.type)
+  if (params?.limit != null) q.set('limit', String(params.limit))
+  if (params?.offset != null) q.set('offset', String(params.offset))
+  const res = await authFetch(`${API_URL}/returns?${q.toString()}`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to load returns')
+  return res.json() as Promise<{ items: ReturnItem[]; total?: number }>
+}
+
+export async function createCustomerReturn(payload: { saleId?: string; boutiqueId: string; reference?: string; items: Array<{ productId: string; quantity: number; reason?: string }> }) {
+  const res = await authFetch(`${API_URL}/returns/customer`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to create customer return')
+  return res.json() as Promise<ReturnItem>
+}
+
+export async function createSupplierReturn(payload: { purchaseOrderId?: string; boutiqueId: string; reference?: string; items: Array<{ productId: string; quantity: number; reason?: string }> }) {
+  const res = await authFetch(`${API_URL}/returns/supplier`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to create supplier return')
+  return res.json() as Promise<ReturnItem>
+}
+
+// --- Phase 2: Customers (basic CRM) ---
+export interface CustomerItem { id: string; firstName?: string; lastName?: string; phone?: string; email?: string; note?: string; createdAt: string }
+
+export async function listCustomersBasic(params?: { query?: string; limit?: number; offset?: number }) {
+  const q = new URLSearchParams()
+  if (params?.query) q.set('query', params.query)
+  if (params?.limit != null) q.set('limit', String(params.limit))
+  if (params?.offset != null) q.set('offset', String(params.offset))
+  const res = await authFetch(`${API_URL}/customers?${q.toString()}`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to load customers')
+  return res.json() as Promise<{ items: CustomerItem[]; total?: number }>
+}
+
+export async function createCustomerBasic(payload: { firstName?: string; lastName?: string; phone?: string; email?: string; note?: string }) {
+  const res = await authFetch(`${API_URL}/customers`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to create customer')
+  return res.json() as Promise<CustomerItem>
+}
+
+export async function updateCustomerBasic(id: string, payload: { firstName?: string; lastName?: string; phone?: string; email?: string; note?: string }) {
+  const res = await authFetch(`${API_URL}/customers/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to update customer')
+  return res.json() as Promise<CustomerItem>
+}
+
+// --- Phase 3: E-commerce stubs ---
+export async function ecomSyncPullProducts() {
+  const res = await authFetch(`${API_URL}/ecommerce/products/pull`)
+  if (!res.ok) throw new Error(await res.text() || 'Failed to pull products')
+  return res.json() as Promise<{ pulled: number; updated: number; created: number }>
+}
+
+export async function ecomSyncPushProducts() {
+  const res = await authFetch(`${API_URL}/ecommerce/products/push`, { method: 'POST' })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to push products')
+  return res.json() as Promise<{ pushed: number }>
+}
+
+ 

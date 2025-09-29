@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Container, Grid, Paper, Stack, TextField, Typography, Avatar, Divider } from '@mui/material'
+import { Box, Button, Container, Grid, Paper, Stack, TextField, Typography, Avatar, Divider, Alert } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { createDemoRequestPublic, getTopClientsPublic, validateReferralPublic } from '../api/client_clean'
 import FooterPublic from '../components/FooterPublic'
@@ -271,7 +271,17 @@ export default function LandingPage() {
           {clients.map(c => (
             <Grid item xs={12} sm={6} md={4} key={c.id}>
               <Paper sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar variant="rounded" src={c.logoUrl} sx={{ width: 48, height: 48 }}>
+                <Avatar
+                  variant="rounded"
+                  src={c.logoUrl}
+                  sx={{ width: 48, height: 48 }}
+                  imgProps={{
+                    onError: (e) => {
+                      // If logo fails to load, drop the src to let Avatar show fallback initials
+                      try { (e.currentTarget as HTMLImageElement).src = '' } catch {}
+                    }
+                  }}
+                >
                   {c.name.substring(0,1)}
                 </Avatar>
                 <Box>
@@ -368,8 +378,43 @@ export default function LandingPage() {
             <Grid key={p.name} item xs={6} sm={4} md={2}>
               <Paper sx={{ p: 2, textAlign: 'center' }}>
                 {p.logo ? (
-                  <a href={p.url || '#'} target={p.url ? '_blank' : undefined} rel={p.url ? 'noopener noreferrer' : undefined}>
-                    <img src={p.logo} alt={p.name} loading="lazy" width="120" height="40" style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }} />
+                  <a href={p.url || '#'} target={p.url ? '_blank' : undefined} rel={p.url ? 'noopener noreferrer' : undefined} title={p.name}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 40 }}>
+                      <img
+                        src={p.logo}
+                        alt={p.name}
+                        loading="lazy"
+                        width={120}
+                        height={40}
+                        style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
+                        onError={(e) => {
+                          const img = e.currentTarget as HTMLImageElement
+                          // Try local placeholder once based on partner name
+                          const map: Record<string, string> = {
+                            'stripe': '/partners/stripe.svg',
+                            'paypal': '/partners/paypal.svg',
+                            'mtn momo': '/partners/mtn.svg',
+                            'mtn': '/partners/mtn.svg',
+                            'orange money': '/partners/orange.svg',
+                            'orange': '/partners/orange.svg',
+                            'aws': '/partners/aws.svg'
+                          }
+                          const key = (p.name || '').toLowerCase()
+                          const local = map[key]
+                          const triedLocal = img.getAttribute('data-tried-local') === '1'
+                          if (local && !triedLocal) {
+                            img.setAttribute('data-tried-local', '1')
+                            img.src = local
+                            return
+                          }
+                          // Final fallback: hide image and show text
+                          img.style.display = 'none'
+                          const fallback = img.parentElement?.querySelector('[data-fallback="1"]') as HTMLElement | null
+                          if (fallback) fallback.style.display = 'inline'
+                        }}
+                      />
+                      <Typography data-fallback="1" variant="body2" sx={{ display: 'none', color: 'text.primary', fontWeight: 600 }}>{p.name}</Typography>
+                    </Box>
                   </a>
                 ) : (
                   <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>{p.name}</Typography>
@@ -493,7 +538,11 @@ export default function LandingPage() {
         <Paper sx={{ p: { xs: 2, md: 3 } }}>
           <Typography variant="h5" fontWeight={700} gutterBottom>Demander une démo</Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>Laissez vos coordonnées, notre équipe vous contactera pour planifier une démonstration. Les comptes ne sont pas créés en libre-service.</Typography>
-          {msg && <Typography color="text.secondary" sx={{ mb: 2 }}>{msg}</Typography>}
+          {msg && (
+            <Alert severity={msg.startsWith('Merci') ? 'success' : 'warning'} sx={{ mb: 2 }}>
+              {msg}
+            </Alert>
+          )}
           <Stack spacing={2} component="form" onSubmit={onSubmitDemo}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField label="Nom" value={name} onChange={e => setName(e.target.value)} required />
@@ -510,11 +559,12 @@ export default function LandingPage() {
             {!!TURNSTILE_KEY && (
               <Box id="turnstile-container" sx={{ my: 1 }} />
             )}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
               {TURNSTILE_KEY && !captchaToken && (
                 <Typography variant="caption" color="text.secondary">Veuillez compléter la vérification avant d'envoyer.</Typography>
               )}
-              <Button type="submit" onClick={() => trackEvent('demo_submit_click')} variant="contained" disabled={loading || (TURNSTILE_KEY && !captchaToken)} sx={{ bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark' } }}>Envoyer</Button>
+              <Typography variant="caption" color="text.secondary">En soumettant, vous acceptez d’être contacté au sujet d’AfriGest. Consultez notre <a href="/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité</a>.</Typography>
+              <Button type="submit" onClick={() => trackEvent('demo_submit_click')} variant="contained" disabled={loading || (Boolean(TURNSTILE_KEY) && !captchaToken)} sx={{ bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark' } }}>Envoyer</Button>
             </Box>
           </Stack>
         </Paper>

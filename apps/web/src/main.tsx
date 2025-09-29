@@ -2,14 +2,14 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
-import { CssBaseline, ThemeProvider } from '@mui/material'
+import { CssBaseline } from '@mui/material'
 import App from './App'
 import { store } from './store'
-import { theme } from './theme'
 import { setupOfflineSync } from './offline/salesQueue'
 import { BoutiqueProvider } from './context/BoutiqueContext'
 import ConsentBanner from './utils/privacy/ConsentBanner'
 import { I18nProvider } from './i18n/i18n'
+import { ThemeModeProvider } from './context/ThemeModeContext'
 
 // Initialize offline sync once at startup
 setupOfflineSync()
@@ -28,7 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-        <ThemeProvider theme={theme}>
+        <ThemeModeProvider>
           <CssBaseline />
           <I18nProvider>
             <BoutiqueProvider>
@@ -36,7 +36,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <ConsentBanner />
             </BoutiqueProvider>
           </I18nProvider>
-        </ThemeProvider>
+        </ThemeModeProvider>
       </BrowserRouter>
     </Provider>
   </React.StrictMode>

@@ -2,6 +2,7 @@ import { Box, Fab, Stack, Tooltip } from '@mui/material'
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import { trackEvent } from '../utils/analytics'
+import { getWhatsAppHref } from '../utils/contact'
 
 export default function FloatingCTAs() {
   const goDemo = () => {
@@ -12,7 +13,7 @@ export default function FloatingCTAs() {
 
   const goWhatsApp = () => {
     try { trackEvent('floating_cta_click', { target: 'whatsapp' }) } catch {}
-    window.open('https://wa.me/2250700000000', '_blank', 'noopener')
+    window.open(getWhatsAppHref(), '_blank', 'noopener')
   }
 
   return (

@@ -25,7 +25,10 @@ import EcommerceOverview from './pages/Ecommerce/Overview'
 import EcommerceProducts from './pages/Ecommerce/Products'
 import EcommerceOrders from './pages/Ecommerce/Orders'
 import EcommerceSettings from './pages/Ecommerce/Settings'
+import EcommercePaymentsPage from './pages/Ecommerce/Payments'
 import EcommerceCustomers from './pages/Ecommerce/Customers'
+import EcommerceSyncPage from './pages/Ecommerce/Sync'
+import ExecutiveDashboard from './pages/Executive/Dashboard'
 import Conversations from './pages/Messaging/Conversations'
 import Chat from './pages/Messaging/Chat'
 import PresencePage from './pages/Messaging/Presence'
@@ -43,6 +46,13 @@ import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedByPermission from './components/ProtectedByPermission'
 import CompaniesAdminPage from './pages/Admin/Companies'
 import SuperAdminConsole from './pages/Admin/SuperAdminConsole'
+import PurchaseOrdersPage from './pages/PurchaseOrders'
+import ReceivingPage from './pages/Receiving'
+import ReturnsPage from './pages/Returns'
+import CustomersPage from './pages/Customers'
+import AuditLogPage from './pages/Admin/AuditLog'
+import DataToolsPage from './pages/DataTools'
+import TasksPage from './pages/Tasks'
 
 export default function App() {
   return (
@@ -70,6 +80,16 @@ export default function App() {
               <Route path="/stock" element={<StockPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
             </Route>
+            {/* Phase 2: Approvisionnements & Réceptions */}
+            <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
+            <Route path="/receiving" element={<ReceivingPage />} />
+            {/* Phase 2: Retours & Clients */}
+            <Route path="/returns" element={<ReturnsPage />} />
+            <Route path="/customers" element={<CustomersPage />} />
+            {/* Productivity */}
+            <Route path="/tasks" element={<TasksPage />} />
+            {/* Executive Dashboard */}
+            <Route path="/executive" element={<ExecutiveDashboard />} />
             <Route element={<ProtectedByPermission moduleKey="suppliers" action="read" />}> 
               <Route path="/suppliers" element={<SuppliersPage />} />
             </Route>
@@ -97,6 +117,10 @@ export default function App() {
                 <Route element={<ProtectedByPermission moduleKey="ecommerce.orders" action="read" />}> 
                   <Route path="/ecommerce/orders" element={<EcommerceOrders />} />
                 </Route>
+                <Route element={<ProtectedByPermission moduleKey="ecommerce.orders" action="read" />}> 
+                  <Route path="/ecommerce/payments" element={<EcommercePaymentsPage />} />
+                </Route>
+                <Route path="/ecommerce/sync" element={<EcommerceSyncPage />} />
                 <Route path="/ecommerce/customers" element={<EcommerceCustomers />} />
               </>
             )}
@@ -113,12 +137,14 @@ export default function App() {
             )}
             {/* Dev Tools (Phase 1 QA) */}
             <Route path="/dev-tools" element={<DevToolsPage />} />
+            <Route path="/data-tools" element={<DataToolsPage />} />
           </Route>
           <Route element={<ProtectedByRole allow={["super_admin"]} />}>
             <Route path="/admin/console" element={<SuperAdminConsole />} />
             <Route path="/leads" element={<LeadsPage />} />
             <Route path="/admin/password-reset" element={<AdminPasswordReset />} />
             <Route path="/admin/companies" element={<CompaniesAdminPage />} />
+            <Route path="/admin/audit-log" element={<AuditLogPage />} />
           </Route>
         </Route>
       </Route>

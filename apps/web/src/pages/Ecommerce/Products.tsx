@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, Button, Card, CardContent, Grid, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, Snackbar, Alert, Link, Switch, FormControlLabel, Select, MenuItem, IconButton, Chip } from '@mui/material'
+import { Box, Button, Card, CardContent, Grid, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, Snackbar, Alert, Link, Switch, FormControlLabel, Select, MenuItem, IconButton, Chip, TableContainer } from '@mui/material'
 import { ecomListProducts, ecomSyncInventory, ecomPresignUpload, ecomUpsertProduct, ecomAddProductImage, ecomRemoveProductImage, ecomSetProductCover } from '../../api/client_clean'
 
 export default function EcommerceProducts() {
@@ -184,40 +184,46 @@ export default function EcommerceProducts() {
               }
             }}>Appliquer delta stock</Button>
           </Stack>
-          <Box sx={{ mt: 2, overflowX: 'auto' }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Image</TableCell>
-                  <TableCell>SKU</TableCell>
-                  <TableCell>Nom</TableCell>
-                  <TableCell>Prix</TableCell>
-                  <TableCell>En ligne</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {items
-                  .filter(p => {
-                    const s = query.trim().toLowerCase()
-                    if (!s) return true
-                    return `${p.sku} ${p.title}`.toLowerCase().includes(s)
-                  })
-                  .map(p => (
-                    <TableRow key={p.sku} hover sx={{ cursor: 'pointer' }} onClick={() => {
-                      setFSku(p.sku); setFTitle(p.title); setFPrice(p.price); setFCurrency(p.currency || 'GNF'); setFDesc(''); setFOnline(!!p.isOnlineAvailable); setFMode(p.onlineStockMode || 'shared'); setFQty(typeof p.onlineStockQty === 'number' ? p.onlineStockQty : ''); setUploadedUrls([])
-                    }}>
-                      <TableCell>{p.imageUrl ? <img src={p.imageUrl} alt={p.title} style={{ maxHeight: 40 }} /> : '-'}</TableCell>
-                      <TableCell>{p.sku}</TableCell>
-                      <TableCell>{p.title}</TableCell>
-                      <TableCell>{p.price.toLocaleString('fr-FR')}</TableCell>
-                      <TableCell>{p.isOnlineAvailable ? 'Oui' : 'Non'}</TableCell>
+          <Box sx={{ mt: 2 }}>
+            <TableContainer sx={{ maxHeight: 520 }}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Image</TableCell>
+                    <TableCell>SKU</TableCell>
+                    <TableCell>Nom</TableCell>
+                    <TableCell>Prix</TableCell>
+                    <TableCell>En ligne</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {items
+                    .filter(p => {
+                      const s = query.trim().toLowerCase()
+                      if (!s) return true
+                      return `${p.sku} ${p.title}`.toLowerCase().includes(s)
+                    })
+                    .map(p => (
+                      <TableRow key={p.sku} hover sx={{ cursor: 'pointer', borderBottom: (theme) => `1px solid ${theme.palette.grey[200]}` }} onClick={() => {
+                        setFSku(p.sku); setFTitle(p.title); setFPrice(p.price); setFCurrency(p.currency || 'GNF'); setFDesc(''); setFOnline(!!p.isOnlineAvailable); setFMode(p.onlineStockMode || 'shared'); setFQty(typeof p.onlineStockQty === 'number' ? p.onlineStockQty : ''); setUploadedUrls([])
+                      }}>
+                        <TableCell>{p.imageUrl ? <img src={p.imageUrl} alt={p.title} style={{ maxHeight: 40 }} /> : '-'}</TableCell>
+                        <TableCell>{p.sku}</TableCell>
+                        <TableCell>{p.title}</TableCell>
+                        <TableCell>{p.price.toLocaleString('fr-FR')}</TableCell>
+                        <TableCell>{p.isOnlineAvailable ? 'Oui' : 'Non'}</TableCell>
+                      </TableRow>
+                    ))}
+                  {items.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        <Typography color="text.secondary" sx={{ py: 2 }}>Aucun produit.</Typography>
+                      </TableCell>
                     </TableRow>
-                  ))}
-                {items.length === 0 && (
-                  <TableRow><TableCell colSpan={4}><Typography color="text.secondary">Aucun produit.</Typography></TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Box>
         </CardContent>
       </Card>

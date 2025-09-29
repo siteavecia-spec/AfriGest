@@ -45,6 +45,31 @@ export function getTheme(mode: 'light' | 'dark' = 'light') {
         defaultProps: { elevation: 0 },
         styleOverrides: { root: { borderRadius: 8 } }
       },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            boxShadow: isDark
+              ? '0 6px 24px rgba(0,0,0,0.35)'
+              : '0 8px 24px rgba(0,0,0,0.06)',
+            transition: 'box-shadow 200ms ease, transform 200ms ease',
+            '&:hover': {
+              boxShadow: isDark
+                ? '0 10px 32px rgba(0,0,0,0.45)'
+                : '0 12px 32px rgba(0,0,0,0.10)'
+            }
+          }
+        }
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backdropFilter: 'saturate(180%) blur(8px)',
+            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.65)',
+            boxShadow: '0 1px 0 rgba(0,0,0,0.06)'
+          }
+        }
+      },
       MuiOutlinedInput: {
         styleOverrides: {
           root: { borderRadius: 4, height: 40 },

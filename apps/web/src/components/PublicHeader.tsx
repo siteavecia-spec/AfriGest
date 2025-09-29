@@ -19,7 +19,7 @@ export default function PublicHeader() {
   }
 
   return (
-    <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid #E5E7EB', mb: 2 }}>
+    <AppBar position="static" color="transparent" elevation={0} sx={{ mb: 2 }}>
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
           <img src="/logo.svg" alt="AfriGest" height={28} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />

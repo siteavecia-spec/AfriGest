@@ -10,7 +10,8 @@ type PendingSale = {
   // original payload expected by createSale
   boutiqueId: string
   items: Array<{ productId: string; quantity: number; unitPrice: number; discount?: number }>
-  paymentMethod: string
+  paymentMethod: 'cash' | 'mobile_money' | 'card' | 'mixed'
+  payments?: Array<{ method: 'cash'|'mobile_money'|'card'; amount: number; ref?: string }>
   currency?: string
   // offline metadata
   createdAt?: string
@@ -134,4 +135,29 @@ export function getSyncErrors(): Array<{ offlineId: string; error: string; at: s
 
 export function clearSyncErrors() {
   try { localStorage.removeItem(LS_SYNC_ERRORS) } catch {}
+}
+
+export async function getPendingSale(offlineId: string): Promise<PendingSale | undefined> {
+  const db = await getDB()
+  return (await db.get(STORE_SALES, offlineId)) as PendingSale | undefined
+}
+
+export async function retryPendingSale(offlineId: string) {
+  const rec = await getPendingSale(offlineId)
+  if (!rec) return
+  try {
+    await tryCreateSaleWithRefresh(rec)
+    await removePendingSale(offlineId)
+  } catch (e) {
+    const attempts = (rec.attempts || 0) + 1
+    const delayMs = Math.min(30000, 1000 * Math.pow(2, Math.min(attempts, 5)))
+    const nextAttemptAt = new Date(Date.now() + delayMs).toISOString()
+    await updatePendingSaleMeta(offlineId, { attempts, nextAttemptAt })
+    try {
+      const list = JSON.parse(localStorage.getItem(LS_SYNC_ERRORS) || '[]')
+      list.push({ offlineId, error: (e as any)?.message || String(e), at: new Date().toISOString() })
+      localStorage.setItem(LS_SYNC_ERRORS, JSON.stringify(list))
+    } catch {}
+    throw e
+  }
 }

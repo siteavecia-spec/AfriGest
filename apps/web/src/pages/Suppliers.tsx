@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Box, Button, Grid, IconButton, Paper, Stack, TextField, Typography, Snackbar, Alert, CircularProgress, MenuItem } from '@mui/material'
+import { Box, Button, Grid, IconButton, Paper, Stack, TextField, Typography, Snackbar, Alert, CircularProgress, TableRow, TableCell } from '@mui/material'
+import MenuItem from '@mui/material/MenuItem'
 import { listSuppliersPaged } from '../api/client_clean'
 import { createSupplier, deleteSupplier, updateSupplier } from '../api/suppliers'
 import EditIcon from '@mui/icons-material/Edit'
@@ -226,6 +227,8 @@ export default function SuppliersPage() {
               })}
               loading={loading}
               error={null}
+              stickyHeader
+              containerMaxHeight={520}
             >
               {suppliers.filter((s: any) => {
                 const q = search.trim().toLowerCase()
@@ -237,7 +240,7 @@ export default function SuppliersPage() {
                   String(s.phone || '').toLowerCase().includes(q)
                 )
               }).map((s: any) => (
-                <TableRow key={s.id} hover>
+                <TableRow key={s.id} hover sx={{ borderBottom: (theme) => `1px solid ${theme.palette.grey[200]}` }}>
                   {editId === s.id ? (
                     <>
                       <TableCell>

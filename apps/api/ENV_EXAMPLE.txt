@@ -10,3 +10,19 @@ REFRESH_TTL=30d
 # Optional DB URLs (kept for future Postgres switch)
 MASTER_DATABASE_URL=postgresql://user:pass@localhost:5432/afrigest_master
 TENANT_DATABASE_URL=postgresql://user:pass@localhost:5432/afrigest_tenant_demo
+
+# --- Payments (Phase 4) ---
+# Stripe
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# PayPal
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+
+# Mobile Money (MTN)
+MTN_MOMO_API_KEY=
+MTN_MOMO_USER_ID=
+
+# Mobile Money (Orange)
+ORANGE_MOMO_API_KEY=

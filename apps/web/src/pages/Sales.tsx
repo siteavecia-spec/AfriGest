@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Box, Button, Container, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material'
 import { listSalesPaged } from '../api/client_clean'
+import { loadCompanySettings } from '../utils/settings'
 import { useBoutique } from '../context/BoutiqueContext'
 import ErrorBanner from '../components/ErrorBanner'
 
@@ -85,6 +86,39 @@ export default function SalesPage() {
 
   const totalPages = total != null ? Math.max(1, Math.ceil(total / limit)) : undefined
 
+  const exportVatCsv = () => {
+    try {
+      const settings = loadCompanySettings()
+      const vatRate = Number(settings?.vatRate ?? 18) || 0
+      // Assume totals are TTC. VAT amount = TTC * rate/(100+rate)
+      const groups = new Map<string, { boutiqueId: string; currency: string; vatRate: number; totalIncl: number; vatAmount: number; totalExcl: number }>()
+      filtered.forEach((s: any) => {
+        const key = `${s.boutiqueId}|${s.currency}|${vatRate}`
+        const totalIncl = Number(s.total || 0)
+        const vatAmount = vatRate > 0 ? (totalIncl * vatRate) / (100 + vatRate) : 0
+        const totalExcl = totalIncl - vatAmount
+        const prev = groups.get(key) || { boutiqueId: s.boutiqueId, currency: s.currency, vatRate, totalIncl: 0, vatAmount: 0, totalExcl: 0 }
+        prev.totalIncl += totalIncl
+        prev.vatAmount += vatAmount
+        prev.totalExcl += totalExcl
+        groups.set(key, prev)
+      })
+      const header = ['boutiqueId','currency','vatRate','totalHT','tva','totalTTC']
+      const lines = Array.from(groups.values()).map(g => [g.boutiqueId, g.currency, String(g.vatRate), g.totalExcl.toFixed(2), g.vatAmount.toFixed(2), g.totalIncl.toFixed(2)])
+      const esc = (v:any) => '"'+String(v ?? '').replace(/"/g,'""')+'"'
+      const csv = [header.join(','), ...lines.map(r => r.map(esc).join(','))].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      // Month label from date range
+      const label = (fromDate && toDate && fromDate.slice(0,7) === toDate.slice(0,7)) ? fromDate.slice(0,7) : `${fromDate||''}_to_${toDate||''}`
+      a.download = `rapport_tva_${label}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {}
+  }
+
   return (
     <Container sx={{ py: 3 }}>
       <Typography variant="h5" gutterBottom>Ventes (liste paginée)</Typography>
@@ -123,6 +157,7 @@ export default function SalesPage() {
             setFromDate(d1); setToDate(d2)
           }}>Cette semaine</Button>
           <Button size="small" variant="outlined" onClick={() => exportCsv(filtered)} disabled={loading || filtered.length === 0}>Exporter CSV</Button>
+          <Button size="small" variant="outlined" onClick={exportVatCsv} disabled={loading || filtered.length === 0}>Exporter TVA (CSV)</Button>
         </Stack>
 
         {/* Info banner */}
@@ -138,9 +173,21 @@ export default function SalesPage() {
           ) : filtered.length === 0 ? (
             <Typography color="text.secondary">Aucune vente.</Typography>
           ) : (
-            filtered.map((s:any) => (
-              <Box key={s.id} sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', border: '1px solid #eee', borderRadius: 1, p: 1 }}>
-                <Typography sx={{ minWidth: 120 }}>{new Date(s.createdAt).toLocaleString()}</Typography>
+            filtered.map((s:any, idx:number) => (
+              <Box
+                key={s.id}
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: 1.25,
+                  border: (theme) => `1px solid ${theme.palette.grey[200]}`,
+                  borderRadius: 1,
+                  '&:hover': { backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : '#FAFAFA' }
+                }}
+              >
+                <Typography sx={{ minWidth: 140 }}>{new Date(s.createdAt).toLocaleString()}</Typography>
                 <Typography sx={{ flex: 1 }}>{s.id}</Typography>
                 <Typography color="text.secondary">{s.boutiqueId}</Typography>
                 <Typography color="text.secondary">{s.paymentMethod}</Typography>

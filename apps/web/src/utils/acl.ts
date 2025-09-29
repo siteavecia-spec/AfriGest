@@ -11,6 +11,11 @@ export type ModuleKey =
   | 'reports'
   | 'settings'
   | 'security'
+  | 'purchase_orders'
+  | 'receiving'
+  | 'returns'
+  | 'customers'
+  | 'audit'
   | 'ecommerce.products'
   | 'ecommerce.orders'
   | 'ecommerce.settings'
@@ -27,6 +32,11 @@ export const ROLE_PERMISSIONS: Record<Role, Partial<Record<ModuleKey, Action[]>>
     suppliers: ['read', 'create', 'update', 'delete'],
     settings: ['read', 'update'],
     security: ['read', 'update'],
+    purchase_orders: ['read', 'create', 'update', 'delete', 'status_change', 'export'],
+    receiving: ['read', 'create', 'update'],
+    returns: ['read', 'create', 'update', 'export'],
+    customers: ['read', 'create', 'update'],
+    audit: ['read', 'export'],
     'ecommerce.products': ['read', 'create', 'update', 'delete', 'approve'],
     'ecommerce.orders': ['read', 'update', 'status_change', 'approve'],
     'ecommerce.settings': ['read', 'update']
@@ -37,6 +47,12 @@ export const ROLE_PERMISSIONS: Record<Role, Partial<Record<ModuleKey, Action[]>>
     pos: ['read'],
     stock: ['read'],
     suppliers: ['read'],
+    settings: ['read', 'update'],
+    purchase_orders: ['read', 'status_change', 'export'],
+    receiving: ['read'],
+    returns: ['read', 'export'],
+    customers: ['read', 'update'],
+    audit: ['read'],
     'ecommerce.products': ['read'],
     'ecommerce.orders': ['read']
   },
@@ -46,6 +62,11 @@ export const ROLE_PERMISSIONS: Record<Role, Partial<Record<ModuleKey, Action[]>>
     pos: ['read', 'create'],
     stock: ['read', 'update'],
     suppliers: ['read', 'create', 'update'],
+    purchase_orders: ['read', 'status_change'],
+    receiving: ['read', 'create'],
+    returns: ['read', 'create'],
+    customers: ['read'],
+    audit: ['read'],
     'ecommerce.products': ['read', 'update'],
     'ecommerce.orders': ['read', 'status_change']
   },

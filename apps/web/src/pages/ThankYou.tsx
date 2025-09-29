@@ -1,6 +1,7 @@
 import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import { useEffect } from 'react'
 import { trackEvent } from '../utils/analytics'
+import { getWhatsAppHref } from '../utils/contact'
 
 export default function ThankYouPage() {
   const calendlyUrl = (import.meta as any).env?.VITE_CALENDLY_URL as string | undefined
@@ -34,7 +35,7 @@ export default function ThankYouPage() {
           {calendlyUrl ? (
             <Button onClick={openCalendlyWithUtm} variant="contained" sx={{ bgcolor: '#1D4ED8', '&:hover': { bgcolor: '#1E40AF' } }}>Planifier un appel</Button>
           ) : (
-            <Button onClick={() => { try { trackEvent('whatsapp_click', { location: 'thank_you' }) } catch {}; window.open('https://wa.me/2250700000000', '_blank', 'noopener') }} variant="contained" sx={{ bgcolor: '#059669', '&:hover': { bgcolor: '#047857' } }}>Parler sur WhatsApp</Button>
+            <Button onClick={() => { try { trackEvent('whatsapp_click', { location: 'thank_you' }) } catch {}; window.open(getWhatsAppHref(), '_blank', 'noopener') }} variant="contained" sx={{ bgcolor: '#059669', '&:hover': { bgcolor: '#047857' } }}>Parler sur WhatsApp</Button>
           )}
         </Stack>
       </Container>

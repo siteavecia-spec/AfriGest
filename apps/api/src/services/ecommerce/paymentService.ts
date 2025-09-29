@@ -72,3 +72,81 @@ export async function handleStripeWebhook(req: Request, res: Response, prisma?: 
 
   return res.json({ received: true })
 }
+
+export async function handlePayPalWebhook(req: Request, res: Response, prisma?: any, tenantId?: string) {
+  // Minimal guard: ensure PayPal configured (for real verification, call PayPal verify API)
+  const enabled = !!process.env.PAYPAL_CLIENT_ID && !!process.env.PAYPAL_CLIENT_SECRET
+  if (!enabled) return res.status(400).send('PayPal not configured')
+  const event: any = req.body
+  try {
+    if (prisma?.ecommerceWebhookEvent) {
+      await prisma.ecommerceWebhookEvent.create({ data: { provider: 'paypal', eventType: String(event?.event_type || 'unknown'), payload: event, status: 'received' } })
+    }
+  } catch {}
+  try {
+    const resource = event?.resource || {}
+    const status = String(resource?.status || '').toLowerCase()
+    const orderId = resource?.custom_id || resource?.invoice_id || resource?.id // depends on integration
+    if (orderId && prisma?.ecommerceOrder && prisma?.ecommercePayment) {
+      if (status === 'completed' || event?.event_type === 'CHECKOUT.ORDER.APPROVED') {
+        try {
+          await prisma.ecommerceOrder.update({ where: { id: orderId }, data: { paymentStatus: 'paid' } })
+          await prisma.ecommercePayment.create({ data: { orderId, provider: 'paypal', status: 'succeeded', amount: Number(resource?.amount?.value || 0), currency: String(resource?.amount?.currency_code || 'GNF') } })
+        } catch {}
+      }
+    }
+  } catch {}
+  return res.json({ received: true })
+}
+
+export async function handleMtnWebhook(req: Request, res: Response, prisma?: any, tenantId?: string) {
+  const enabled = !!process.env.MTN_MOMO_API_KEY && !!process.env.MTN_MOMO_USER_ID
+  if (!enabled) return res.status(400).send('MTN MoMo not configured')
+  const event: any = req.body
+  try {
+    if (prisma?.ecommerceWebhookEvent) {
+      await prisma.ecommerceWebhookEvent.create({ data: { provider: 'mtn_momo', eventType: String(event?.type || 'unknown'), payload: event, status: 'received' } })
+    }
+  } catch {}
+  try {
+    const status = String(event?.status || '').toLowerCase()
+    const orderId = event?.orderId || event?.reference || event?.externalId
+    if (orderId && prisma?.ecommerceOrder && prisma?.ecommercePayment) {
+      if (status === 'success' || status === 'successful' || status === 'paid') {
+        try {
+          await prisma.ecommerceOrder.update({ where: { id: orderId }, data: { paymentStatus: 'paid' } })
+          await prisma.ecommercePayment.create({ data: { orderId, provider: 'mtn_momo', status: 'succeeded', amount: Number(event?.amount || 0), currency: String(event?.currency || 'GNF') } })
+        } catch {}
+      } else if (status === 'failed') {
+        try { await prisma.ecommerceOrder.update({ where: { id: orderId }, data: { paymentStatus: 'failed' } }) } catch {}
+      }
+    }
+  } catch {}
+  return res.json({ received: true })
+}
+
+export async function handleOrangeWebhook(req: Request, res: Response, prisma?: any, tenantId?: string) {
+  const enabled = !!process.env.ORANGE_MOMO_API_KEY
+  if (!enabled) return res.status(400).send('Orange MoMo not configured')
+  const event: any = req.body
+  try {
+    if (prisma?.ecommerceWebhookEvent) {
+      await prisma.ecommerceWebhookEvent.create({ data: { provider: 'orange_momo', eventType: String(event?.type || 'unknown'), payload: event, status: 'received' } })
+    }
+  } catch {}
+  try {
+    const status = String(event?.status || '').toLowerCase()
+    const orderId = event?.orderId || event?.reference || event?.externalId
+    if (orderId && prisma?.ecommerceOrder && prisma?.ecommercePayment) {
+      if (status === 'success' || status === 'successful' || status === 'paid') {
+        try {
+          await prisma.ecommerceOrder.update({ where: { id: orderId }, data: { paymentStatus: 'paid' } })
+          await prisma.ecommercePayment.create({ data: { orderId, provider: 'orange_momo', status: 'succeeded', amount: Number(event?.amount || 0), currency: String(event?.currency || 'GNF') } })
+        } catch {}
+      } else if (status === 'failed') {
+        try { await prisma.ecommerceOrder.update({ where: { id: orderId }, data: { paymentStatus: 'failed' } }) } catch {}
+      }
+    }
+  } catch {}
+  return res.json({ received: true })
+}

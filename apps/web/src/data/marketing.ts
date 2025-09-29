@@ -27,10 +27,35 @@ export const testimonials: Testimonial[] = [
   },
 ]
 
+// Allow overriding partner logos/links via env for official brand assets
+const ENV: any = (import.meta as any)?.env || {}
+const envLogo = (key: string, fallback: string) => String(ENV[key] || fallback)
+const envLink = (key: string, fallback?: string) => (ENV[key] ? String(ENV[key]) : fallback)
+
 export const partners: Partner[] = [
-  { name: 'Stripe', logo: '/partners/stripe.svg', url: 'https://stripe.com' },
-  { name: 'PayPal', logo: '/partners/paypal.svg', url: 'https://paypal.com' },
-  { name: 'MTN MoMo', logo: '/partners/mtn.svg' },
-  { name: 'Orange Money', logo: '/partners/orange.svg' },
-  { name: 'AWS', logo: '/partners/aws.svg', url: 'https://aws.amazon.com' },
+  {
+    name: 'Stripe',
+    logo: envLogo('VITE_LOGO_STRIPE_URL', '/partners/stripe.svg'),
+    url: envLink('VITE_LINK_STRIPE', 'https://stripe.com')
+  },
+  {
+    name: 'PayPal',
+    logo: envLogo('VITE_LOGO_PAYPAL_URL', '/partners/paypal.svg'),
+    url: envLink('VITE_LINK_PAYPAL', 'https://paypal.com')
+  },
+  {
+    name: 'MTN MoMo',
+    logo: envLogo('VITE_LOGO_MTN_URL', '/partners/mtn.svg'),
+    url: envLink('VITE_LINK_MTN')
+  },
+  {
+    name: 'Orange Money',
+    logo: envLogo('VITE_LOGO_ORANGE_URL', '/partners/orange.svg'),
+    url: envLink('VITE_LINK_ORANGE')
+  },
+  {
+    name: 'AWS',
+    logo: envLogo('VITE_LOGO_AWS_URL', '/partners/aws.svg'),
+    url: envLink('VITE_LINK_AWS', 'https://aws.amazon.com')
+  }
 ]

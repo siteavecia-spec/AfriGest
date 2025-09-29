@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, Button, Container, Stack, Typography } from '@mui/material'
+import { getWhatsAppHref } from '../utils/contact'
 import { trackEvent } from '../utils/analytics'
 
 type Props = { children: React.ReactNode }
@@ -51,7 +52,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }} justifyContent="center">
               <Button variant="contained" onClick={() => window.location.reload()} sx={{ bgcolor: '#1D4ED8', '&:hover': { bgcolor: '#1E40AF' } }}>Recharger</Button>
               <Button variant="outlined" onClick={() => { try { window.open('mailto:contact@afrigest.app?subject=Incident%20AfriGest&body=' + encodeURIComponent(`Bonjour,\n\nUn problème est survenu.\nID d'incident: ${this.incidentId || ''}\nURL: ${typeof window !== 'undefined' ? window.location.href : ''}\n`)) } catch {} }}>Contacter le support (Email)</Button>
-              <Button variant="outlined" onClick={() => { try { window.open('https://wa.me/2250700000000?text=' + encodeURIComponent(`Incident AfriGest ${this.incidentId || ''} — ${typeof window !== 'undefined' ? window.location.href : ''}`),'_blank','noopener') } catch {} }}>WhatsApp</Button>
+              <Button variant="outlined" onClick={() => { try { window.open(getWhatsAppHref(`Incident AfriGest ${this.incidentId || ''} — ${typeof window !== 'undefined' ? window.location.href : ''}`), '_blank', 'noopener') } catch {} }}>WhatsApp</Button>
             </Stack>
           </Container>
         </Box>

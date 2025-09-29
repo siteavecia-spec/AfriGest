@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Button, Container, IconButton, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material'
 import { CompanySettings, loadCompanySettings, saveCompanySettings } from '../utils/settings'
+import { useBoutique } from '../context/BoutiqueContext'
 import { loadCustomAttrs, saveCustomAttrs, type CustomAttr, type CustomAttrsMap } from '../utils/customAttrs'
 import { listProductTemplates, addCustomProductAttribute, removeCustomProductAttribute, importProductsJson } from '../api/client_clean'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -8,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 export default function SettingsPage() {
   const [settings, setSettings] = useState<CompanySettings>(loadCompanySettings())
   const [message, setMessage] = useState<string | null>(null)
+  const { boutiques } = useBoutique()
   const fileRef = useRef<HTMLInputElement>(null)
   const [templates, setTemplates] = useState<Array<{ key: string; name: string }>>([])
   const [customMap, setCustomMap] = useState<CustomAttrsMap>({})
@@ -71,6 +73,36 @@ export default function SettingsPage() {
             <TextField label="Devise" value={settings.currency || ''} onChange={e => setSettings({ ...settings, currency: e.target.value })} placeholder="Ex: XOF, GNF" sx={{ minWidth: 160 }} />
             <TextField label="TVA (%)" type="number" value={settings.vatRate ?? ''} onChange={e => setSettings({ ...settings, vatRate: Number(e.target.value) })} inputProps={{ min: 0, max: 100 }} sx={{ minWidth: 160 }} />
           </Stack>
+          {/* Devise par boutique (optionnelle) */}
+          <Box>
+            <Typography variant="subtitle1" sx={{ mt: 2 }}>Devise par boutique (optionnel)</Typography>
+            <Typography variant="caption" color="text.secondary">Par défaut, on utilise la devise société. Vous pouvez surcharger ici boutique par boutique et définir le nombre de décimales.</Typography>
+            <Stack spacing={1} sx={{ mt: 1 }}>
+              {boutiques.map(b => {
+                const current = (settings.boutiqueCurrencies || {})[b.id] || { currency: '', decimals: undefined }
+                return (
+                  <Stack key={b.id} direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                    <TextField label={`Boutique`} value={`${b.code ? b.code + ' — ' : ''}${b.name}`} InputProps={{ readOnly: true }} sx={{ minWidth: 260 }} />
+                    <TextField label="Devise boutique" value={current.currency} placeholder={settings.currency || 'XOF'} onChange={e => {
+                      const val = e.target.value
+                      setSettings(prev => ({ ...prev, boutiqueCurrencies: { ...(prev.boutiqueCurrencies || {}), [b.id]: { currency: val, decimals: (prev.boutiqueCurrencies || {})[b.id]?.decimals } } }))
+                    }} sx={{ minWidth: 160 }} />
+                    <TextField label="Décimales" type="number" value={current.decimals ?? ''} placeholder="0" onChange={e => {
+                      const num = e.target.value === '' ? undefined : Number(e.target.value)
+                      setSettings(prev => ({ ...prev, boutiqueCurrencies: { ...(prev.boutiqueCurrencies || {}), [b.id]: { currency: ((prev.boutiqueCurrencies || {})[b.id]?.currency) || '', decimals: num } } }))
+                    }} sx={{ width: 140 }} inputProps={{ min: 0, max: 4 }} />
+                    <Button size="small" color="warning" onClick={() => {
+                      setSettings(prev => {
+                        const next = { ...(prev.boutiqueCurrencies || {}) }
+                        delete next[b.id]
+                        return { ...prev, boutiqueCurrencies: next }
+                      })
+                    }}>Réinitialiser</Button>
+                  </Stack>
+                )
+              })}
+            </Stack>
+          </Box>
           <Box>
             <Button variant="outlined" onClick={onPickLogo}>Choisir un logo</Button>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFileChange} />

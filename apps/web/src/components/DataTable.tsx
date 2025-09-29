@@ -1,4 +1,4 @@
-import { Paper, Table, TableBody, TableCell, TableHead, TableRow, Box, Typography, CircularProgress } from '@mui/material'
+import { Paper, Table, TableBody, TableCell, TableHead, TableRow, Box, Typography, CircularProgress, TableContainer } from '@mui/material'
 import { ReactNode } from 'react'
 
 interface DataTableProps {
@@ -9,9 +9,12 @@ interface DataTableProps {
   error?: string | null
   emptyMessage?: string
   size?: 'small' | 'medium'
+  stickyHeader?: boolean
+  hover?: boolean
+  containerMaxHeight?: number | string
 }
 
-export default function DataTable({ columns, rows, children, loading, error, emptyMessage = 'Aucune donnée', size = 'small' }: DataTableProps) {
+export default function DataTable({ columns, rows, children, loading, error, emptyMessage = 'Aucune donnée', size = 'small', stickyHeader = false, hover = true, containerMaxHeight = 520 }: DataTableProps) {
   return (
     <Paper variant="outlined" sx={{ overflowX: 'auto' }}>
       {error && (
@@ -20,46 +23,49 @@ export default function DataTable({ columns, rows, children, loading, error, emp
         </Box>
       )}
       {!error && (
-        <Table size={size}>
-          <TableHead>
-            <TableRow>
-              {columns.map(col => (
-                <TableCell key={col.key} align={col.align || 'left'}>{col.label}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
+        <TableContainer sx={{ maxHeight: containerMaxHeight }}>
+          <Table size={size} stickyHeader={stickyHeader}>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={columns.length} align="center">
-                  <Box sx={{ py: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                    <CircularProgress size={18} />
-                    <Typography variant="body2" color="text.secondary">Chargement…</Typography>
-                  </Box>
-                </TableCell>
+                {columns.map(col => (
+                  <TableCell key={col.key} align={col.align || 'left'}>{col.label}</TableCell>
+                ))}
               </TableRow>
-            ) : (children ? children : (
-              rows.length === 0 ? (
+            </TableHead>
+            <TableBody>
+              {loading ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length}>
-                    <Typography color="text.secondary">{emptyMessage}</Typography>
+                  <TableCell colSpan={columns.length} align="center">
+                    <Box sx={{ py: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                      <CircularProgress size={18} />
+                      <Typography variant="body2" color="text.secondary">Chargement…</Typography>
+                    </Box>
                   </TableCell>
                 </TableRow>
-              ) : (
-                rows.map((r, idx) => (
-                  <TableRow key={r.id || idx}>
-                    {columns.map(col => (
-                      <TableCell key={col.key} align={col.align || 'left'}>
-                        {String(r[col.key] ?? '')}
-                      </TableCell>
-                    ))}
+              ) : (children ? children : (
+                rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} align="center">
+                      <Typography color="text.secondary" sx={{ py: 2 }}>{emptyMessage}</Typography>
+                    </TableCell>
                   </TableRow>
-                ))
-              )
-            ))}
-          </TableBody>
-        </Table>
+                ) : (
+                  rows.map((r, idx) => (
+                    <TableRow key={r.id || idx} hover={hover}>
+                      {columns.map(col => (
+                        <TableCell key={col.key} align={col.align || 'left'}>
+                          {String(r[col.key] ?? '')}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                )
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
     </Paper>
   )
 }
+

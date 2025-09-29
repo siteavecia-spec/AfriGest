@@ -1,4 +1,4 @@
-import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Badge, TextField, Alert, Stack } from '@mui/material'
+import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Badge, TextField, Alert, Stack, Chip } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -11,6 +11,8 @@ import { showEcommerce, showMessaging } from '../config/featureFlags'
 import { logoutApi } from '../api/client_clean'
 import { useI18n } from '../i18n/i18n'
 import { getPendingSales, trySyncSales, getSyncErrors, clearSyncErrors } from '../offline/salesQueue'
+import { listPendingReceivings, trySyncReceivings } from '../offline/poQueue'
+import { listPendingReturns, trySyncReturns } from '../offline/returnsQueue'
 import { useBoutique } from '../context/BoutiqueContext'
 import { can } from '../utils/acl'
 
@@ -22,6 +24,8 @@ export default function Layout() {
   const isDesktop = useMediaQuery('(min-width:900px)')
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [pendingCount, setPendingCount] = useState<number>(0)
+  const [pendingRxCount, setPendingRxCount] = useState<number>(0)
+  const [pendingRtCount, setPendingRtCount] = useState<number>(0)
   const [errorCount, setErrorCount] = useState<number>(0)
   const [syncing, setSyncing] = useState(false)
   const [openErrors, setOpenErrors] = useState(false)
@@ -31,6 +35,7 @@ export default function Layout() {
   const [impersonateCompany, setImpersonateCompany] = useState<string | null>(null)
   const { locale, setLocale } = useI18n()
   const [companyKey, setCompanyKey] = useState<string | null>(null)
+  const [openDebug, setOpenDebug] = useState(false)
 
   async function refreshSyncStatus() {
     try {
@@ -41,6 +46,14 @@ export default function Layout() {
       const errs = getSyncErrors()
       setErrorCount((errs || []).length)
     } catch { setErrorCount(0) }
+    try {
+      const rx = await listPendingReceivings()
+      setPendingRxCount((rx || []).length)
+    } catch { setPendingRxCount(0) }
+    try {
+      const rt = await listPendingReturns()
+      setPendingRtCount((rt || []).length)
+    } catch { setPendingRtCount(0) }
   }
 
   // lightweight polling and online event
@@ -86,8 +99,23 @@ export default function Layout() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
             <img src="/logo-afrigest.svg" alt="AfriGest" height={28} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>AfriGest</Typography>
+            {role && (
+              <Chip size="small" variant="outlined" label={`Rôle: ${role}`} sx={{ ml: 1, display: { xs: 'none', sm: 'inline-flex' } }} />
+            )}
+            {(companyKey !== null) && (
+              <Chip size="small" variant="outlined" color="secondary" label={`Entreprise: ${companyKey || '—'}`} sx={{ ml: 1, display: { xs: 'none', sm: 'inline-flex' } }} />
+            )}
+            {!isMasterContext && selectedBoutiqueId && selectedBoutiqueId !== 'all' && (() => {
+              const b = boutiques.find(b => b.id === selectedBoutiqueId)
+              return b ? (
+                <Chip size="small" variant="outlined" color="default" label={`Boutique: ${b.code ? `${b.code} — ` : ''}${b.name}`} sx={{ ml: 1, display: { xs: 'none', sm: 'inline-flex' } }} />
+              ) : null
+            })()}
           </Box>
           {/* Global boutique selector (hidden in super admin master context) */}
+          {import.meta.env.MODE !== 'production' && (
+            <Button size="small" variant="outlined" onClick={() => setOpenDebug(true)}>Debug rôle</Button>
+          )}
           {!isMasterContext && (
             <TextField
               select
@@ -128,21 +156,45 @@ export default function Layout() {
                   <Button color={isActive('/messaging/presence') ? 'secondary' : 'inherit'} onClick={go('/messaging/presence')}>Présence</Button>
                 </>
               )}
-              {!isMasterContext && (can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
+              {!isMasterContext && (
                 <>
+                  {/* Stock & Inventaire (show only if allowed) */}
                   {can(role as any, 'stock', 'read') && (
                     <>
                       <Button color={isActive('/stock') ? 'secondary' : 'inherit'} onClick={go('/stock')}>Stock</Button>
                       <Button color={isActive('/inventory') ? 'secondary' : 'inherit'} onClick={go('/inventory')}>Inventaire</Button>
+                      <Button color={isActive('/purchase-orders') ? 'secondary' : 'inherit'} onClick={go('/purchase-orders')}>Appro</Button>
+                      <Button color={isActive('/receiving') ? 'secondary' : 'inherit'} onClick={go('/receiving')}>Réceptions</Button>
                     </>
                   )}
+
+                  {/* Fournisseurs */}
                   {can(role as any, 'suppliers', 'read') && (
                     <Button color={isActive('/suppliers') ? 'secondary' : 'inherit'} onClick={go('/suppliers')}>Fournisseurs</Button>
                   )}
-                  <Button color={isActive('/sales') ? 'secondary' : 'inherit'} onClick={go('/sales')}>Ventes</Button>
-                  <Button color={isActive('/ambassador') ? 'secondary' : 'inherit'} onClick={go('/ambassador')}>Ambassadeur</Button>
-                  <Button color={isActive('/users') ? 'secondary' : 'inherit'} onClick={go('/users')}>Utilisateurs</Button>
-                  {/* Ecommerce (Overview/Products/Orders/Customers) */}
+
+                  {/* Ventes */}
+                  {can(role as any, 'pos', 'read') && (
+                    <Button color={isActive('/sales') ? 'secondary' : 'inherit'} onClick={go('/sales')}>Ventes</Button>
+                  )}
+                  {/* Retours */}
+                  {can(role as any, 'returns', 'read') && (
+                    <Button color={isActive('/returns') ? 'secondary' : 'inherit'} onClick={go('/returns')}>Retours</Button>
+                  )}
+                  {/* Clients */}
+                  {can(role as any, 'customers', 'read') && (
+                    <Button color={isActive('/customers') ? 'secondary' : 'inherit'} onClick={go('/customers')}>Clients</Button>
+                  )}
+                  {/* Ambassadeur (parrainage) visible Super Admin/PDG/DG */}
+                  {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
+                    <Button color={isActive('/ambassador') ? 'secondary' : 'inherit'} onClick={go('/ambassador')}>Ambassadeur</Button>
+                  )}
+                  {/* Utilisateurs: Super Admin & PDG */}
+                  {(role === 'super_admin' || role === 'pdg') && (
+                    <Button color={isActive('/users') ? 'secondary' : 'inherit'} onClick={go('/users')}>Utilisateurs</Button>
+                  )}
+
+                  {/* Ecommerce */}
                   {showEcommerce && (
                     <>
                       <Button color={isActive('/ecommerce') ? 'secondary' : 'inherit'} onClick={go('/ecommerce')}>Boutique en ligne</Button>
@@ -152,12 +204,15 @@ export default function Layout() {
                       {can(role as any, 'ecommerce.orders', 'read') && (
                         <Button color={isActive('/ecommerce/orders') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/orders')}>Commandes</Button>
                       )}
+                      {can(role as any, 'ecommerce.orders', 'read') && (
+                        <Button color={isActive('/ecommerce/payments') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/payments')}>Transactions</Button>
+                      )}
                       <Button color={isActive('/ecommerce/customers') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/customers')}>Clients</Button>
                     </>
                   )}
                 </>
               )}
-              {!isMasterContext && (can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
+              {!isMasterContext && (
                 <>
                   {can(role as any, 'settings', 'read') && (
                     <Button color={isActive('/settings') ? 'secondary' : 'inherit'} onClick={go('/settings')}>Paramètres</Button>
@@ -170,20 +225,33 @@ export default function Layout() {
                   <Button color={isActive('/dev-tools') ? 'secondary' : 'inherit'} onClick={go('/dev-tools')}>Dev Tools</Button>
                 </>
               )}
+              {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
+                <>
+                  <Button color={isActive('/executive') ? 'secondary' : 'inherit'} onClick={go('/executive')}>Exécutif</Button>
+                </>
+              )}
               {(role === 'super_admin') && (
                 <>
                   <Button color={isActive('/leads') ? 'secondary' : 'inherit'} onClick={go('/leads')}>Leads</Button>
                   <Button color={isActive('/admin/password-reset') ? 'secondary' : 'inherit'} onClick={go('/admin/password-reset')}>Reset MDP (Admin)</Button>
                   <Button color={isActive('/admin/companies') ? 'secondary' : 'inherit'} onClick={go('/admin/companies')}>Entreprises</Button>
+                  <Button color={isActive('/admin/audit-log') ? 'secondary' : 'inherit'} onClick={go('/admin/audit-log')}>Audit</Button>
                 </>
               )}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="body2" sx={{ mr: 1 }} title="Ventes en attente / Erreurs de sync">Offline: {pendingCount} | Err: {errorCount}</Typography>
-                <Button size="small" variant="outlined" onClick={async () => { setSyncing(true); try { await trySyncSales() } finally { setSyncing(false); refreshSyncStatus() } }} disabled={syncing}>Sync</Button>
-                <Button size="small" variant="text" onClick={() => { clearSyncErrors(); refreshSyncStatus() }} disabled={errorCount === 0}>Effacer erreurs</Button>
-                <Button size="small" variant="text" onClick={() => { setErrors(getSyncErrors()); setOpenErrors(true) }} disabled={errorCount === 0}>Voir détails</Button>
-                <Button color="inherit" onClick={async () => { try { await logoutApi() } catch {} ; dispatch(logout()); localStorage.removeItem('afrigest_token'); localStorage.removeItem('afrigest_refresh'); localStorage.removeItem('afrigest_company'); navigate('/login') }}>Déconnexion</Button>
-              </Box>
+              {(role === 'super_admin' || role === 'support') && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" sx={{ mr: 1 }} title="En attente (Ventes/Réceptions/Retours) / Erreurs de sync">En attente: {pendingCount + pendingRxCount + pendingRtCount} | Err: {errorCount}</Typography>
+                  <Button size="small" variant="outlined" onClick={async () => { setSyncing(true); try { await trySyncSales(); await trySyncReceivings(); await trySyncReturns() } finally { setSyncing(false); refreshSyncStatus() } }} disabled={syncing}>Sync</Button>
+                  <Button size="small" variant="text" onClick={() => { clearSyncErrors(); refreshSyncStatus() }} disabled={errorCount === 0}>Effacer erreurs</Button>
+                  <Button size="small" variant="text" onClick={() => { setErrors(getSyncErrors()); setOpenErrors(true) }} disabled={errorCount === 0}>Voir détails</Button>
+                  <Button color="inherit" onClick={async () => { try { await logoutApi() } catch {} ; dispatch(logout()); localStorage.removeItem('afrigest_token'); localStorage.removeItem('afrigest_refresh'); localStorage.removeItem('afrigest_company'); navigate('/login') }}>Déconnexion</Button>
+                </Box>
+              )}
+              {!(role === 'super_admin' || role === 'support') && (
+                <Box>
+                  <Button color="inherit" onClick={async () => { try { await logoutApi() } catch {} ; dispatch(logout()); localStorage.removeItem('afrigest_token'); localStorage.removeItem('afrigest_refresh'); localStorage.removeItem('afrigest_company'); navigate('/login') }}>Déconnexion</Button>
+                </Box>
+              )}
             </>
           ) : (
             <>
@@ -210,17 +278,34 @@ export default function Layout() {
                     <MenuItem onClick={() => { navigate('/messaging/presence'); setMenuAnchor(null) }}>Présence</MenuItem>
                   </>
                 )}
-                {!isMasterContext && (can(role as any, 'stock', 'read') || can(role as any, 'suppliers', 'read') || can(role as any, 'reports', 'read')) && (
+                {!isMasterContext && (
                   <>
                     {can(role as any, 'stock', 'read') && (
-                      <MenuItem onClick={() => { navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
+                      <>
+                        <MenuItem onClick={() => { navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
+                        <MenuItem onClick={() => { navigate('/inventory'); setMenuAnchor(null) }}>Inventaire</MenuItem>
+                        <MenuItem onClick={() => { navigate('/purchase-orders'); setMenuAnchor(null) }}>Appro</MenuItem>
+                        <MenuItem onClick={() => { navigate('/receiving'); setMenuAnchor(null) }}>Réceptions</MenuItem>
+                      </>
                     )}
                     {can(role as any, 'suppliers', 'read') && (
                       <MenuItem onClick={() => { navigate('/suppliers'); setMenuAnchor(null) }}>Fournisseurs</MenuItem>
                     )}
-                    <MenuItem onClick={() => { navigate('/sales'); setMenuAnchor(null) }}>Ventes</MenuItem>
-                    <MenuItem onClick={() => { navigate('/ambassador'); setMenuAnchor(null) }}>Ambassadeur</MenuItem>
-                    <MenuItem onClick={() => { navigate('/users'); setMenuAnchor(null) }}>Utilisateurs</MenuItem>
+                    {can(role as any, 'pos', 'read') && (
+                      <MenuItem onClick={() => { navigate('/sales'); setMenuAnchor(null) }}>Ventes</MenuItem>
+                    )}
+                    {can(role as any, 'returns', 'read') && (
+                      <MenuItem onClick={() => { navigate('/returns'); setMenuAnchor(null) }}>Retours</MenuItem>
+                    )}
+                    {can(role as any, 'customers', 'read') && (
+                      <MenuItem onClick={() => { navigate('/customers'); setMenuAnchor(null) }}>Clients</MenuItem>
+                    )}
+                    {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
+                      <MenuItem onClick={() => { navigate('/ambassador'); setMenuAnchor(null) }}>Ambassadeur</MenuItem>
+                    )}
+                    {(role === 'super_admin' || role === 'pdg') && (
+                      <MenuItem onClick={() => { navigate('/users'); setMenuAnchor(null) }}>Utilisateurs</MenuItem>
+                    )}
                     {/* Ecommerce (Overview/Products/Orders/Customers) */}
                     {showEcommerce && (
                       <>
@@ -231,12 +316,18 @@ export default function Layout() {
                         {can(role as any, 'ecommerce.orders', 'read') && (
                           <MenuItem onClick={() => { navigate('/ecommerce/orders'); setMenuAnchor(null) }}>Commandes</MenuItem>
                         )}
+                        {can(role as any, 'ecommerce.orders', 'read') && (
+                          <MenuItem onClick={() => { navigate('/ecommerce/payments'); setMenuAnchor(null) }}>Transactions</MenuItem>
+                        )}
                         <MenuItem onClick={() => { navigate('/ecommerce/customers'); setMenuAnchor(null) }}>Clients</MenuItem>
                       </>
                     )}
+                    {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
+                      <MenuItem onClick={() => { navigate('/executive'); setMenuAnchor(null) }}>Exécutif</MenuItem>
+                    )}
                   </>
                 )}
-                {!isMasterContext && (can(role as any, 'settings', 'read') || (showEcommerce && can(role as any, 'ecommerce.settings', 'read'))) && (
+                {!isMasterContext && (
                   <>
                     {can(role as any, 'settings', 'read') && (
                       <MenuItem onClick={() => { navigate('/settings'); setMenuAnchor(null) }}>Paramètres</MenuItem>
@@ -254,13 +345,18 @@ export default function Layout() {
                     <MenuItem onClick={() => { navigate('/leads'); setMenuAnchor(null) }}>Leads</MenuItem>
                     <MenuItem onClick={() => { navigate('/admin/password-reset'); setMenuAnchor(null) }}>Reset MDP (Admin)</MenuItem>
                     <MenuItem onClick={() => { navigate('/admin/companies'); setMenuAnchor(null) }}>Entreprises</MenuItem>
+                    <MenuItem onClick={() => { navigate('/admin/audit-log'); setMenuAnchor(null) }}>Audit</MenuItem>
                   </>
                 )}
                 {/* Offline controls (mobile) */}
-                <MenuItem disabled>Offline: {pendingCount} | Err: {errorCount}</MenuItem>
-                <MenuItem onClick={async () => { setMenuAnchor(null); setSyncing(true); try { await trySyncSales() } finally { setSyncing(false); refreshSyncStatus() } }}>Sync maintenant</MenuItem>
-                <MenuItem disabled={errorCount === 0} onClick={() => { clearSyncErrors(); refreshSyncStatus(); setMenuAnchor(null) }}>Effacer erreurs</MenuItem>
-                <MenuItem disabled={errorCount === 0} onClick={() => { setErrors(getSyncErrors()); setOpenErrors(true); setMenuAnchor(null) }}>Voir détails</MenuItem>
+                {(role === 'super_admin' || role === 'support') && (
+                  <>
+                    <MenuItem disabled>En attente: {pendingCount + pendingRxCount + pendingRtCount} | Err: {errorCount}</MenuItem>
+                    <MenuItem onClick={async () => { setMenuAnchor(null); setSyncing(true); try { await trySyncSales(); await trySyncReceivings(); await trySyncReturns() } finally { setSyncing(false); refreshSyncStatus() } }}>Sync maintenant</MenuItem>
+                    <MenuItem disabled={errorCount === 0} onClick={() => { clearSyncErrors(); refreshSyncStatus(); setMenuAnchor(null) }}>Effacer erreurs</MenuItem>
+                    <MenuItem disabled={errorCount === 0} onClick={() => { setErrors(getSyncErrors()); setOpenErrors(true); setMenuAnchor(null) }}>Voir détails</MenuItem>
+                  </>
+                )}
                 <MenuItem onClick={async () => { setMenuAnchor(null); try { await logoutApi() } catch {}; dispatch(logout()); localStorage.removeItem('afrigest_token'); localStorage.removeItem('afrigest_refresh'); localStorage.removeItem('afrigest_company'); navigate('/login') }}>Déconnexion</MenuItem>
                 <MenuItem>
                   <TextField select size="small" label="Lang" value={locale} onChange={e => setLocale(e.target.value as any)} sx={{ minWidth: 120 }}>
@@ -327,7 +423,7 @@ export default function Layout() {
               const rows = getSyncErrors()
               const header = ['offlineId','error','at']
               const lines = rows.map(r => [r.offlineId, r.error.replace(/\n/g,' ').replace(/"/g,'""'), r.at])
-              const csv = [header.join(','), ...lines.map(l => l.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(','))].join('\n')
+              const csv = [header.join(','), ...lines.map(l => l.map(v => `"${String(v ?? '').replace(/\"/g,'""')}"`).join(','))].join('\n')
               const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
               const url = URL.createObjectURL(blob)
               const a = document.createElement('a')
@@ -339,6 +435,33 @@ export default function Layout() {
           }} disabled={errors.length === 0}>Exporter CSV</Button>
           <Button onClick={() => { clearSyncErrors(); setErrors([]); refreshSyncStatus() }} disabled={errors.length === 0}>Effacer</Button>
           <Button variant="contained" onClick={() => setOpenErrors(false)}>Fermer</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Debug role/permissions dialog (dev only) */}
+      <Dialog open={openDebug} onClose={() => setOpenDebug(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Debug rôle & permissions</DialogTitle>
+        <DialogContent dividers>
+          <List dense>
+            <ListItem><ListItemText primary={`Rôle: ${role || '—'}`} /></ListItem>
+            <ListItem><ListItemText primary={`Entreprise: ${companyKey || '—'}`} /></ListItem>
+            <ListItem><ListItemText primary={`Boutique: ${selectedBoutiqueId || '—'}`} /></ListItem>
+          </List>
+          <Typography variant="subtitle2" sx={{ mt: 2 }}>Permissions clés (can)</Typography>
+          <List dense>
+            <ListItem><ListItemText primary={`pos.read: ${can(role as any, 'pos', 'read')}`} /></ListItem>
+            <ListItem><ListItemText primary={`pos.create: ${can(role as any, 'pos', 'create')}`} /></ListItem>
+            <ListItem><ListItemText primary={`stock.read: ${can(role as any, 'stock', 'read')}`} /></ListItem>
+            <ListItem><ListItemText primary={`stock.update: ${can(role as any, 'stock', 'update')}`} /></ListItem>
+            <ListItem><ListItemText primary={`suppliers.read: ${can(role as any, 'suppliers', 'read')}`} /></ListItem>
+            <ListItem><ListItemText primary={`returns.read: ${can(role as any, 'returns', 'read')}`} /></ListItem>
+            <ListItem><ListItemText primary={`customers.read: ${can(role as any, 'customers', 'read')}`} /></ListItem>
+            <ListItem><ListItemText primary={`ecommerce.orders.read: ${can(role as any, 'ecommerce.orders', 'read')}`} /></ListItem>
+            <ListItem><ListItemText primary={`ecommerce.settings.read: ${can(role as any, 'ecommerce.settings', 'read')}`} /></ListItem>
+          </List>
+          <Typography variant="body2" color="text.secondary">Boutons visibles: Utilisateurs = {String(role === 'super_admin' || role === 'pdg')} | Ambassadeur = {String(role === 'super_admin' || role === 'pdg' || role === 'dg')}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDebug(false)} variant="contained">Fermer</Button>
         </DialogActions>
       </Dialog>
     </Box>

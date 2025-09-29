@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Box, Button, Card, CardContent, Grid, Stack, Typography, Alert } from '@mui/material'
+import { Box, Button, Card, CardContent, Grid, Stack, Typography, Alert, TextField, MenuItem } from '@mui/material'
 import { devSeedBasic, devSeedSales, devGetStatus } from '../api/client_clean'
 import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import type { RootState } from '../store'
+import { setCredentials } from '../features/auth/slice'
 
 export default function DevToolsPage() {
   const [message, setMessage] = useState<string | null>(null)
@@ -10,6 +13,9 @@ export default function DevToolsPage() {
   const [status, setStatus] = useState<{ products: number; suppliers: number; sales: number; stockAudits: number; lowAlerts: number } | null>(null)
   const [seeds, setSeeds] = useState<{ basicAt: string | null; salesAt: string | null } | null>(null)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const currentRole = useSelector((s: RootState) => s.auth.role) as 'super_admin'|'pdg'|'dg'|'employee'|null
+  const [devRole, setDevRole] = useState<'super_admin'|'pdg'|'dg'|'employee'>(currentRole || 'employee')
 
   async function run(action: 'basic' | 'sales') {
     setMessage(null)
@@ -109,6 +115,29 @@ export default function DevToolsPage() {
             <Button size="small" variant="text" onClick={() => navigate('/pos')}>Aller au POS</Button>
             <Button size="small" variant="text" onClick={() => navigate('/suppliers')}>Aller aux Fournisseurs</Button>
           </Stack>
+          <Card variant="outlined" sx={{ mt: 2 }}>
+            <CardContent>
+              <Typography variant="subtitle2" color="text.secondary">Test local — Sélecteur de rôle (sans BDD)</Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1 }}>
+                <TextField select size="small" label="Rôle (dev)" value={devRole} onChange={e => setDevRole(e.target.value as any)} sx={{ minWidth: 220 }}>
+                  <MenuItem value="super_admin">Super Admin</MenuItem>
+                  <MenuItem value="pdg">PDG</MenuItem>
+                  <MenuItem value="dg">DG</MenuItem>
+                  <MenuItem value="employee">Employé</MenuItem>
+                </TextField>
+                <Button variant="outlined" onClick={() => {
+                  try {
+                    localStorage.setItem('afrigest_token', 'dev')
+                    dispatch(setCredentials({ token: 'dev', role: devRole }))
+                    setMessage(`Rôle courant défini: ${devRole}`)
+                  } catch (e: any) {
+                    setError(e?.message || 'Impossible de définir le rôle dev')
+                  }
+                }}>Appliquer</Button>
+                <Typography variant="body2" color="text.secondary">Rôle actuel: {currentRole || '—'}</Typography>
+              </Stack>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
     </Box>

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Box, Button, IconButton, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Tooltip, Chip, CircularProgress } from '@mui/material'
 import { createSale, listProducts, listSales, API_URL } from '../api/client_clean'
-import { enqueueSale, getPendingSales, removePendingSale, trySyncSales } from '../offline/salesQueue'
+import { enqueueSale, getPendingSales, removePendingSale, trySyncSales, retryPendingSale } from '../offline/salesQueue'
+import { trySyncReceivings } from '../offline/poQueue'
+import { trySyncReturns } from '../offline/returnsQueue'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ReceiptModal, { type ReceiptData } from '../components/ReceiptModal'
-import { loadCompanySettings, getNextReceiptNumber } from '../utils/settings'
-import { formatGNF } from '../utils/currency'
+import { loadCompanySettings, getNextReceiptNumber, getCurrencyForBoutique } from '../utils/settings'
+import { formatCurrency, formatCurrencyWithDecimals } from '../utils/currency'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 import { useBoutique } from '../context/BoutiqueContext'
@@ -29,6 +31,7 @@ export default function PosPage() {
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mobile_money' | 'card'>('cash')
   const [paymentRef, setPaymentRef] = useState('')
+  const [mobilePhone, setMobilePhone] = useState('')
   const [payments, setPayments] = useState<Array<{ method: 'cash'|'mobile_money'|'card'; amount: number; ref?: string }>>([])
   const [globalDiscount, setGlobalDiscount] = useState<number>(0)
   // Offline pending state
@@ -87,7 +90,9 @@ export default function PosPage() {
       }
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const onOnline = async () => { try { await trySyncSales(); await trySyncReceivings(); await trySyncReturns() } catch {} }
+    window.addEventListener('online', onOnline)
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('online', onOnline) }
   }, [prodLimit, prodPage])
 
   const filtered = useMemo(() => {
@@ -135,6 +140,8 @@ export default function PosPage() {
   const totalAfterDiscount = useMemo(() => Math.max(0, total - (globalDiscount || 0)), [total, globalDiscount])
   const settings = loadCompanySettings()
   const currency = settings.currency || 'XOF'
+  const { currency: displayCurrency, decimals: displayDecimals } = getCurrencyForBoutique(boutiqueId, settings)
+  const fc = (n: number) => formatCurrencyWithDecimals(n, displayCurrency, displayDecimals)
   const vatRate = settings.vatRate ?? 18
   // Assume displayed prices are tax-inclusive (TTC)
   // Build a quick map to access product details (for per-product VAT)
@@ -172,6 +179,111 @@ export default function PosPage() {
     return 'offline-' + Date.now() + '-' + Math.floor(Math.random() * 1e6)
   }
 
+  // Export last receipt (when available) in two formats: 80mm and A5 PDF
+  const exportReceipt80mm = async () => {
+    if (!receiptData) return
+    try {
+      const jsPDFModule = await import('jspdf')
+      const jsPDF = (jsPDFModule as any).jsPDF || jsPDFModule.default
+      const lineH = 5
+      const baseHeight = 60 + (receiptData.items.length * (lineH + 1)) + 30
+      const doc = new jsPDF({ unit: 'mm', format: [80, Math.max(120, baseHeight)] })
+      const m = 4
+      let y = m
+      const brand = receiptData.brand
+      if (brand?.logoDataUrl) {
+        try { doc.addImage(brand.logoDataUrl, 'PNG', m, y, 14, 14) } catch {}
+      }
+      doc.setFontSize(11)
+      doc.text(brand?.name || 'AfriGest', brand?.logoDataUrl ? m + 16 : m, y + 5)
+      doc.setFontSize(8)
+      const meta = [brand?.slogan, brand?.address, brand?.phone].filter(Boolean).join(' • ')
+      if (meta) { doc.text(meta, m, y + 11) }
+      y += 16
+      doc.setDrawColor(180); doc.line(m, y, 80 - m, y); y += 3
+      doc.setFontSize(9)
+      doc.text(`Reçu ${receiptData.receiptNumber || ''} — ${new Date(receiptData.createdAt).toLocaleString()}`, m, y); y += 5
+      doc.text(`Boutique: ${receiptData.boutiqueId} • Paiement: ${receiptData.paymentMethod}`, m, y); y += 5
+      if (receiptData.paymentRef) { doc.text(`Réf: ${receiptData.paymentRef}`, m, y); y += 5 }
+      doc.setDrawColor(220); doc.line(m, y, 80 - m, y); y += 4
+      doc.setFontSize(8)
+      receiptData.items.forEach((it) => {
+        const line = `${it.quantity} x ${it.name}`.substring(0, 38)
+        const total = it.total != null ? it.total : (it.quantity * it.unitPrice)
+        doc.text(line, m, y)
+        doc.text(String(total), 80 - m, y, { align: 'right' as any })
+        y += lineH
+      })
+      doc.setDrawColor(220); doc.line(m, y, 80 - m, y); y += 5
+      doc.setFontSize(10)
+      doc.text('Total', m, y)
+      doc.text(String(receiptData.total) + ' ' + (receiptData.currency || ''), 80 - m, y, { align: 'right' as any })
+      y += 6
+      if ((receiptData.vatRate || 0) > 0) {
+        doc.setFontSize(8)
+        doc.text(`HT: ${String(receiptData.totalExclVat || '')}`, m, y); y += 4
+        doc.text(`TVA (${receiptData.vatRate}%): ${String(receiptData.vatAmount || '')}`, m, y); y += 4
+      }
+      doc.save(`receipt_${receiptData.receiptNumber || ''}_80mm.pdf`)
+    } catch {}
+  }
+
+  const exportReceiptA5 = async () => {
+    if (!receiptData) return
+    try {
+      const jsPDFModule = await import('jspdf')
+      const jsPDF = (jsPDFModule as any).jsPDF || jsPDFModule.default
+      const pdf = new jsPDF({ unit: 'pt', format: 'a5' })
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const margin = 26
+      const lineH = 14
+      const brand = receiptData.brand
+      let y = margin
+      if (brand?.logoDataUrl) {
+        try { pdf.addImage(brand.logoDataUrl, 'PNG', margin, y - 8, 36, 36) } catch {}
+      }
+      pdf.setFontSize(14)
+      pdf.text(brand?.name || 'AfriGest', brand?.logoDataUrl ? margin + 44 : margin, y)
+      y += lineH
+      pdf.setFontSize(10)
+      const meta = [brand?.slogan, brand?.address, brand?.phone].filter(Boolean).join(' • ')
+      if (meta) { pdf.text(meta, brand?.logoDataUrl ? margin + 44 : margin, y); y += lineH }
+      pdf.setFontSize(12)
+      pdf.text(`Reçu ${receiptData.receiptNumber || ''} — ${new Date(receiptData.createdAt).toLocaleString()}`, margin, y); y += lineH
+      pdf.setFontSize(10)
+      pdf.text(`Boutique: ${receiptData.boutiqueId}`, margin, y); y += lineH
+      pdf.text(`Paiement: ${receiptData.paymentMethod}${receiptData.paymentRef ? ' (' + receiptData.paymentRef + ')' : ''}`, margin, y); y += lineH
+      pdf.setDrawColor(200); pdf.line(margin, y, pageWidth - margin, y); y += lineH
+      pdf.setFontSize(10)
+      pdf.text('SKU', margin, y)
+      pdf.text('Nom', margin + 100, y)
+      pdf.text('Qté', pageWidth - margin - 140, y)
+      pdf.text('PU', pageWidth - margin - 100, y)
+      pdf.text('Total', pageWidth - margin - 40, y)
+      y += lineH
+      pdf.setDrawColor(230)
+      receiptData.items.forEach((it) => {
+        const total = it.total != null ? it.total : (it.quantity * it.unitPrice)
+        pdf.text(String(it.sku || ''), margin, y)
+        pdf.text(String(it.name || '').substring(0, 38), margin + 100, y)
+        pdf.text(String(it.quantity), pageWidth - margin - 140, y)
+        pdf.text(String(it.unitPrice), pageWidth - margin - 100, y)
+        pdf.text(String(total), pageWidth - margin - 40, y)
+        y += lineH
+      })
+      y += 6
+      pdf.setDrawColor(200); pdf.line(margin, y, pageWidth - margin, y); y += lineH
+      pdf.setFontSize(12); pdf.text(`Total: ${receiptData.total} ${receiptData.currency || ''}`, pageWidth - margin - 160, y)
+      y += lineH
+      if ((receiptData.vatRate || 0) > 0) {
+        pdf.setFontSize(10)
+        pdf.text(`HT: ${String(receiptData.totalExclVat || '')}`, pageWidth - margin - 160, y); y += lineH
+        pdf.text(`TVA (${receiptData.vatRate}%): ${String(receiptData.vatAmount || '')}`, pageWidth - margin - 160, y); y += lineH
+      }
+      pdf.save(`receipt_${receiptData.receiptNumber || ''}_A5.pdf`)
+    } catch {}
+  }
+
   const submitSale = async () => {
     setMessage(null)
     setLoading(true)
@@ -185,10 +297,13 @@ export default function PosPage() {
     const hasMulti = (payments || []).length > 0
     const pmMethod = hasMulti ? 'mixed' : paymentMethod
     const validPayments = (payments || []).filter(p => Number(p.amount) > 0)
+    // If mobile money selected (single payment), attach phone into paymentRef for reconciliation.
+    const mmRef = (paymentMethod === 'mobile_money' && !hasMulti && mobilePhone.trim()) ? `momo:${mobilePhone.trim()}` : undefined
     const payload = { boutiqueId, items, paymentMethod: pmMethod as any, payments: hasMulti ? validPayments : undefined, currency }
     try {
       const sale = await createSale(payload)
       setMessage(`Vente créée: ${sale.id} | Total: ${totalAfterDiscount}`)
+      try { (await import('../utils/audit')).appendAudit({ action: 'sale_create', module: 'pos', entityId: sale.id, details: `total: ${totalAfterDiscount}` }) } catch {}
       // Build receipt
       const receiptItems = cart.map((i, idx) => ({
         sku: i.sku,
@@ -199,7 +314,7 @@ export default function PosPage() {
       }))
       const brand = settings
       const receiptNumber = getNextReceiptNumber(boutiqueId, brand.receiptPrefix)
-      setReceiptData({ id: sale.id, boutiqueId, createdAt: new Date().toISOString(), currency, paymentMethod: pmMethod, paymentRef: paymentRef || undefined, payments: hasMulti ? validPayments : undefined, items: receiptItems, total: totalAfterDiscount, offlineId: undefined, brand: { name: brand.name, slogan: brand.slogan, address: brand.address, phone: brand.phone, logoDataUrl: brand.logoDataUrl }, receiptNumber, vatRate, vatAmount, totalExclVat, totalInclVat })
+      setReceiptData({ id: sale.id, boutiqueId, createdAt: new Date().toISOString(), currency, paymentMethod: pmMethod, paymentRef: (paymentRef || mmRef) || undefined, payments: hasMulti ? validPayments : undefined, items: receiptItems, total: totalAfterDiscount, offlineId: undefined, brand: { name: brand.name, slogan: brand.slogan, address: brand.address, phone: brand.phone, logoDataUrl: brand.logoDataUrl }, receiptNumber, vatRate, vatAmount, totalExclVat, totalInclVat })
       setReceiptOpen(true)
       setCart([])
       setGlobalDiscount(0)
@@ -210,6 +325,7 @@ export default function PosPage() {
       const offlineId = genOfflineId()
       await enqueueSale({ ...payload, offlineId })
       setMessage(`Vente enregistrée hors-ligne (${offlineId}). Elle sera synchronisée dès connexion.`)
+      try { (await import('../utils/audit')).appendAudit({ action: 'sale_enqueue', module: 'pos', entityId: offlineId, details: `total: ${totalAfterDiscount}` }) } catch {}
       try { setPending(await getPendingSales()) } catch {}
       const receiptItems = cart.map((i, idx) => ({
         sku: i.sku,
@@ -220,7 +336,7 @@ export default function PosPage() {
       }))
       const brand = settings
       const receiptNumber = getNextReceiptNumber(boutiqueId, brand.receiptPrefix)
-      setReceiptData({ id: undefined, boutiqueId, createdAt: new Date().toISOString(), currency, paymentMethod: pmMethod, paymentRef: paymentRef || undefined, payments: hasMulti ? validPayments : undefined, items: receiptItems, total: totalAfterDiscount, offlineId, brand: { name: brand.name, slogan: brand.slogan, address: brand.address, phone: brand.phone, logoDataUrl: brand.logoDataUrl }, receiptNumber, vatRate, vatAmount, totalExclVat, totalInclVat })
+      setReceiptData({ id: undefined, boutiqueId, createdAt: new Date().toISOString(), currency, paymentMethod: pmMethod, paymentRef: (paymentRef || mmRef) || undefined, payments: hasMulti ? validPayments : undefined, items: receiptItems, total: totalAfterDiscount, offlineId, brand: { name: brand.name, slogan: brand.slogan, address: brand.address, phone: brand.phone, logoDataUrl: brand.logoDataUrl }, receiptNumber, vatRate, vatAmount, totalExclVat, totalInclVat })
       setReceiptOpen(true)
       setCart([])
       setGlobalDiscount(0)
@@ -424,7 +540,7 @@ export default function PosPage() {
                 pdf.text('Total', pageWidth - margin - 30, yPos)
                 yPos += lineH
                 pdf.setDrawColor(230)
-                sale.items.forEach(it => {
+                sale.items.forEach((it: any) => {
                   const p = mapById.get(it.productId)
                   const sku = p?.sku || it.productId
                   const name = p?.name || ''
@@ -553,14 +669,14 @@ export default function PosPage() {
                       </IconButton>
                     </Stack>
                   </TableCell>
-                  <TableCell align="right">{formatGNF(i.unitPrice)}</TableCell>
+                  <TableCell align="right">{fc(i.unitPrice)}</TableCell>
                   <TableCell align="right">
                     <TextField size="small" type="number" value={i.discount || 0} onChange={e => {
                       const v = Number(e.target.value)
                       setCart(prev => prev.map((x, j) => j === idx ? { ...x, discount: v } : x))
                     }} inputProps={{ min: 0 }} sx={{ width: 100 }} />
                   </TableCell>
-                  <TableCell align="right">{formatGNF(i.quantity * i.unitPrice - (i.discount || 0))}</TableCell>
+                  <TableCell align="right">{fc(i.quantity * i.unitPrice - (i.discount || 0))}</TableCell>
                   <TableCell align="right">
                     <IconButton size="small" aria-label="Supprimer ligne" onClick={() => removeFromCart(i.productId)}>
                       <DeleteIcon fontSize="small" />
@@ -576,15 +692,15 @@ export default function PosPage() {
             <Stack spacing={0.5} sx={{ minWidth: 280 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography color="text.secondary">Sous‑total</Typography>
-                <Typography color="text.secondary">{formatGNF(total)}</Typography>
+                <Typography color="text.secondary">{fc(total)}</Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography color="text.secondary">Remise globale</Typography>
-                <Typography color="text.secondary">{formatGNF(Math.min(globalDiscount || 0, total))}</Typography>
+                <Typography color="text.secondary">{fc(Math.min(globalDiscount || 0, total))}</Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography fontWeight={700}>Total</Typography>
-                <Typography fontWeight={700}>{formatGNF(totalAfterDiscount)}</Typography>
+                <Typography fontWeight={700}>{fc(totalAfterDiscount)}</Typography>
               </Box>
             </Stack>
           </Box>
@@ -596,22 +712,32 @@ export default function PosPage() {
               <MenuItem value="mobile_money">Mobile Money</MenuItem>
               <MenuItem value="card">Carte</MenuItem>
             </TextField>
+            {paymentMethod === 'mobile_money' && (
+              <TextField label="Téléphone Mobile Money" value={mobilePhone} onChange={e => setMobilePhone(e.target.value)} placeholder="Ex: 620000000" />
+            )}
             <TextField label="Référence paiement (optionnel)" value={paymentRef} onChange={e => setPaymentRef(e.target.value)} />
             <TextField label="Remise globale" type="number" value={globalDiscount} onChange={e => setGlobalDiscount(Number(e.target.value))} inputProps={{ min: 0 }} />
             <Box sx={{ flex: 1 }} />
             <Stack sx={{ textAlign: 'right' }}>
               {vatRate > 0 && (
                 <>
-                  <Typography variant="body2" color="text.secondary">HT: {formatGNF(totalExclVat)}</Typography>
-                  <Typography variant="body2" color="text.secondary">TVA ({vatRate}%): {formatGNF(vatAmount)}</Typography>
-                  <Typography variant="h6">TTC: {formatGNF(totalInclVat)} {currency}</Typography>
+                  <Typography variant="body2" color="text.secondary">HT: {fc(totalExclVat)}</Typography>
+                  <Typography variant="body2" color="text.secondary">TVA ({vatRate}%): {fc(vatAmount)}</Typography>
+                  <Typography variant="h6">TTC: {fc(totalInclVat)}</Typography>
                 </>
               )}
-              {vatRate <= 0 && <Typography variant="h6">Total: {formatGNF(totalAfterDiscount)} {currency}</Typography>}
+              {vatRate <= 0 && <Typography variant="h6">Total: {fc(totalAfterDiscount)}</Typography>}
             </Stack>
             <Button variant="contained" onClick={submitSale} disabled={loading || cart.length === 0} disableElevation>
               {loading ? (<><CircularProgress size={18} sx={{ mr: 1 }} /> En cours…</>) : (t('pos.submit_sale') || 'Valider la vente')}
             </Button>
+            <Button size="small" variant="outlined" onClick={async () => { setPendingOpen(true); try { setPending(await getPendingSales()) } catch {} }} disabled={false}>
+              En attente: {pending.length}
+            </Button>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 1 }}>
+              <Button size="small" variant="outlined" onClick={exportReceipt80mm} disabled={!receiptData}>Imprimer 80mm</Button>
+              <Button size="small" variant="outlined" onClick={exportReceiptA5} disabled={!receiptData}>Exporter A5 PDF</Button>
+            </Stack>
           </Stack>
 
           {/* Multi-payments section */}
@@ -631,7 +757,7 @@ export default function PosPage() {
             ))}
             <Stack direction="row" spacing={1}>
               <Button size="small" variant="outlined" onClick={() => setPayments(prev => [...prev, { method: 'cash', amount: 0 }])}>Ajouter un paiement</Button>
-              <Typography color="text.secondary">Somme paiements: {formatGNF((payments || []).reduce((s, p) => s + (p.amount || 0), 0))} / TTC: {formatGNF(totalInclVat)}</Typography>
+              <Typography color="text.secondary">Somme paiements: {formatCurrency((payments || []).reduce((s, p) => s + (p.amount || 0), 0), currency)} / TTC: {formatCurrency(totalInclVat, currency)}</Typography>
             </Stack>
           </Stack>
 
@@ -693,6 +819,7 @@ export default function PosPage() {
               {pending.map((p: any) => (
                 <ListItem key={p.offlineId} secondaryAction={
                   <Stack direction="row" spacing={1}>
+                    <Button size="small" onClick={async () => { try { await retryPendingSale(p.offlineId) } catch {} finally { try { setPending(await getPendingSales()) } catch {} } }}>Réessayer</Button>
                     <Button size="small" onClick={async () => { try { await removePendingSale(p.offlineId) } finally { try { setPending(await getPendingSales()) } catch {} } }}>Supprimer</Button>
                   </Stack>
                 }>
