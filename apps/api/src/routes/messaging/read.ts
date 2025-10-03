@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { requireAuth } from '../../middleware/auth'
+import { requirePermission } from '../../middleware/authorization'
 import { getTenantClientFromReq } from '../../db'
 import { getIO } from '../../ws'
+import { auditReq } from '../../services/audit'
 
 const router = Router({ mergeParams: true })
 
 // PUT /api/tenants/:tenantId/messaging/:messageId/read
-router.put('/:messageId/read', requireAuth, async (req, res) => {
+router.put('/:messageId/read', requireAuth, requirePermission('messaging', 'read'), async (req, res) => {
   const { tenantId, messageId } = req.params as { tenantId: string; messageId: string }
   const auth = (req as any).auth as { sub: string }
   const prisma = getTenantClientFromReq(req)
@@ -19,7 +21,7 @@ router.put('/:messageId/read', requireAuth, async (req, res) => {
       io.to(`tenant:${tenantId}`).emit('messaging:read', { messageId: msg.id, readAt: msg.readAt })
     }
     // Audit best-effort
-    try { await (prisma as any).messagingAuditLog.create({ data: { tenantId, userId: auth.sub, action: 'message.read', entityType: 'message', entityId: messageId, createdAt: new Date() } }) } catch {}
+    try { await auditReq(req, { action: 'messaging.message.read', resource: messageId, userId: auth.sub }) } catch {}
     return res.json({ ok: true })
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to mark as read' })

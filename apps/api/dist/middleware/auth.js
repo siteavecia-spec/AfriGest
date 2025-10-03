@@ -23,8 +23,12 @@ function requireAuth(req, res, next) {
                 return res.status(401).json({ error: 'Session invalidated, please login again' });
             }
         }
-        ;
-        req.auth = payload;
+        // Allow support window override via header (MVP). Only attach if present and role is support or header provided.
+        const supportUntilHeader = (req.headers['x-support-until'] || '').toString().trim();
+        const enriched = { ...payload };
+        if (supportUntilHeader)
+            enriched.support_until = supportUntilHeader;
+        req.auth = enriched;
         next();
     }
     catch (e) {

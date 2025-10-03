@@ -1,15 +1,16 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth'
-import { requireRole } from '../middleware/rbac'
+import { requirePermission } from '../middleware/authorization'
 import { Product, sectorTemplates, products as memoryProducts } from '../stores/memory'
 import { listSectorTemplatesMerged, addTenantCustomAttribute, removeTenantCustomAttribute } from '../services/templates'
 import { listProducts as svcListProducts, createProduct as svcCreateProduct } from '../services/products'
 import { getTenantClientFromReq } from '../db'
+import { auditReq } from '../services/audit'
 
 const router = Router()
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, requirePermission('stock', 'read'), async (req, res) => {
   const limitRaw = (req.query.limit || '').toString()
   const offsetRaw = (req.query.offset || '').toString()
   const limit = limitRaw ? Math.max(1, Math.min(200, Number(limitRaw))) : undefined
@@ -27,6 +28,7 @@ router.get('/', requireAuth, async (req, res) => {
   } catch {
     res.setHeader('X-Total-Count', String(memoryProducts.length))
   }
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'products.read', resource: 'products', meta: { limit, offset } }) } catch {}
   return res.json(rows)
 })
 
@@ -41,7 +43,7 @@ const createSchema = z.object({
   attrs: z.record(z.any()).optional()
 })
 
-router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.post('/', requireAuth, requirePermission('stock', 'create'), async (req, res) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   // Dynamic per-sector validation using templates
@@ -74,27 +76,31 @@ router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (re
     return res.status(400).json({ error: e?.message || 'Sector validation error' })
   }
   const created = await svcCreateProduct(req, parsed.data)
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'product.create', resource: (created as any).id, meta: { sku: parsed.data.sku, sector: parsed.data.sector } }) } catch {}
   return res.status(201).json(created as Product)
 })
 
 // Sector templates for multi-sector product attributes
-router.get('/templates', requireAuth, async (req, res) => {
+router.get('/templates', requireAuth, requirePermission('stock', 'read'), async (req, res) => {
   try {
     const data = await listSectorTemplatesMerged(req)
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'products.templates.read', resource: 'templates' }) } catch {}
     return res.json(data)
   } catch (e: any) {
     // fallback memory
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'products.templates.read', resource: 'templates' }) } catch {}
     return res.json(sectorTemplates)
   }
 })
 
 // Add custom attribute for a sector (PDG)
-router.post('/templates/custom', requireAuth, requireRole('super_admin', 'pdg'), async (req, res) => {
+router.post('/templates/custom', requireAuth, requirePermission('settings', 'update'), async (req, res) => {
   const schema = z.object({ sectorKey: z.string().min(1), key: z.string().min(1), label: z.string().min(1), type: z.enum(['string','number','date','text']), required: z.boolean().optional() })
   const parsed = schema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   try {
     const created = await addTenantCustomAttribute(req, parsed.data)
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'products.template.custom.add', resource: parsed.data.sectorKey, meta: { key: parsed.data.key } }) } catch {}
     return res.status(201).json(created)
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to add custom attribute' })
@@ -102,12 +108,13 @@ router.post('/templates/custom', requireAuth, requireRole('super_admin', 'pdg'),
 })
 
 // Remove custom attribute for a sector
-router.delete('/templates/custom', requireAuth, requireRole('super_admin', 'pdg'), async (req, res) => {
+router.delete('/templates/custom', requireAuth, requirePermission('settings', 'update'), async (req, res) => {
   const schema = z.object({ sectorKey: z.string().min(1), key: z.string().min(1) })
   const parsed = schema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   try {
     const removed = await removeTenantCustomAttribute(req, parsed.data.sectorKey, parsed.data.key)
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'products.template.custom.remove', resource: parsed.data.sectorKey, meta: { key: parsed.data.key } }) } catch {}
     return res.json(removed)
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to remove custom attribute' })
@@ -115,7 +122,7 @@ router.delete('/templates/custom', requireAuth, requireRole('super_admin', 'pdg'
 })
 
 // Export products as CSV for a given sector (flattening template attributes)
-router.get('/export', requireAuth, async (req, res) => {
+router.get('/export', requireAuth, requirePermission('stock', 'export'), async (req, res) => {
   const sectorKey = (req.query.sector || '').toString() || 'all'
   try {
     const templates = await listSectorTemplatesMerged(req).catch(() => sectorTemplates)
@@ -133,14 +140,16 @@ router.get('/export', requireAuth, async (req, res) => {
     }
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')
     res.setHeader('Content-Disposition', `attachment; filename="products_${sectorKey}.csv"`)
-    return res.send(lines.join('\n'))
+    const out = lines.join('\n')
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'products.export', resource: 'products', meta: { sector: sectorKey, count: items.length } }) } catch {}
+    return res.send(out)
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to export products' })
   }
 })
 
 // Import products from JSON payload shaped by sector template
-router.post('/import', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.post('/import', requireAuth, requirePermission('stock', 'create'), async (req, res) => {
   const schema = z.object({ sectorKey: z.string().min(1), items: z.array(z.record(z.any())).min(1) })
   const parsed = schema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
@@ -166,11 +175,12 @@ router.post('/import', requireAuth, requireRole('super_admin', 'pdg', 'dg'), asy
       errors.push({ index: idx, error: e?.message || 'Failed to import row' })
     }
   }
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'products.import', resource: 'products', meta: { sectorKey, created: created.length, errors: errors.length } }) } catch {}
   return res.json({ createdCount: created.length, errorCount: errors.length, created, errors })
 })
 
 // PATCH /products/:id — update product basic fields (name, price, cost, barcode, taxRate, sector, attrs)
-router.patch('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.patch('/:id', requireAuth, requirePermission('stock', 'update'), async (req, res) => {
   const id = (req.params.id || '').toString()
   const schema = z.object({
     name: z.string().optional(),
@@ -195,6 +205,7 @@ router.patch('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async
       if (parsed.data.sector !== undefined) data.sector = parsed.data.sector
       if (parsed.data.attrs !== undefined) data.attrs = parsed.data.attrs
       const updated = await (prisma as any).product.update({ where: { id }, data })
+      try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'product.update', resource: id, meta: parsed.data as any }) } catch {}
       return res.json(updated)
     }
   } catch (e: any) {
@@ -206,12 +217,13 @@ router.patch('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async
   const next = { ...((memoryProducts as any)[idx]) }
   Object.assign(next, parsed.data)
   ;(memoryProducts as any)[idx] = next
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'product.update', resource: id, meta: parsed.data as any }) } catch {}
   return res.json(next)
 })
 
 // Search with advanced filters (MVP: filter in memory/JS)
 // GET /products/search?q=...&sector=pharmacy&expiryBefore=2025-12-31&warrantyLtDays=30&attr.color=Rouge
-router.get('/search', requireAuth, async (req, res) => {
+router.get('/search', requireAuth, requirePermission('stock', 'read'), async (req, res) => {
   const q = (req.query.q || '').toString().toLowerCase().trim()
   const sectorKey = (req.query.sector || '').toString().trim() || 'all'
   const expiryBeforeRaw = (req.query.expiryBefore || '').toString().trim()

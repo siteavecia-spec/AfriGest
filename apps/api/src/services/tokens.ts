@@ -2,7 +2,18 @@ import jwt from 'jsonwebtoken'
 import { env } from '../config/env'
 import type { SignOptions, Secret } from 'jsonwebtoken'
 
-export type Role = 'super_admin' | 'pdg' | 'dg' | 'employee'
+export type Role =
+  | 'super_admin'
+  | 'support'
+  | 'pdg'
+  | 'dr'
+  | 'dg'
+  | 'manager_stock'
+  | 'caissier'
+  | 'employee'
+  | 'ecom_manager'
+  | 'ecom_ops'
+  | 'marketing'
 
 export function signAccessToken(userId: string, role: Role) {
   const opts: SignOptions = { expiresIn: env.ACCESS_TTL as any }

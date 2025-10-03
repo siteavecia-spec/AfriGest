@@ -1,9 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
 const rbac_1 = require("../middleware/rbac");
 const memory_1 = require("../stores/memory");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const tenant_1 = require("../db/tenant");
+const env_1 = require("../config/env");
 const router = (0, express_1.Router)();
 let lastSeedBasicAt = null;
 let lastSeedSalesAt = null;
@@ -96,4 +102,36 @@ router.get('/status', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin',
         }
     }
     return res.json({ ok: true, counts: { products: productCount, suppliers: supplierCount, sales: salesCount, stockAudits: stockAuditCount, lowAlerts }, seeds: { basicAt: lastSeedBasicAt, salesAt: lastSeedSalesAt } });
+});
+// POST /dev/seed/users — seed demo users in current tenant DB (using TENANT_DATABASE_URL)
+router.post('/seed/users', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg'), async (req, res) => {
+    try {
+        const prisma = (0, tenant_1.getTenantPrisma)(env_1.env.TENANT_DATABASE_URL);
+        const desired = [
+            { email: 'pdg@demo.local', fullName: 'PDG Démo', role: 'pdg', password: 'Admin123!' },
+            { email: 'dg@demo.local', fullName: 'DG Démo', role: 'dg', password: 'Admin123!' },
+            { email: 'caissier@demo.local', fullName: 'Caissier Démo', role: 'caissier', password: 'Admin123!' },
+            { email: 'manager_stock@demo.local', fullName: 'Manager Stock Démo', role: 'manager_stock', password: 'Admin123!' },
+            { email: 'ecom_manager@demo.local', fullName: 'E‑commerce Manager Démo', role: 'ecom_manager', password: 'Admin123!' },
+            { email: 'ecom_ops@demo.local', fullName: 'E‑commerce Ops Démo', role: 'ecom_ops', password: 'Admin123!' },
+            { email: 'marketing@demo.local', fullName: 'Marketing Démo', role: 'marketing', password: 'Admin123!' },
+            { email: 'support@demo.local', fullName: 'Support Démo', role: 'support', password: 'Admin123!' },
+            { email: 'employee@demo.local', fullName: 'Employé Démo', role: 'employee', password: 'Admin123!' }
+        ];
+        const results = [];
+        for (const d of desired) {
+            const exists = await prisma.user.findUnique({ where: { email: d.email.toLowerCase() } });
+            if (exists) {
+                results.push({ email: d.email, created: false });
+                continue;
+            }
+            const passwordHash = await bcryptjs_1.default.hash(d.password, 10);
+            await prisma.user.create({ data: { email: d.email.toLowerCase(), fullName: d.fullName, role: d.role, status: 'active', passwordHash } });
+            results.push({ email: d.email, created: true });
+        }
+        return res.json({ ok: true, results });
+    }
+    catch (e) {
+        return res.status(500).json({ error: e?.message || 'Failed to seed users' });
+    }
 });

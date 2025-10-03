@@ -51,20 +51,36 @@ export async function getTodayTopProducts(tenantId: string, prisma?: any, limit 
   return arr.slice(0, limit)
 }
 
-export async function createOrder(params: { tenantId: string; items: EcommerceOrderItem[]; customerEmail?: string; customerPhone?: string; currency?: string }, prisma?: any): Promise<any> {
+export async function createOrder(params: { tenantId: string; items: EcommerceOrderItem[]; customerEmail?: string; customerPhone?: string; currency?: string; boutiqueId?: string }, prisma?: any): Promise<any> {
   const currency = params.currency || 'GNF'
   const total = params.items.reduce((s, it) => s + it.price * it.quantity, 0)
   if (prisma?.ecommerceOrder) {
-    const created = await prisma.ecommerceOrder.create({
-      data: {
-        total,
-        currency,
-        status: 'received',
-        customer: params.customerEmail ? { connectOrCreate: { where: { email: params.customerEmail }, create: { email: params.customerEmail, phone: params.customerPhone } } } : undefined,
-        items: { create: params.items.map(it => ({ sku: it.sku, quantity: it.quantity, price: it.price, currency })) }
-      },
-      include: { items: true, customer: true }
-    })
+    let created: any
+    try {
+      created = await prisma.ecommerceOrder.create({
+        data: {
+          total,
+          currency,
+          status: 'received',
+          ...(params.boutiqueId ? { boutiqueId: params.boutiqueId } : {}),
+          customer: params.customerEmail ? { connectOrCreate: { where: { email: params.customerEmail }, create: { email: params.customerEmail, phone: params.customerPhone } } } : undefined,
+          items: { create: params.items.map(it => ({ sku: it.sku, quantity: it.quantity, price: it.price, currency })) }
+        },
+        include: { items: true, customer: true }
+      })
+    } catch {
+      // Fallback for older schema without boutiqueId
+      created = await prisma.ecommerceOrder.create({
+        data: {
+          total,
+          currency,
+          status: 'received',
+          customer: params.customerEmail ? { connectOrCreate: { where: { email: params.customerEmail }, create: { email: params.customerEmail, phone: params.customerPhone } } } : undefined,
+          items: { create: params.items.map(it => ({ sku: it.sku, quantity: it.quantity, price: it.price, currency })) }
+        },
+        include: { items: true, customer: true }
+      })
+    }
     // Audit log (best-effort)
     try {
       await prisma.auditLog.create({ data: { action: 'order.create', resource: 'ecommerce.order', resourceId: created.id, metadata: { total, currency }, createdAt: new Date() } })
@@ -80,7 +96,8 @@ export async function createOrder(params: { tenantId: string; items: EcommerceOr
     status: 'received',
     createdAt: new Date().toISOString(),
     customerEmail: params.customerEmail,
-    customerPhone: params.customerPhone
+    customerPhone: params.customerPhone,
+    ...(params.boutiqueId ? { boutiqueId: params.boutiqueId } : {})
   }
   ecommerceOrders.push(order)
   return order

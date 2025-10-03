@@ -323,3 +323,70 @@ model TenantCustomAttribute {
 
   @@unique([sectorKey, key])
 }
+
+// --- E-COMMERCE (Phase 4) ---
+
+model EcommerceCustomer {
+  id         String   @id @default(uuid())
+  email      String?  @unique
+  phone      String?  @unique
+  firstName  String?
+  lastName   String?
+  addresses  Json?
+  createdAt  DateTime @default(now())
+  orders     EcommerceOrder[]
+}
+
+model EcommerceOrder {
+  id            String             @id @default(uuid())
+  total         Decimal            @db.Decimal(10,2)
+  currency      String             @default("GNF")
+  status        String             @default("received")
+  paymentStatus String?
+  boutiqueId    String?
+  customer      EcommerceCustomer? @relation(fields: [customerId], references: [id])
+  customerId    String?
+  createdAt     DateTime           @default(now())
+  items         EcommerceOrderItem[]
+  payments      EcommercePayment[]
+
+  @@index([createdAt])
+  @@index([paymentStatus])
+}
+
+model EcommerceOrderItem {
+  id        String         @id @default(uuid())
+  order     EcommerceOrder @relation(fields: [orderId], references: [id])
+  orderId   String
+  sku       String
+  quantity  Int
+  price     Decimal        @db.Decimal(10,2)
+  currency  String
+}
+
+model EcommercePayment {
+  id               String         @id @default(uuid())
+  order            EcommerceOrder @relation(fields: [orderId], references: [id])
+  orderId          String
+  provider         String
+  status           String
+  amount           Decimal        @db.Decimal(10,2)
+  currency         String         @default("GNF")
+  providerIntentId String?
+  createdAt        DateTime       @default(now())
+
+  @@index([provider])
+  @@index([createdAt])
+}
+
+model EcommerceWebhookEvent {
+  id        String   @id @default(uuid())
+  provider  String
+  eventType String
+  payload   Json?
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([provider])
+  @@index([createdAt])
+}

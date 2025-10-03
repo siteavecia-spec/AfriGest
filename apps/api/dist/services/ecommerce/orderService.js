@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listOrders = listOrders;
+exports.getTodayTopProducts = getTodayTopProducts;
 exports.createOrder = createOrder;
 exports.updateOrderStatus = updateOrderStatus;
 exports.getTodayOnlineKPIs = getTodayOnlineKPIs;
@@ -18,20 +19,73 @@ async function listOrders(tenantId, limit = 50, offset = 0, prisma) {
     const items = all.slice().reverse().slice(offset, offset + limit);
     return { items, total };
 }
+async function getTodayTopProducts(tenantId, prisma, limit = 5) {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    if (prisma?.ecommerceOrderItem) {
+        // Aggregate items for today's orders
+        const rows = await prisma.ecommerceOrderItem.findMany({
+            where: { createdAt: { gte: start, lt: end } },
+            select: { sku: true, quantity: true, price: true }
+        });
+        const map = new Map();
+        for (const r of rows) {
+            const e = map.get(r.sku) || { qty: 0, rev: 0 };
+            e.qty += Number(r.quantity || 0);
+            e.rev += Number(r.price || 0) * Number(r.quantity || 0);
+            map.set(r.sku, e);
+        }
+        const arr = Array.from(map.entries()).map(([sku, v]) => ({ sku, quantity: v.qty, revenue: v.rev }));
+        arr.sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue);
+        return arr.slice(0, limit);
+    }
+    // Memory mode
+    const todays = memory_1.ecommerceOrders.filter(o => new Date(o.createdAt).getTime() >= start.getTime() && new Date(o.createdAt).getTime() < end.getTime() && o.tenantId === tenantId);
+    const map = new Map();
+    for (const o of todays) {
+        for (const it of (o.items || [])) {
+            const e = map.get(it.sku) || { qty: 0, rev: 0 };
+            e.qty += Number(it.quantity || 0);
+            e.rev += Number(it.price || 0) * Number(it.quantity || 0);
+            map.set(it.sku, e);
+        }
+    }
+    const arr = Array.from(map.entries()).map(([sku, v]) => ({ sku, quantity: v.qty, revenue: v.rev }));
+    arr.sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue);
+    return arr.slice(0, limit);
+}
 async function createOrder(params, prisma) {
     const currency = params.currency || 'GNF';
     const total = params.items.reduce((s, it) => s + it.price * it.quantity, 0);
     if (prisma?.ecommerceOrder) {
-        const created = await prisma.ecommerceOrder.create({
-            data: {
-                total,
-                currency,
-                status: 'received',
-                customer: params.customerEmail ? { connectOrCreate: { where: { email: params.customerEmail }, create: { email: params.customerEmail, phone: params.customerPhone } } } : undefined,
-                items: { create: params.items.map(it => ({ sku: it.sku, quantity: it.quantity, price: it.price, currency })) }
-            },
-            include: { items: true, customer: true }
-        });
+        let created;
+        try {
+            created = await prisma.ecommerceOrder.create({
+                data: {
+                    total,
+                    currency,
+                    status: 'received',
+                    ...(params.boutiqueId ? { boutiqueId: params.boutiqueId } : {}),
+                    customer: params.customerEmail ? { connectOrCreate: { where: { email: params.customerEmail }, create: { email: params.customerEmail, phone: params.customerPhone } } } : undefined,
+                    items: { create: params.items.map(it => ({ sku: it.sku, quantity: it.quantity, price: it.price, currency })) }
+                },
+                include: { items: true, customer: true }
+            });
+        }
+        catch {
+            // Fallback for older schema without boutiqueId
+            created = await prisma.ecommerceOrder.create({
+                data: {
+                    total,
+                    currency,
+                    status: 'received',
+                    customer: params.customerEmail ? { connectOrCreate: { where: { email: params.customerEmail }, create: { email: params.customerEmail, phone: params.customerPhone } } } : undefined,
+                    items: { create: params.items.map(it => ({ sku: it.sku, quantity: it.quantity, price: it.price, currency })) }
+                },
+                include: { items: true, customer: true }
+            });
+        }
         // Audit log (best-effort)
         try {
             await prisma.auditLog.create({ data: { action: 'order.create', resource: 'ecommerce.order', resourceId: created.id, metadata: { total, currency }, createdAt: new Date() } });
@@ -48,7 +102,8 @@ async function createOrder(params, prisma) {
         status: 'received',
         createdAt: new Date().toISOString(),
         customerEmail: params.customerEmail,
-        customerPhone: params.customerPhone
+        customerPhone: params.customerPhone,
+        ...(params.boutiqueId ? { boutiqueId: params.boutiqueId } : {})
     };
     memory_1.ecommerceOrders.push(order);
     return order;

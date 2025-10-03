@@ -140,6 +140,7 @@ export default function StorefrontCatalog() {
               </CardContent>
               <CardActions>
                 <Button size="small" disabled={loading} onClick={() => { addToCart(p.sku, p.title || p.sku, p.price, p.currency || 'GNF', (p.images && p.images[0]) || undefined); setToast('Ajouté au panier'); }}>Ajouter au panier</Button>
+                <Button size="small" href={`/shop/product/${encodeURIComponent(p.sku)}`}>Voir</Button>
                 <Button size="small" href="/shop/cart">Voir le panier</Button>
               </CardActions>
             </Card>

@@ -62,6 +62,25 @@ jobs:
           API_URL: http://localhost:4000
         run: node apps/api/tests/happy.test.mjs
 
+      - name: Install Playwright test runner
+        run: |
+          npm i -D @playwright/test
+          npx playwright install --with-deps
+
+      - name: Run E2E — MoMo callbacks
+        env:
+          API_URL: http://localhost:4000
+        run: |
+          npx playwright test -c e2e/playwright.config.ts e2e/tests/ecommerce-momo-callbacks.spec.ts
+
+      - name: Run E2E — Messaging (best-effort)
+        env:
+          API_URL: http://localhost:4000
+        run: |
+          set +e
+          npx playwright test -c e2e/playwright.config.ts e2e/tests/messaging.spec.ts || true
+          set -e
+
       - name: Bench (non-blocking)
         env:
           API_URL: http://localhost:4000

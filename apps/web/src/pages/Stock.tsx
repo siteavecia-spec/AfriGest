@@ -4,9 +4,13 @@ import { adjustStock, createProduct, createStockEntry, getStockAudit, getStockSu
 import { loadCustomAttrs, mergeTemplates } from '../utils/customAttrs'
 import { loadCompanySettings } from '../utils/settings'
 import { useBoutique } from '../context/BoutiqueContext'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../store'
+import { can } from '../utils/acl'
 import ErrorBanner from '../components/ErrorBanner'
 
 export default function StockPage() {
+  const role = useSelector((s: RootState) => s.auth.role) as any
   const { selectedBoutiqueId: boutiqueId, setSelectedBoutiqueId, boutiques } = useBoutique()
   const [products, setProducts] = useState<Array<any>>([])
   const [summary, setSummary] = useState<Array<{ productId: string; sku: string; name: string; quantity: number }>>([])
@@ -31,7 +35,7 @@ export default function StockPage() {
     } catch {
       return {}
     }
-
+  })
   const onOpenEdit = (prod: any) => {
     setEditProduct(prod)
     setEName(prod?.name || '')
@@ -69,7 +73,6 @@ export default function StockPage() {
       setLoading(false)
     }
   }
-  })
   // Adjust form state (per-row simple shared inputs)
   const [adjProductId, setAdjProductId] = useState<string>('')
   const [adjDelta, setAdjDelta] = useState<number>(0)
@@ -277,6 +280,11 @@ export default function StockPage() {
   // Apply advanced search restriction if present
   const filteredRows2 = advIds ? filteredRows.filter(r => advIds.has(r.productId)) : filteredRows
 
+  // Permissions
+  const canStockRead = can(role, 'stock', 'read')
+  const canStockCreate = can(role, 'stock', 'create')
+  const canStockUpdate = can(role, 'stock', 'update')
+
   const onAdjust = async (productId: string) => {
     if (!adjReason || !productId) return setMessage('Motif requis pour ajustement')
     try {
@@ -312,6 +320,7 @@ export default function StockPage() {
       {message && <ErrorBanner message={message} onRetry={() => load()} />}
 
       <Grid container spacing={3}>
+        {canStockCreate && (
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={600}>Créer un produit</Typography>
@@ -455,6 +464,8 @@ export default function StockPage() {
         </Stack>
       </Paper>
         </Grid>
+        )}
+        {canStockUpdate && (
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={600}>Entrée de stock</Typography>
@@ -480,6 +491,8 @@ export default function StockPage() {
             </Stack>
           </Paper>
         </Grid>
+        )}
+        {canStockUpdate && (
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={600}>Entrée rapide (multi‑lignes)</Typography>
@@ -552,6 +565,7 @@ export default function StockPage() {
             </Stack>
           </Paper>
         </Grid>
+        )}
       </Grid>
 
       <Divider sx={{ my: 3 }} />

@@ -2,7 +2,7 @@
 // Simple in-memory stores for MVP demo
 // NOTE: This is temporary and will be replaced by Prisma-backed services.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ecommerceOrders = exports.sectorTemplates = exports.passwordRevokedAfter = exports.passwordResetRequests = exports.demoRequests = exports.publicClients = exports.referralCodes = exports.stockAudits = exports.sales = exports.stocks = exports.boutiques = exports.suppliers = exports.products = void 0;
+exports.restockRequests = exports.transfers = exports.ecommerceOrders = exports.sectorTemplates = exports.passwordRevokedAfter = exports.passwordResetRequests = exports.demoRequests = exports.publicClients = exports.referralCodes = exports.stockAudits = exports.sales = exports.stocks = exports.boutiques = exports.suppliers = exports.products = void 0;
 exports.stockKey = stockKey;
 exports.upsertStock = upsertStock;
 exports.getStock = getStock;
@@ -73,11 +73,11 @@ exports.sectorTemplates = [
             { key: 'warranty', label: 'Garantie (mois)', type: 'number' },
         ] },
     { key: 'pharmacy', name: 'Pharmacie', attributes: [
-            { key: 'dci', label: 'DCI', type: 'string' },
+            { key: 'dci', label: 'DCI', type: 'string', required: true },
             { key: 'dosage', label: 'Dosage', type: 'string' },
             { key: 'form', label: 'Forme galénique', type: 'string' },
-            { key: 'batch', label: 'Numéro de lot', type: 'string' },
-            { key: 'expiry', label: 'Date d\'expiration', type: 'date' },
+            { key: 'batch', label: 'Numéro de lot', type: 'string', required: true },
+            { key: 'expiry', label: 'Date d\'expiration', type: 'date', required: true },
         ] },
     { key: 'grocery', name: 'Supérette', attributes: [
             { key: 'category', label: 'Catégorie', type: 'string' },
@@ -94,3 +94,5 @@ exports.sectorTemplates = [
     { key: 'generic', name: 'Générique', attributes: [] },
 ];
 exports.ecommerceOrders = [];
+exports.transfers = [];
+exports.restockRequests = [];

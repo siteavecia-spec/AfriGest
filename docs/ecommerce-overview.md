@@ -113,3 +113,15 @@ Notes:
 - Implement Phase 1 routes, then iterate to Phase 2.
 - Set up CloudFront signed URL flow per `docs/s3-private.md`.
 - Add dashboards for KPIs to PDG/DG views.
+
+---
+
+## Current Status (2025-10-03)
+
+- **Storefront (Public)**: Implemented Catalog, Product Detail, Cart, Checkout (PayPal init), and Order Tracking `/shop/track`.
+- **Payments (MVP)**: PayPal order/capture, MTN MoMo and Orange Money init + callbacks wired to update `paymentStatus` and persist `EcommercePayment`.
+- **Inventory**: Shared mode decrement/release integrated with order status transitions (Prepared/Returned) using Prisma service.
+- **Routing**: Multi-tenant routes under `/api/tenants/:tenantId/ecommerce/*` are active.
+- **E2E**: Playwright tests added for MoMo callbacks; storefront flows validated via smoke.
+
+Next validations: run E2E suites on CI, review KPIs, and harden observability (metrics/alerts per endpoint).

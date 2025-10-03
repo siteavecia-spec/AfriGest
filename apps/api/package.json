@@ -13,6 +13,9 @@
     "test:api:core": "node tests/products.super.test.mjs && node tests/suppliers.super.test.mjs && node tests/stock.super.test.mjs && node tests/sales.super.test.mjs",
     "test:api:ecom": "node tests/ecommerce.products.super.test.mjs && node tests/ecommerce.orders.super.test.mjs && node tests/ecommerce.products.upsert.super.test.mjs && node tests/ecommerce.products.patch.super.test.mjs && node tests/ecommerce.images.super.test.mjs && node tests/ecommerce.images.cover.super.test.mjs",
     "test:api": "npm run test:api:core && npm run test:api:ecom",
+    "test:rbac:users": "node tests/rbac.users.admin_only.test.mjs",
+    "test:rbac:core": "node tests/rbac.core.permissions.test.mjs",
+    "test:rbac": "npm run build && npm run test:rbac:users && npm run test:rbac:core",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {

@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { Box, Card, CardContent, FormControlLabel, Grid, Switch, TextField, Typography, MenuItem, Stack, Button, Snackbar, Alert } from '@mui/material'
 import { showPayments, showMobileMoney, enableStripe, showPayPal } from '../../config/featureFlags'
 import { ecomPaymentsStripeIntent, ecomPaymentsPayPalOrder, ecomPaymentsMtnInit, ecomPaymentsOrangeInit } from '../../api/client_clean'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../../store'
+import { can } from '../../utils/acl'
 
 export default function EcommerceSettings() {
   const [stockMode, setStockMode] = useState<'shared'|'dedicated'>('shared')
@@ -17,6 +20,9 @@ export default function EcommerceSettings() {
   const [savedInfo, setSavedInfo] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  // Permissions
+  const role = useSelector((s: RootState) => s.auth.role) as any
+  const canUpdate = can(role, 'ecommerce.settings', 'update')
 
   return (
     <Box>
@@ -26,11 +32,11 @@ export default function EcommerceSettings() {
           <Card>
             <CardContent>
               <Typography variant="subtitle1" fontWeight={600}>Stock</Typography>
-              <TextField select size="small" label="Mode stock en ligne" value={stockMode} onChange={e => setStockMode(e.target.value as any)} sx={{ mt: 2, minWidth: 240 }}>
+              <TextField select size="small" label="Mode stock en ligne" value={stockMode} onChange={e => setStockMode(e.target.value as any)} sx={{ mt: 2, minWidth: 240 }} disabled={!canUpdate}>
                 <MenuItem value="shared">Partagé avec stock physique</MenuItem>
                 <MenuItem value="dedicated">Dédié e‑commerce</MenuItem>
               </TextField>
-              <TextField select size="small" label="Filtre secteur (sync)" value={sectorFilter} onChange={e => setSectorFilter(e.target.value as any)} sx={{ mt: 2, minWidth: 240 }}>
+              <TextField select size="small" label="Filtre secteur (sync)" value={sectorFilter} onChange={e => setSectorFilter(e.target.value as any)} sx={{ mt: 2, minWidth: 240 }} disabled={!canUpdate}>
                 <MenuItem value="all">Tous</MenuItem>
                 <MenuItem value="generic">Générique</MenuItem>
                 <MenuItem value="electronics">Électronique</MenuItem>
@@ -44,10 +50,10 @@ export default function EcommerceSettings() {
             <CardContent>
               <Typography variant="subtitle1" fontWeight={600}>Paiements</Typography>
               <Stack sx={{ mt: 2 }}>
-                <FormControlLabel control={<Switch checked={codEnabled} onChange={e => setCodEnabled(e.target.checked)} />} label="Paiement à la livraison (COD)" />
-                <FormControlLabel control={<Switch checked={cardEnabled} onChange={e => setCardEnabled(e.target.checked)} />} label="Carte (Stripe/PayPal)" />
-                <FormControlLabel control={<Switch checked={mtnEnabled} onChange={e => setMtnEnabled(e.target.checked)} />} label="MTN Mobile Money" />
-                <FormControlLabel control={<Switch checked={orangeEnabled} onChange={e => setOrangeEnabled(e.target.checked)} />} label="Orange Money" />
+                <FormControlLabel control={<Switch checked={codEnabled} onChange={e => setCodEnabled(e.target.checked)} disabled={!canUpdate} />} label="Paiement à la livraison (COD)" />
+                <FormControlLabel control={<Switch checked={cardEnabled} onChange={e => setCardEnabled(e.target.checked)} disabled={!canUpdate} />} label="Carte (Stripe/PayPal)" />
+                <FormControlLabel control={<Switch checked={mtnEnabled} onChange={e => setMtnEnabled(e.target.checked)} disabled={!canUpdate} />} label="MTN Mobile Money" />
+                <FormControlLabel control={<Switch checked={orangeEnabled} onChange={e => setOrangeEnabled(e.target.checked)} disabled={!canUpdate} />} label="Orange Money" />
               </Stack>
               {showPayments && (
                 <>
@@ -60,7 +66,7 @@ export default function EcommerceSettings() {
                   </Stack>
                   <Typography variant="subtitle2" sx={{ mt: 2 }}>Tests sandbox (stubs)</Typography>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 1 }}>
-                    {enableStripe && (
+                    {enableStripe && canUpdate && (
                       <Button variant="outlined" onClick={async () => {
                         try {
                           const res = await ecomPaymentsStripeIntent({ items: [{ sku: 'demo', quantity: 1, price: 1000 }], customer: {} })
@@ -68,7 +74,7 @@ export default function EcommerceSettings() {
                         } catch (e: any) { setErr(e?.message || 'Échec Stripe stub') }
                       }}>Tester Stripe</Button>
                     )}
-                    {showPayPal && (
+                    {showPayPal && canUpdate && (
                       <Button variant="outlined" onClick={async () => {
                         try {
                           const res = await ecomPaymentsPayPalOrder({ items: [{ sku: 'demo', quantity: 1, price: 1000 }] })
@@ -76,7 +82,7 @@ export default function EcommerceSettings() {
                         } catch (e: any) { setErr(e?.message || 'Échec PayPal stub') }
                       }}>Tester PayPal</Button>
                     )}
-                    {showMobileMoney && (
+                    {showMobileMoney && canUpdate && (
                       <>
                         <Button variant="outlined" onClick={async () => { try { const r = await ecomPaymentsMtnInit({ amount: 1000 }); setMsg(`MTN: ${r.status || 'ok'}`) } catch (e: any) { setErr(e?.message || 'Échec MTN stub') } }}>Tester MTN</Button>
                         <Button variant="outlined" onClick={async () => { try { const r = await ecomPaymentsOrangeInit({ amount: 1000 }); setMsg(`Orange: ${r.status || 'ok'}`) } catch (e: any) { setErr(e?.message || 'Échec Orange stub') } }}>Tester Orange</Button>
@@ -93,8 +99,8 @@ export default function EcommerceSettings() {
             <CardContent>
               <Typography variant="subtitle1" fontWeight={600}>Sous-domaine</Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
-                <TextField size="small" label="Sous-domaine" value={subdomain} onChange={e => setSubdomain(e.target.value)} sx={{ maxWidth: 240 }} />
-                <Button variant="outlined">Tester</Button>
+                <TextField size="small" label="Sous-domaine" value={subdomain} onChange={e => setSubdomain(e.target.value)} sx={{ maxWidth: 240 }} disabled={!canUpdate} />
+                <Button variant="outlined" disabled={!canUpdate}>Tester</Button>
               </Stack>
               <Typography color="text.secondary" sx={{ mt: 1 }}>Ex: boutique.votresociete.afrigest.com</Typography>
             </CardContent>
@@ -106,13 +112,13 @@ export default function EcommerceSettings() {
             <CardContent>
               <Typography variant="subtitle1" fontWeight={600}>Mapping attributs (produit → e‑commerce)</Typography>
               <Typography variant="body2" color="text.secondary">Format JSON simple: clés source (produit) → clés destination (e‑commerce). Ex: {`{"attrs.brand":"ecom.brand"}`}.</Typography>
-              <TextField multiline minRows={6} value={mappingText} onChange={e => setMappingText(e.target.value)} sx={{ mt: 2 }} fullWidth />
+              <TextField multiline minRows={6} value={mappingText} onChange={e => setMappingText(e.target.value)} sx={{ mt: 2 }} fullWidth disabled={!canUpdate} />
               <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                <Button variant="outlined" onClick={() => setMappingText(`{
+                <Button variant="outlined" disabled={!canUpdate} onClick={() => setMappingText(`{
   "attrs.brand": "ecom.brand",
   "attrs.model": "ecom.model"
 }`)}>Exemple</Button>
-                <Button variant="contained" onClick={() => {
+                <Button variant="contained" disabled={!canUpdate} onClick={() => {
                   try {
                     const parsed = JSON.parse(mappingText)
                     if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('JSON objet requis')

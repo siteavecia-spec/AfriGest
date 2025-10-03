@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Box, Button, Card, CardContent, Stack, Typography, Table, TableHead, TableRow, TableCell, TableBody, Chip, ToggleButtonGroup, ToggleButton, Alert, TableContainer, Skeleton } from '@mui/material'
-import { ecomListOrders, ecomCreateOrder, ecomUpdateOrderStatus, createSale } from '../../api/client_clean'
+import { ecomListOrders, ecomCreateOrder, ecomUpdateOrderStatus, createSale, ecomPaymentsPayPalOrder, ecomPaymentsPayPalCapture } from '../../api/client_clean'
 import { useBoutique } from '../../context/BoutiqueContext'
 import { loadCompanySettings } from '../../utils/settings'
 import { appendAudit } from '../../utils/audit'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../../store'
+import { can } from '../../utils/acl'
 
 export default function EcommerceOrders() {
   const { selectedBoutiqueId: boutiqueId } = useBoutique()
@@ -16,6 +19,12 @@ export default function EcommerceOrders() {
   const [debouncedFilter, setDebouncedFilter] = useState<typeof filter>('all')
   const [debouncedStatus, setDebouncedStatus] = useState<typeof statusFilter>('all')
   const [stripeSecret, setStripeSecret] = useState<string | null>(null)
+  const [paypalApproveUrl, setPaypalApproveUrl] = useState<string | null>(null)
+  const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null)
+  const [paypalLocalOrderId, setPaypalLocalOrderId] = useState<string | null>(null)
+  // Permissions
+  const role = useSelector((s: RootState) => s.auth.role) as any
+  const canStatusChange = can(role, 'ecommerce.orders', 'status_change')
 
   useEffect(() => {
     ;(async () => {
@@ -102,10 +111,48 @@ export default function EcommerceOrders() {
                 setError(e?.message || 'Impossible de créer la commande Stripe')
               }
             }}>Créer commande test (Stripe)</Button>
+            <Button variant="outlined" onClick={async () => {
+              setError(null); setMessage(null); setPaypalApproveUrl(null); setPaypalOrderId(null); setPaypalLocalOrderId(null)
+              try {
+                const res = await ecomPaymentsPayPalOrder({ items: [{ sku: 'SKU-TSHIRT', quantity: 1, price: 75000, currency: 'GNF' }] })
+                if (res.approveUrl) {
+                  setPaypalApproveUrl(res.approveUrl)
+                  if (res.paypalOrderId) setPaypalOrderId(res.paypalOrderId)
+                  if (res.orderId) setPaypalLocalOrderId(res.orderId)
+                  setMessage('Ordre PayPal créé. Ouvrez le lien d’approbation puis capturez.')
+                } else {
+                  setMessage('PayPal: approveUrl non retournée.')
+                }
+                const listRes = await ecomListOrders()
+                const list = (listRes.items || []).map((o: any, idx: number) => ({ id: o.id || `ord-${idx}`, status: (o.status || 'received') as any, total: Number(o.total ?? 0), currency: o.currency || 'GNF', paymentStatus: (o.paymentStatus || 'pending') as any }))
+                setOrders(list)
+              } catch (e: any) {
+                setError(e?.message || 'Impossible de créer l’ordre PayPal')
+              }
+            }}>Créer commande test (PayPal)</Button>
           </Stack>
           {stripeSecret && (
             <Alert severity="info" sx={{ mb: 2 }}>
               clientSecret Stripe: <code style={{ userSelect: 'all' }}>{stripeSecret}</code>
+            </Alert>
+          )}
+          {paypalApproveUrl && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              PayPal: <a href={paypalApproveUrl} target="_blank" rel="noreferrer">Ouvrir approveUrl</a>
+              {paypalOrderId && (
+                <Button size="small" sx={{ ml: 1 }} variant="outlined" onClick={async () => {
+                  setError(null); setMessage(null)
+                  try {
+                    await ecomPaymentsPayPalCapture({ paypalOrderId, orderId: paypalLocalOrderId || undefined })
+                    setMessage('Capture PayPal effectuée. La commande devrait passer en payé (si liée).')
+                    const listRes = await ecomListOrders()
+                    const list = (listRes.items || []).map((o: any, idx: number) => ({ id: o.id || `ord-${idx}`, status: (o.status || 'received') as any, total: Number(o.total ?? 0), currency: o.currency || 'GNF', paymentStatus: (o.paymentStatus || 'pending') as any }))
+                    setOrders(list)
+                  } catch (e: any) {
+                    setError(e?.message || 'Échec capture PayPal')
+                  }
+                }}>Capturer maintenant</Button>
+              )}
             </Alert>
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
@@ -184,10 +231,10 @@ export default function EcommerceOrders() {
                   <TableCell>{o.total.toLocaleString('fr-FR')} {o.currency}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
-                      {o.status !== 'prepared' && <Button size="small" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'prepared'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Préparer</Button>}
-                      {o.status !== 'shipped' && <Button size="small" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'shipped'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Expédier</Button>}
-                      {o.status !== 'delivered' && <Button size="small" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'delivered'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Livrer</Button>}
-                      {o.status !== 'returned' && <Button size="small" color="warning" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'returned'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Retour</Button>}
+                      {canStatusChange && o.status !== 'prepared' && <Button size="small" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'prepared'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Préparer</Button>}
+                      {canStatusChange && o.status !== 'shipped' && <Button size="small" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'shipped'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Expédier</Button>}
+                      {canStatusChange && o.status !== 'delivered' && <Button size="small" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'delivered'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Livrer</Button>}
+                      {canStatusChange && o.status !== 'returned' && <Button size="small" color="warning" onClick={async () => { try { await ecomUpdateOrderStatus(o.id, 'returned'); const r = await ecomListOrders(); setOrders((r.items || []).map((x:any, idx:number) => ({ id: x.id || `ord-${idx}`, status: (x.status || 'received'), total: Number(x.total ?? 0), currency: x.currency || 'GNF', paymentStatus: (x.paymentStatus || 'pending') })))} catch (e:any) { setError(e?.message || 'MAJ statut échouée') } }}>Retour</Button>}
                       <Button size="small" variant="outlined" onClick={() => {
                         try {
                           const when = new Date().toLocaleString()

@@ -7,7 +7,7 @@ const express_1 = require("express");
 const zod_1 = require("zod");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const auth_1 = require("../middleware/auth");
-const rbac_1 = require("../middleware/rbac");
+const authorization_1 = require("../middleware/authorization");
 const tenant_1 = require("../db/tenant");
 const env_1 = require("../config/env");
 const router = (0, express_1.Router)();
@@ -17,7 +17,7 @@ function prismaFrom(req) {
     return (0, tenant_1.getTenantPrisma)(dbUrl);
 }
 // GET /users?query=&limit=&offset=
-router.get('/', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.get('/', auth_1.requireAuth, (0, authorization_1.requirePermission)('users', 'read'), async (req, res) => {
     const q = (req.query.query || '').toString().trim();
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     const offset = Number(req.query.offset) || 0;
@@ -43,7 +43,7 @@ router.get('/', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg'
     res.json({ items, total, limit, offset });
 });
 // GET /users/:id
-router.get('/:id', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.get('/:id', auth_1.requireAuth, (0, authorization_1.requirePermission)('users', 'read'), async (req, res) => {
     const prisma = prismaFrom(req);
     const user = await prisma.user.findUnique({ where: { id: req.params.id } });
     if (!user)
@@ -55,10 +55,22 @@ const createSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
     password: zod_1.z.string().min(8),
     fullName: zod_1.z.string().min(1),
-    role: zod_1.z.enum(['super_admin', 'pdg', 'dg', 'employee']).default('employee')
+    role: zod_1.z.enum([
+        'super_admin',
+        'support',
+        'pdg',
+        'dr',
+        'dg',
+        'manager_stock',
+        'caissier',
+        'employee',
+        'ecom_manager',
+        'ecom_ops',
+        'marketing'
+    ]).default('employee')
 });
 // POST /users
-router.post('/', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.post('/', auth_1.requireAuth, (0, authorization_1.requirePermission)('users', 'create'), async (req, res) => {
     const parsed = createSchema.safeParse(req.body);
     if (!parsed.success)
         return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() });
@@ -89,12 +101,24 @@ router.post('/', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg
 });
 const updateSchema = zod_1.z.object({
     fullName: zod_1.z.string().min(1).optional(),
-    role: zod_1.z.enum(['super_admin', 'pdg', 'dg', 'employee']).optional(),
+    role: zod_1.z.enum([
+        'super_admin',
+        'support',
+        'pdg',
+        'dr',
+        'dg',
+        'manager_stock',
+        'caissier',
+        'employee',
+        'ecom_manager',
+        'ecom_ops',
+        'marketing'
+    ]).optional(),
     status: zod_1.z.enum(['active', 'disabled']).optional(),
     password: zod_1.z.string().min(8).optional()
 });
 // PATCH /users/:id
-router.patch('/:id', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.patch('/:id', auth_1.requireAuth, (0, authorization_1.requirePermission)('users', 'update'), async (req, res) => {
     const parsed = updateSchema.safeParse(req.body);
     if (!parsed.success)
         return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() });
@@ -130,7 +154,7 @@ router.patch('/:id', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 
     }
 });
 // DELETE /users/:id  (soft delete -> status = disabled)
-router.delete('/:id', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.delete('/:id', auth_1.requireAuth, (0, authorization_1.requirePermission)('users', 'suspend'), async (req, res) => {
     const prisma = prismaFrom(req);
     try {
         const updated = await prisma.user.update({ where: { id: req.params.id }, data: { status: 'disabled' }, select: { id: true, email: true, status: true } });

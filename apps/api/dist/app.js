@@ -18,10 +18,15 @@ const stock_1 = __importDefault(require("./routes/stock"));
 const sales_1 = __importDefault(require("./routes/sales"));
 const public_1 = __importDefault(require("./routes/public"));
 const referrals_1 = __importDefault(require("./routes/referrals"));
+const alerts_1 = __importDefault(require("./routes/alerts"));
 const leads_1 = __importDefault(require("./routes/leads"));
 const superAdmin_1 = __importDefault(require("./routes/superAdmin"));
+const admin_1 = __importDefault(require("./routes/admin"));
 const users_1 = __importDefault(require("./routes/users"));
 const ecommerce_1 = __importDefault(require("./routes/ecommerce"));
+const transfers_1 = __importDefault(require("./routes/transfers"));
+const boutiques_1 = __importDefault(require("./routes/boutiques"));
+const inventory_1 = __importDefault(require("./routes/inventory"));
 const paymentService_1 = require("./services/ecommerce/paymentService");
 const db_1 = require("./db");
 const messaging_1 = __importDefault(require("./routes/messaging"));
@@ -30,6 +35,7 @@ const logger_1 = require("./middleware/logger");
 const rateLimit_1 = require("./middleware/rateLimit");
 const errorHandler_1 = require("./middleware/errorHandler");
 const env_1 = require("./config/env");
+const restock_1 = __importDefault(require("./routes/restock"));
 const app = (0, express_1.default)();
 app.use((0, helmet_1.default)());
 // CORS: in non-dev, restrict to ALLOWED_ORIGINS if provided (comma-separated)
@@ -64,7 +70,13 @@ app.use('/public', public_1.default);
 app.use('/referrals', referrals_1.default);
 app.use('/leads', leads_1.default);
 app.use('/super-admin', superAdmin_1.default);
+app.use('/admin', admin_1.default);
 app.use('/users', users_1.default);
+app.use('/alerts', alerts_1.default);
+app.use('/transfers', transfers_1.default);
+app.use('/boutiques', boutiques_1.default);
+app.use('/inventory', inventory_1.default);
+app.use('/restock', restock_1.default);
 // Dev utilities (seed, local tools)
 app.use('/dev', dev_1.default);
 // E-commerce module endpoints: /api/tenants/:tenantId/ecommerce/*

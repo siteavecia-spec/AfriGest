@@ -3,10 +3,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.notifyEvent = notifyEvent;
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
 exports.notifyNewLead = notifyNewLead;
 exports.sendEmailVerification = sendEmailVerification;
 const nodemailer_1 = __importDefault(require("nodemailer"));
+// Generic event notification (MVP)
+async function notifyEvent(subject, text, to, html) {
+    const transport = getTransport();
+    const toEmail = to || process.env.MAIL_TO;
+    const from = process.env.MAIL_FROM || 'no-reply@afrigest.local';
+    if (!transport || !toEmail) {
+        console.log('[notify:event]', { subject, text });
+        return { ok: false, reason: 'No SMTP configured' };
+    }
+    await transport.sendMail({ from, to: toEmail, subject, text, html: html || undefined });
+    return { ok: true };
+}
 async function sendPasswordResetEmail(toEmail, resetLink, reason) {
     const transport = getTransport();
     const to = toEmail;

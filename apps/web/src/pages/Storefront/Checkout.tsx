@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Box, Button, Card, CardContent, Stack, TextField, Typography, Snackbar, Alert } from '@mui/material'
-import { ecomCreateOrder, ecomGetSignedMediaUrl, API_URL, getTenantId } from '../../api/client_clean'
+import { ecomCreateOrder, ecomGetSignedMediaUrl, API_URL, getTenantId, ecomPaymentsPayPalOrder } from '../../api/client_clean'
 import StorefrontHeader from '../../components/Storefront/Header'
 import { enableStripe, showMobileMoney } from '../../config/featureFlags'
 import { setMetaDescription } from '../../utils/seo'
@@ -26,6 +26,7 @@ export default function StorefrontCheckout() {
   const [stripeInfo, setStripeInfo] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [imgMap, setImgMap] = useState<Record<string, string>>({})
+  const [paypalApprove, setPaypalApprove] = useState<string | null>(null)
 
   useEffect(() => {
     const list = loadCart()
@@ -44,6 +45,26 @@ export default function StorefrontCheckout() {
         } catch {
           return [it.sku, ''] as const
         }
+
+  const onPayPalInit = async () => {
+    setSubmitting(true)
+    setError(null)
+    setMessage(null)
+    setPaypalApprove(null)
+    try {
+      if (items.length === 0) throw new Error('Panier vide')
+      const orderItems = items.map(it => ({ sku: it.sku, quantity: it.qty, price: it.price, currency }))
+      const res = await ecomPaymentsPayPalOrder({ items: orderItems })
+      if (res.approveUrl) {
+        setPaypalApprove(res.approveUrl)
+        setMessage('PayPal: ordre créé. Ouvrez le lien pour approuver le paiement.')
+      } else {
+        setMessage('PayPal: approveUrl non retournée (vérifiez la config serveur).')
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Impossible d’initier PayPal')
+    } finally { setSubmitting(false) }
+  }
 
   const simulateMtn = async () => {
     setSubmitting(true)
@@ -212,6 +233,7 @@ export default function StorefrontCheckout() {
                 {enableStripe && (
                   <Button variant="outlined" disabled={submitting} onClick={onStripeTest}>Payer par carte (test)</Button>
                 )}
+                <Button variant="outlined" disabled={submitting} onClick={onPayPalInit}>Payer (PayPal)</Button>
                 {showMobileMoney && (
                   <>
                     <Button variant="outlined" disabled={submitting} onClick={simulateMtn}>Payer (simulate MTN)</Button>
@@ -219,6 +241,9 @@ export default function StorefrontCheckout() {
                   </>
                 )}
               </Stack>
+              {paypalApprove && (
+                <Alert severity="info">Lien d’approbation PayPal: <a href={paypalApprove} target="_blank" rel="noreferrer">Ouvrir</a></Alert>
+              )}
               {enableStripe && clientSecret && stripePromise && (
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
                   <StripeCardForm secret={clientSecret} />

@@ -2,6 +2,9 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { requireRole } from '../middleware/rbac'
 import { products, upsertStock, boutiques, suppliers, type Supplier, sales, type Sale, stocks, stockAudits } from '../stores/memory'
+import bcrypt from 'bcryptjs'
+import { getTenantPrisma } from '../db/tenant'
+import { env } from '../config/env'
 
 const router = Router()
 let lastSeedBasicAt: string | null = null
@@ -97,4 +100,33 @@ router.get('/status', requireAuth, requireRole('super_admin', 'pdg', 'dg'), (req
     }
   }
   return res.json({ ok: true, counts: { products: productCount, suppliers: supplierCount, sales: salesCount, stockAudits: stockAuditCount, lowAlerts }, seeds: { basicAt: lastSeedBasicAt, salesAt: lastSeedSalesAt } })
+})
+
+// POST /dev/seed/users — seed demo users in current tenant DB (using TENANT_DATABASE_URL)
+router.post('/seed/users', requireAuth, requireRole('super_admin', 'pdg'), async (req, res) => {
+  try {
+    const prisma = getTenantPrisma(env.TENANT_DATABASE_URL)
+    const desired: Array<{ email: string; fullName: string; role: string; password: string }> = [
+      { email: 'pdg@demo.local', fullName: 'PDG Démo', role: 'pdg', password: 'Admin123!' },
+      { email: 'dg@demo.local', fullName: 'DG Démo', role: 'dg', password: 'Admin123!' },
+      { email: 'caissier@demo.local', fullName: 'Caissier Démo', role: 'caissier', password: 'Admin123!' },
+      { email: 'manager_stock@demo.local', fullName: 'Manager Stock Démo', role: 'manager_stock', password: 'Admin123!' },
+      { email: 'ecom_manager@demo.local', fullName: 'E‑commerce Manager Démo', role: 'ecom_manager', password: 'Admin123!' },
+      { email: 'ecom_ops@demo.local', fullName: 'E‑commerce Ops Démo', role: 'ecom_ops', password: 'Admin123!' },
+      { email: 'marketing@demo.local', fullName: 'Marketing Démo', role: 'marketing', password: 'Admin123!' },
+      { email: 'support@demo.local', fullName: 'Support Démo', role: 'support', password: 'Admin123!' },
+      { email: 'employee@demo.local', fullName: 'Employé Démo', role: 'employee', password: 'Admin123!' }
+    ]
+    const results: Array<{ email: string; created: boolean }> = []
+    for (const d of desired) {
+      const exists = await prisma.user.findUnique({ where: { email: d.email.toLowerCase() } })
+      if (exists) { results.push({ email: d.email, created: false }); continue }
+      const passwordHash = await bcrypt.hash(d.password, 10)
+      await prisma.user.create({ data: { email: d.email.toLowerCase(), fullName: d.fullName, role: d.role as any, status: 'active', passwordHash } })
+      results.push({ email: d.email, created: true })
+    }
+    return res.json({ ok: true, results })
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'Failed to seed users' })
+  }
 })

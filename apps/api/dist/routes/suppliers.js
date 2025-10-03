@@ -36,12 +36,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const zod_1 = require("zod");
 const auth_1 = require("../middleware/auth");
-const rbac_1 = require("../middleware/rbac");
+const authorization_1 = require("../middleware/authorization");
 const memory_1 = require("../stores/memory");
 const db_1 = require("../db");
 const svc = __importStar(require("../services/suppliers"));
+const audit_1 = require("../services/audit");
 const router = (0, express_1.Router)();
-router.get('/', auth_1.requireAuth, async (req, res) => {
+router.get('/', auth_1.requireAuth, (0, authorization_1.requirePermission)('suppliers', 'read'), async (req, res) => {
     const limitRaw = (req.query.limit || '').toString();
     const offsetRaw = (req.query.offset || '').toString();
     const limit = limitRaw ? Math.max(1, Math.min(200, Number(limitRaw))) : undefined;
@@ -60,6 +61,10 @@ router.get('/', auth_1.requireAuth, async (req, res) => {
     catch {
         res.setHeader('X-Total-Count', String(memory_1.suppliers.length));
     }
+    try {
+        await (0, audit_1.auditReq)(req, { userId: req.auth?.sub, action: 'suppliers.read', resource: 'suppliers', meta: { limit, offset } });
+    }
+    catch { }
     res.json(rows);
 });
 const createSchema = zod_1.z.object({
@@ -69,11 +74,15 @@ const createSchema = zod_1.z.object({
     email: zod_1.z.string().email().optional(),
     address: zod_1.z.string().optional()
 });
-router.post('/', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.post('/', auth_1.requireAuth, (0, authorization_1.requirePermission)('suppliers', 'create'), async (req, res) => {
     const parsed = createSchema.safeParse(req.body);
     if (!parsed.success)
         return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() });
     const created = await svc.createSupplier(req, parsed.data);
+    try {
+        await (0, audit_1.auditReq)(req, { userId: req.auth?.sub, action: 'supplier.create', resource: created.id, meta: { name: created.name } });
+    }
+    catch { }
     res.status(201).json(created);
 });
 // Update supplier
@@ -84,7 +93,7 @@ const updateSchema = zod_1.z.object({
     email: zod_1.z.string().email().optional(),
     address: zod_1.z.string().optional()
 });
-router.put('/:id', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.put('/:id', auth_1.requireAuth, (0, authorization_1.requirePermission)('suppliers', 'update'), async (req, res) => {
     const { id } = req.params;
     const parsed = updateSchema.safeParse(req.body);
     if (!parsed.success)
@@ -92,14 +101,22 @@ router.put('/:id', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'p
     const updated = await svc.updateSupplier(req, id, parsed.data);
     if (!updated)
         return res.status(404).json({ error: 'Supplier not found' });
+    try {
+        await (0, audit_1.auditReq)(req, { userId: req.auth?.sub, action: 'supplier.update', resource: id, meta: parsed.data });
+    }
+    catch { }
     return res.json(updated);
 });
 // Delete supplier
-router.delete('/:id', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.delete('/:id', auth_1.requireAuth, (0, authorization_1.requirePermission)('suppliers', 'delete'), async (req, res) => {
     const { id } = req.params;
     const ok = await svc.deleteSupplier(req, id);
     if (!ok)
         return res.status(404).json({ error: 'Supplier not found' });
+    try {
+        await (0, audit_1.auditReq)(req, { userId: req.auth?.sub, action: 'supplier.delete', resource: id });
+    }
+    catch { }
     return res.status(204).send();
 });
 exports.default = router;

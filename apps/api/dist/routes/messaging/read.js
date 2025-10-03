@@ -2,11 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../../middleware/auth");
+const authorization_1 = require("../../middleware/authorization");
 const db_1 = require("../../db");
 const ws_1 = require("../../ws");
+const audit_1 = require("../../services/audit");
 const router = (0, express_1.Router)({ mergeParams: true });
 // PUT /api/tenants/:tenantId/messaging/:messageId/read
-router.put('/:messageId/read', auth_1.requireAuth, async (req, res) => {
+router.put('/:messageId/read', auth_1.requireAuth, (0, authorization_1.requirePermission)('messaging', 'read'), async (req, res) => {
     const { tenantId, messageId } = req.params;
     const auth = req.auth;
     const prisma = (0, db_1.getTenantClientFromReq)(req);
@@ -21,7 +23,7 @@ router.put('/:messageId/read', auth_1.requireAuth, async (req, res) => {
         }
         // Audit best-effort
         try {
-            await prisma.messagingAuditLog.create({ data: { tenantId, userId: auth.sub, action: 'message.read', entityType: 'message', entityId: messageId, createdAt: new Date() } });
+            await (0, audit_1.auditReq)(req, { action: 'messaging.message.read', resource: messageId, userId: auth.sub });
         }
         catch { }
         return res.json({ ok: true });

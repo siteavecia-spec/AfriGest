@@ -12,6 +12,14 @@ const env_1 = require("../config/env");
 const crypto_1 = __importDefault(require("crypto"));
 const notify_1 = require("../services/notify");
 const router = (0, express_1.Router)();
+const useDb = String(process.env.USE_DB || 'false').toLowerCase() === 'true';
+// In-memory demo users (when USE_DB !== 'true')
+const demoUsers = {
+    'admin@demo.local': 'super_admin',
+    'pdg@demo.local': 'pdg',
+    'dg@demo.local': 'dg',
+    'employee@demo.local': 'employee'
+};
 const loginSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
     password: zod_1.z.string().min(4),
@@ -25,6 +33,31 @@ router.post('/login', async (req, res) => {
     // Resolve tenant DB URL (MVP: support demo tenant)
     const headerDbUrl = req.tenantDbUrl;
     const dbUrl = headerDbUrl || (company.toLowerCase() === 'demo' ? env_1.env.TENANT_DATABASE_URL : undefined);
+    if (!useDb) {
+        // In-memory login (no DB required)
+        const companyKey = company.toLowerCase();
+        const emailLc = email.toLowerCase();
+        if (companyKey === 'master') {
+            // Only allow super admin for master context
+            if (emailLc !== 'admin@demo.local' || password !== 'Admin123!')
+                return res.status(401).json({ error: 'Invalid credentials' });
+            const role = 'super_admin';
+            const uid = `mem-${role}-master`;
+            const accessToken = (0, tokens_1.signAccessToken)(uid, role);
+            const refreshToken = (0, tokens_1.signRefreshToken)(uid, role);
+            return res.json({ accessToken, refreshToken, role });
+        }
+        if (companyKey !== 'demo')
+            return res.status(400).json({ error: 'Unknown company/tenant' });
+        const role = demoUsers[emailLc];
+        const ok = !!role && password === 'Admin123!';
+        if (!ok)
+            return res.status(401).json({ error: 'Invalid credentials' });
+        const uid = `mem-${role}`;
+        const accessToken = (0, tokens_1.signAccessToken)(uid, role);
+        const refreshToken = (0, tokens_1.signRefreshToken)(uid, role);
+        return res.json({ accessToken, refreshToken, role });
+    }
     if (!dbUrl)
         return res.status(400).json({ error: 'Unknown company/tenant' });
     try {
@@ -61,6 +94,12 @@ router.post('/refresh', async (req, res) => {
     try {
         const token = parsed.data.refreshToken;
         const payload = (0, tokens_1.verifyRefreshToken)(token);
+        if (!useDb) {
+            // In-memory rotate without session persistence
+            const newAccess = (0, tokens_1.signAccessToken)(payload.sub, payload.role);
+            const newRefresh = (0, tokens_1.signRefreshToken)(payload.sub, payload.role);
+            return res.json({ accessToken: newAccess, refreshToken: newRefresh });
+        }
         // Check session in tenant DB
         const dbUrl = req.tenantDbUrl || env_1.env.TENANT_DATABASE_URL;
         const prisma = (0, tenant_1.getTenantPrisma)(dbUrl);
@@ -90,7 +129,7 @@ router.post('/logout', async (req, res) => {
     // Prefer revoking the refresh token if provided; still respond ok if not
     const parsed = logoutSchema.safeParse(req.body || {});
     const token = parsed.success ? parsed.data.refreshToken : undefined;
-    if (token) {
+    if (useDb && token) {
         try {
             const dbUrl = req.tenantDbUrl || env_1.env.TENANT_DATABASE_URL;
             const prisma = (0, tenant_1.getTenantPrisma)(dbUrl);

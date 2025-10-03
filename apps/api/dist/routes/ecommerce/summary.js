@@ -11,8 +11,9 @@ router.get('/', auth_1.requireAuth, async (req, res) => {
     const { tenantId } = req.params;
     const prisma = (0, db_1.getTenantClientFromReq)(req);
     const { onlineCount, onlineRevenue, paidCount, averageOrderValuePaid } = await (0, orderService_1.getTodayOnlineKPIs)(tenantId, prisma);
+    const topProducts = await (0, orderService_1.getTodayTopProducts)(tenantId, prisma, 5);
     // MVP: conversionRate placeholder (to be replaced with real analytics)
     const conversionRate = 0;
-    return res.json({ tenantId, today: { onlineCount, onlineRevenue, paidCount, averageOrderValuePaid, conversionRate } });
+    return res.json({ tenantId, today: { onlineCount, onlineRevenue, paidCount, averageOrderValuePaid, conversionRate, topProducts } });
 });
 exports.default = router;

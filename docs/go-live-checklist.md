@@ -21,6 +21,20 @@ API (`apps/api/.env`):
 - STRIPE_SECRET_KEY=sk_live_... (or test key for staging)
 - STRIPE_WEBHOOK_SECRET=whsec_...
 
+# PayPal
+- PAYPAL_CLIENT_ID=...
+- PAYPAL_CLIENT_SECRET=...
+- PAYPAL_ENV=live   # or sandbox for staging
+
+# MTN MoMo (per tenant or global depending on setup)
+- MTN_MOMO_API_KEY=...
+- MTN_MOMO_USER_ID=...
+- MTN_MOMO_ENV=production   # or sandbox
+
+# Orange Money
+- ORANGE_MOMO_API_KEY=...
+- ORANGE_MOMO_ENV=production   # or sandbox
+
 Web (`apps/web/.env`):
 - VITE_API_URL=https://api.<domain>
 - VITE_ENABLE_ECOMMERCE=true
@@ -51,6 +65,16 @@ Web (`apps/web/.env`):
 - Error tracking: Sentry or equivalent (front/back)
 - Front perf: lazy loading, code‑split, image optimization
 
+### Payments Monitoring
+- Gateways success/failure rates (PayPal, MTN, Orange)
+- Webhook latency and error rates; idempotency conflicts
+- Alert on spike of `paymentStatus=failed/timeout`
+
+### Messaging Monitoring
+- WS connections active, reconnect rate, message latency
+- REST send/read error rates
+- Alert on WS disconnect spikes or elevated p95 latency
+
 ## 7) Backups & DR
 - 3‑2‑1: daily snapshots + monthly retention; offsite copy
 - Test restore: verify RTO/RPO; document recovery steps
@@ -64,6 +88,11 @@ Web (`apps/web/.env`):
 - Blue/green or canary deploy (optional)
 - Health checks; readiness/liveness endpoints
 - Run smoke + in‑process tests on deploy
+
+## 11) CI Gates (E2E)
+- Ensure Playwright is installed and browsers cached
+- Run MoMo callbacks suite: `e2e/tests/ecommerce-momo-callbacks.spec.ts`
+- Run Messaging REST suite (best‑effort): `e2e/tests/messaging.spec.ts`
 
 ## 10) Runbooks
 - Incident response: who/what/where

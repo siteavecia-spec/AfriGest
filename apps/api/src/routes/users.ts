@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { requireAuth } from '../middleware/auth'
-import { requireRole } from '../middleware/rbac'
+import { requirePermission } from '../middleware/authorization'
 import { getTenantPrisma } from '../db/tenant'
 import { env } from '../config/env'
 
@@ -15,7 +15,7 @@ function prismaFrom(req: any) {
 }
 
 // GET /users?query=&limit=&offset=
-router.get('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.get('/', requireAuth, requirePermission('users', 'read'), async (req, res) => {
   const q = (req.query.query || '').toString().trim()
   const limit = Math.min(Number(req.query.limit) || 20, 100)
   const offset = Number(req.query.offset) || 0
@@ -42,7 +42,7 @@ router.get('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req
 })
 
 // GET /users/:id
-router.get('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.get('/:id', requireAuth, requirePermission('users', 'read'), async (req, res) => {
   const prisma = prismaFrom(req)
   const user = await prisma.user.findUnique({ where: { id: req.params.id } })
   if (!user) return res.status(404).json({ error: 'Not found' })
@@ -54,11 +54,23 @@ const createSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   fullName: z.string().min(1),
-  role: z.enum(['super_admin', 'pdg', 'dg', 'employee']).default('employee')
+  role: z.enum([
+    'super_admin',
+    'support',
+    'pdg',
+    'dr',
+    'dg',
+    'manager_stock',
+    'caissier',
+    'employee',
+    'ecom_manager',
+    'ecom_ops',
+    'marketing'
+  ] as const).default('employee')
 })
 
 // POST /users
-router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.post('/', requireAuth, requirePermission('users', 'create'), async (req, res) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   const { email, password, fullName, role } = parsed.data
@@ -87,13 +99,25 @@ router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (re
 
 const updateSchema = z.object({
   fullName: z.string().min(1).optional(),
-  role: z.enum(['super_admin', 'pdg', 'dg', 'employee']).optional(),
+  role: z.enum([
+    'super_admin',
+    'support',
+    'pdg',
+    'dr',
+    'dg',
+    'manager_stock',
+    'caissier',
+    'employee',
+    'ecom_manager',
+    'ecom_ops',
+    'marketing'
+  ] as const).optional(),
   status: z.enum(['active', 'disabled']).optional(),
   password: z.string().min(8).optional()
 })
 
 // PATCH /users/:id
-router.patch('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.patch('/:id', requireAuth, requirePermission('users', 'update'), async (req, res) => {
   const parsed = updateSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   const prisma = prismaFrom(req)
@@ -123,7 +147,7 @@ router.patch('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async
 })
 
 // DELETE /users/:id  (soft delete -> status = disabled)
-router.delete('/:id', requireAuth, requireRole('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.delete('/:id', requireAuth, requirePermission('users', 'suspend'), async (req, res) => {
   const prisma = prismaFrom(req)
   try {
     const updated = await prisma.user.update({ where: { id: req.params.id }, data: { status: 'disabled' }, select: { id: true, email: true, status: true } })

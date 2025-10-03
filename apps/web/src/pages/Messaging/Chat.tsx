@@ -12,6 +12,8 @@ export default function Chat() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [items, setItems] = useState<Array<{ id: string; conversationId: string; senderId: string; content: string; createdAt: string; read?: boolean; readAt?: string }>>([])
+  const [hasMore, setHasMore] = useState(false)
+  const PAGE_SIZE = 30
   const [input, setInput] = useState('')
   const conversationIdRef = useRef<string | null>(null)
   const endRef = useRef<HTMLDivElement | null>(null)
@@ -31,6 +33,25 @@ export default function Chat() {
         setInput(draft)
         localStorage.removeItem('afritalk_draft')
       }
+
+  async function loadMore() {
+    if (!userId || items.length === 0) return
+    setLoading(true)
+    try {
+      const oldest = items[0]
+      const res = await msgGetConversation(userId, { limit: PAGE_SIZE, before: oldest.createdAt })
+      const arr = (res.items || [])
+      if (arr.length > 0) {
+        // API returns desc; reverse to oldest-first and prepend
+        setItems(prev => [...arr.slice().reverse(), ...prev])
+      }
+      setHasMore(arr.length >= PAGE_SIZE)
+    } catch (e: any) {
+      setError(e?.message || 'Chargement supplémentaire échoué')
+    } finally {
+      setLoading(false)
+    }
+  }
     } catch {}
   }, [userId])
 
@@ -40,9 +61,11 @@ export default function Chat() {
       setLoading(true)
       setError(null)
       try {
-        const res = await msgGetConversation(userId)
+        const res = await msgGetConversation(userId, { limit: PAGE_SIZE })
         conversationIdRef.current = res.conversationId
-        setItems((res.items || []).slice().reverse()) // oldest first
+        const arr = (res.items || [])
+        setItems(arr.slice().reverse()) // oldest first
+        setHasMore(arr.length >= PAGE_SIZE)
         // Mark last message as read if needed
         const last = (res.items || [])[0]
         if (last && !last.read) {
@@ -131,6 +154,12 @@ export default function Chat() {
               <Stack direction="row" spacing={1}>
                 <TextField fullWidth size="small" placeholder="Votre message…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send() }} />
                 <IconButton color="primary" onClick={send}><SendIcon /></IconButton>
+              </Stack>
+              <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>Conversation: {conversationIdRef.current || '—'}</Typography>
+                <IconButton size="small" disabled={loading || !hasMore} onClick={loadMore} aria-label="load-more">
+                  <Typography variant="caption">Charger plus</Typography>
+                </IconButton>
               </Stack>
             </>
           )}

@@ -7,8 +7,12 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import { createUser, deactivateUser, listUsers, updateUser, type UserItem } from '../api/client_clean'
 import Page from '../components/Page'
 import DataTable from '../components/DataTable'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../store'
+import { can, type Role } from '../utils/acl'
 
 export default function UsersPage() {
+  const role = useSelector((s: RootState) => s.auth.role) as any
   const [items, setItems] = useState<UserItem[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -35,7 +39,9 @@ export default function UsersPage() {
       title="Utilisateurs"
       actions={
         <>
-          <Button startIcon={<AddIcon/>} variant="contained" onClick={() => setOpenCreate(true)}>Créer</Button>
+          {can(role, 'users', 'create') && (
+            <Button startIcon={<AddIcon/>} variant="contained" onClick={() => setOpenCreate(true)}>Créer</Button>
+          )}
           <Button startIcon={<RefreshIcon/>} onClick={load} disabled={loading}>Rafraîchir</Button>
           <TextField size="small" placeholder="Rechercher" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') load() }} />
         </>
@@ -70,16 +76,20 @@ export default function UsersPage() {
               <TableCell>{u.status === 'active' ? <Chip color="success" label="Actif"/> : <Chip color="warning" label="Désactivé"/>}</TableCell>
               <TableCell>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</TableCell>
               <TableCell align="right">
-                <IconButton size="small" aria-label="Modifier" onClick={() => setOpenEdit(u)}><EditIcon fontSize="small" /></IconButton>
-                <IconButton size="small" aria-label="Désactiver" onClick={async () => { if (!confirm('Désactiver cet utilisateur ?')) return; try { await deactivateUser(u.id); await load() } catch (e:any) { alert(e?.message || 'Échec de la désactivation') } }}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                {can(role, 'users', 'update') && (
+                  <IconButton size="small" aria-label="Modifier" onClick={() => setOpenEdit(u)}><EditIcon fontSize="small" /></IconButton>
+                )}
+                {can(role, 'users', 'suspend') && (
+                  <IconButton size="small" aria-label="Désactiver" onClick={async () => { if (!confirm('Désactiver cet utilisateur ?')) return; try { await deactivateUser(u.id); await load() } catch (e:any) { alert(e?.message || 'Échec de la désactivation') } }}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                )}
               </TableCell>
             </TableRow>
           ))}
         </DataTable>
-        {openCreate && <CreateDialog onClose={() => setOpenCreate(false)} onCreated={async () => { setOpenCreate(false); await load() }} />}
-        {openEdit && <EditDialog user={openEdit} onClose={() => setOpenEdit(null)} onSaved={async () => { setOpenEdit(null); await load() }} />}
+        {openCreate && can(role, 'users', 'create') && <CreateDialog onClose={() => setOpenCreate(false)} onCreated={async () => { setOpenCreate(false); await load() }} />}
+        {openEdit && can(role, 'users', 'update') && <EditDialog user={openEdit} onClose={() => setOpenEdit(null)} onSaved={async () => { setOpenEdit(null); await load() }} />}
       </Stack>
     </Page>
   )
@@ -88,7 +98,7 @@ export default function UsersPage() {
 function CreateDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
-  const [role, setRole] = useState<'super_admin'|'pdg'|'dg'|'employee'>('employee')
+  const [role, setRole] = useState<Role>('employee')
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -105,10 +115,16 @@ function CreateDialog({ onClose, onCreated }: { onClose: () => void; onCreated: 
         <Stack spacing={2} sx={{ pt: 1 }}>
           <TextField label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
           <TextField label="Nom complet" value={fullName} onChange={e => setFullName(e.target.value)} required />
-          <TextField select label="Rôle" value={role} onChange={e => setRole(e.target.value as any)}>
+          <TextField select label="Rôle" value={role} onChange={e => setRole(e.target.value as Role)}>
             <MenuItem value="employee">Employé</MenuItem>
+            <MenuItem value="caissier">Caissier</MenuItem>
+            <MenuItem value="manager_stock">Manager stock</MenuItem>
             <MenuItem value="dg">DG</MenuItem>
             <MenuItem value="pdg">PDG</MenuItem>
+            <MenuItem value="ecom_ops">E‑commerce Ops</MenuItem>
+            <MenuItem value="ecom_manager">E‑commerce Manager</MenuItem>
+            <MenuItem value="marketing">Marketing</MenuItem>
+            <MenuItem value="support">Support</MenuItem>
             <MenuItem value="super_admin">Super Admin</MenuItem>
           </TextField>
           <TextField label="Mot de passe" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
@@ -125,7 +141,7 @@ function CreateDialog({ onClose, onCreated }: { onClose: () => void; onCreated: 
 
 function EditDialog({ user, onClose, onSaved }: { user: UserItem; onClose: () => void; onSaved: () => void }) {
   const [fullName, setFullName] = useState(user.fullName)
-  const [role, setRole] = useState<UserItem['role']>(user.role)
+  const [role, setRole] = useState<Role>(user.role as Role)
   const [status, setStatus] = useState<UserItem['status']>(user.status)
   const [password, setPassword] = useState('')
   const [saving, setSaving] = useState(false)
@@ -143,10 +159,16 @@ function EditDialog({ user, onClose, onSaved }: { user: UserItem; onClose: () =>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <TextField label="Email" value={user.email} InputProps={{ readOnly: true }} />
           <TextField label="Nom complet" value={fullName} onChange={e => setFullName(e.target.value)} />
-          <TextField select label="Rôle" value={role} onChange={e => setRole(e.target.value as any)}>
+          <TextField select label="Rôle" value={role} onChange={e => setRole(e.target.value as Role)}>
             <MenuItem value="employee">Employé</MenuItem>
+            <MenuItem value="caissier">Caissier</MenuItem>
+            <MenuItem value="manager_stock">Manager stock</MenuItem>
             <MenuItem value="dg">DG</MenuItem>
             <MenuItem value="pdg">PDG</MenuItem>
+            <MenuItem value="ecom_ops">E‑commerce Ops</MenuItem>
+            <MenuItem value="ecom_manager">E‑commerce Manager</MenuItem>
+            <MenuItem value="marketing">Marketing</MenuItem>
+            <MenuItem value="support">Support</MenuItem>
             <MenuItem value="super_admin">Super Admin</MenuItem>
           </TextField>
           <TextField select label="Statut" value={status} onChange={e => setStatus(e.target.value as any)}>

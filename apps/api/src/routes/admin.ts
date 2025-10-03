@@ -1,9 +1,10 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth'
-import { requireRole } from '../middleware/rbac'
+import { requirePermission } from '../middleware/authorization'
 import { getMasterPrisma } from '../db/master'
 import { pushAudit } from '../stores/audit'
+import { signAccessToken } from '../services/tokens'
 
 const router = Router()
 
@@ -24,8 +25,53 @@ const createCompanySchema = z.object({
   plan: z.string().optional(),
 })
 
+// POST /admin/seed/demo-company — ensure demo company exists (master DB or memory)
+router.post('/seed/demo-company', requireAuth, requirePermission('admin.companies', 'create'), async (req, res) => {
+  const prisma = getMasterPrisma()
+  try {
+    if (prisma) {
+      const code = 'demo'
+      let company = await prisma.company.findUnique({ where: { code } })
+      if (!company) {
+        company = await prisma.company.create({ data: { code, name: 'Demo Company', status: 'active', plan: 'starter' } as any })
+      } else if (company.status === 'archived') {
+        company = await prisma.company.update({ where: { id: company.id }, data: { status: 'active' } })
+      }
+      return res.json({ ok: true, company })
+    } else {
+      const exists = mem.companies.find(c => c.code === 'demo')
+      if (!exists) {
+        const now = new Date().toISOString()
+        const created: MemCompany = { id: uuid(), code: 'demo', name: 'Demo Company', contactEmail: 'admin@demo.local', subdomain: 'demo', plan: 'starter', status: 'active', createdAt: now }
+        mem.companies.unshift(created)
+        mem.audit.push({ actorEmail: (req as any).user?.email || 'unknown', action: 'company.create(seed)', companyCode: created.code, at: now })
+        return res.json({ ok: true, company: created, mem: true })
+      }
+      return res.json({ ok: true, company: exists, mem: true })
+    }
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'Failed to seed demo company' })
+  }
+})
+
+// POST /admin/support-token { userId?, hours?: number, scopes?: string[] }
+// Mint a temporary support access token with read-only window enforced by authorization middleware
+router.post('/support-token', requireAuth, requirePermission('admin.console', 'update'), async (req, res) => {
+  const schema = z.object({ userId: z.string().optional(), hours: z.number().int().positive().max(24).optional(), scopes: z.array(z.string()).optional() })
+  const parsed = schema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+  const hours = parsed.data.hours || 4
+  const until = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString()
+  const sub = parsed.data.userId || (req as any).auth?.sub || 'support-user'
+  // Create JWT with role support; `support_until` will be injected by clients in headers or via custom signing in a real impl.
+  // For MVP, include support_until in token payload by serializing into subject-like metadata is not supported; we keep it in a side header suggestion.
+  // Here we just return the token and until; FE should attach until in x-support-until if needed.
+  const token = signAccessToken(sub, 'support' as any)
+  return res.json({ accessToken: token, role: 'support', support_until: until, scopes: parsed.data.scopes || ['dashboard','reports','audit'] })
+})
+
 // POST /admin/companies/:id/provision (simulate provisioning)
-router.post('/companies/:id/provision', requireAuth, requireRole('super_admin'), async (req, res) => {
+router.post('/companies/:id/provision', requireAuth, requirePermission('admin.companies', 'update'), async (req, res) => {
   const prisma = getMasterPrisma()
   const id = String(req.params.id)
   try {
@@ -53,7 +99,7 @@ const updateCompanySchema = z.object({
 })
 
 // GET /admin/companies?limit=50&offset=0&status=active|pending|archived
-router.get('/companies', requireAuth, requireRole('super_admin'), async (req, res) => {
+router.get('/companies', requireAuth, requirePermission('admin.companies', 'read'), async (req, res) => {
   const prisma = getMasterPrisma()
   const limit = Math.min(Number(req.query.limit || 50), 200)
   const offset = Math.max(Number(req.query.offset || 0), 0)
@@ -79,7 +125,7 @@ router.get('/companies', requireAuth, requireRole('super_admin'), async (req, re
 })
 
 // POST /admin/companies
-router.post('/companies', requireAuth, requireRole('super_admin'), async (req, res) => {
+router.post('/companies', requireAuth, requirePermission('admin.companies', 'create'), async (req, res) => {
   const prisma = getMasterPrisma()
   const parsed = createCompanySchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
@@ -109,7 +155,7 @@ router.post('/companies', requireAuth, requireRole('super_admin'), async (req, r
 })
 
 // PATCH /admin/companies/:id
-router.patch('/companies/:id', requireAuth, requireRole('super_admin'), async (req, res) => {
+router.patch('/companies/:id', requireAuth, requirePermission('admin.companies', 'update'), async (req, res) => {
   const prisma = getMasterPrisma()
   const id = String(req.params.id)
   const parsed = updateCompanySchema.safeParse(req.body)
@@ -132,7 +178,7 @@ router.patch('/companies/:id', requireAuth, requireRole('super_admin'), async (r
 })
 
 // DELETE /admin/companies/:id (archive)
-router.delete('/companies/:id', requireAuth, requireRole('super_admin'), async (req, res) => {
+router.delete('/companies/:id', requireAuth, requirePermission('admin.companies', 'update'), async (req, res) => {
   const prisma = getMasterPrisma()
   const id = String(req.params.id)
   try {
@@ -154,7 +200,7 @@ router.delete('/companies/:id', requireAuth, requireRole('super_admin'), async (
 
 // POST /admin/impersonate { companyCode }
 // For MVP: return ok + companyCode; client will set x-company accordingly.
-router.post('/impersonate', requireAuth, requireRole('super_admin'), async (req, res) => {
+router.post('/impersonate', requireAuth, requirePermission('admin.console', 'update'), async (req, res) => {
   const schema = z.object({ companyCode: z.string().min(2) })
   const parsed = schema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })

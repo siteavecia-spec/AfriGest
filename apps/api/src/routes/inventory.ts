@@ -1,21 +1,24 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth'
-import { requireRole } from '../middleware/rbac'
+import { requirePermission } from '../middleware/authorization'
 import { getTenantClientFromReq } from '../db'
+import { auditReq } from '../services/audit'
 import { getStock, stocks, products as memProducts } from '../stores/memory'
 
 const router = Router()
 
 // GET /inventory/summary?boutiqueId=ID
-router.get('/summary', requireAuth, requireRole('super_admin','pdg','dg'), async (req, res) => {
+router.get('/summary', requireAuth, requirePermission('stock', 'read'), async (req, res) => {
   const boutiqueId = String(req.query.boutiqueId || '')
   if (!boutiqueId) return res.status(400).json({ error: 'Missing boutiqueId' })
   const prisma: any = getTenantClientFromReq(req)
   try {
     if (prisma?.stock) {
       const rows = await prisma.stock.findMany({ where: { boutiqueId } })
-      return res.json({ boutiqueId, summary: rows.map((r: any) => ({ productId: r.productId, quantity: Number(r.quantity) })) })
+      const payload = { boutiqueId, summary: rows.map((r: any) => ({ productId: r.productId, quantity: Number(r.quantity) })) }
+      try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'inventory.summary.read', resource: boutiqueId }) } catch {}
+      return res.json(payload)
     } else {
       // Build summary from in-memory stocks map and mem products list
       const items: Array<{ productId: string; sku?: string; name?: string; quantity: number }> = []
@@ -24,7 +27,9 @@ router.get('/summary', requireAuth, requireRole('super_admin','pdg','dg'), async
         if (qty !== 0) items.push({ productId: p.id, sku: (p as any).sku, name: (p as any).name, quantity: qty })
       }
       // Also include explicit zero for products not yet in stock could be large; keep to existing only
-      return res.json({ boutiqueId, summary: items })
+      const payload = { boutiqueId, summary: items }
+      try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'inventory.summary.read', resource: boutiqueId }) } catch {}
+      return res.json(payload)
     }
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to get inventory summary' })
@@ -38,7 +43,7 @@ const createSchema = z.object({
   items: z.array(z.object({ productId: z.string().min(1), counted: z.number().finite().min(0), unitPrice: z.number().finite().min(0).optional() })).min(1)
 })
 
-router.post('/sessions', requireAuth, requireRole('super_admin','pdg','dg'), async (req, res) => {
+router.post('/sessions', requireAuth, requirePermission('stock', 'update'), async (req, res) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   const { boutiqueId, items } = parsed.data
@@ -64,7 +69,9 @@ router.post('/sessions', requireAuth, requireRole('super_admin','pdg','dg'), asy
     }
     const id = 'inv-' + Date.now()
     const createdAt = new Date().toISOString()
-    return res.status(201).json({ id, boutiqueId, createdAt, items: results, totalDelta: results.reduce((s, r) => s + r.delta, 0), totalValueDelta: results.reduce((s, r) => s + (r.valueDelta || 0), 0) })
+    const payload = { id, boutiqueId, createdAt, items: results, totalDelta: results.reduce((s, r) => s + r.delta, 0), totalValueDelta: results.reduce((s, r) => s + (r.valueDelta || 0), 0) }
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'inventory.session.create', resource: boutiqueId, meta: { items: items.length } }) } catch {}
+    return res.status(201).json(payload)
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to create inventory session' })
   }

@@ -1,15 +1,16 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth'
-import { requireRole } from '../middleware/rbac'
+import { requirePermission } from '../middleware/authorization'
 import * as svc from '../services/sales'
 import { products, sales as memorySales } from '../stores/memory'
 import { getTenantClientFromReq } from '../db'
+import { auditReq } from '../services/audit'
 
 const router = Router()
 
 // GET /sales?limit=...
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, requirePermission('pos', 'read'), async (req, res) => {
   const limit = Math.max(1, Math.min(200, Number((req.query.limit || 50).toString())))
   const rawOffset = Number((req.query.offset || 0).toString())
   const offset = Number.isFinite(rawOffset) && rawOffset > 0 ? Math.max(0, rawOffset) : 0
@@ -25,18 +26,20 @@ router.get('/', requireAuth, async (req, res) => {
   } catch {
     res.setHeader('X-Total-Count', String(memorySales.length))
   }
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'sales.read', resource: 'sales', meta: { limit, offset } }) } catch {}
   res.json(rows)
 })
 
 // GET /sales/summary — simple KPIs for today (in-memory)
-router.get('/summary', requireAuth, async (req, res) => {
+router.get('/summary', requireAuth, requirePermission('pos', 'read'), async (req, res) => {
   const boutiqueId = (req.query.boutiqueId || '').toString() || undefined
   const out = await svc.getSalesSummary(req, boutiqueId)
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'sales.summary.read', resource: boutiqueId || 'all' }) } catch {}
   return res.json(out)
 })
 
 // GET /sales/eod?date=YYYY-MM-DD&boutiqueId=ID|all — End-of-day report
-router.get('/eod', requireAuth, async (req, res) => {
+router.get('/eod', requireAuth, requirePermission('reports', 'read'), async (req, res) => {
   const dateStr = (req.query.date || '').toString()
   const boutiqueId = (req.query.boutiqueId || '').toString() || undefined
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return res.status(400).json({ error: 'Invalid or missing date (YYYY-MM-DD)' })
@@ -69,14 +72,16 @@ router.get('/eod', requireAuth, async (req, res) => {
       total: r.total,
       items: (r.items || []).map((it: any) => `${it.productId}:${it.quantity}x${(it.unitPrice - (it.discount || 0))}`).join('|')
     }))
-    return res.json({ date: dateStr, boutiqueId: boutiqueId || 'all', totals: { count, revenue, payments }, lines })
+    const payload = { date: dateStr, boutiqueId: boutiqueId || 'all', totals: { count, revenue, payments }, lines }
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'sales.eod.read', resource: payload.boutiqueId, meta: { date: dateStr } }) } catch {}
+    return res.json(payload)
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to compute EOD' })
   }
 })
 
 // GET /sales/overview?from=YYYY-MM-DD&to=YYYY-MM-DD&boutiqueId=ID|all — Period aggregates for PDG
-router.get('/overview', requireAuth, async (req, res) => {
+router.get('/overview', requireAuth, requirePermission('reports', 'read'), async (req, res) => {
   const from = (req.query.from || '').toString()
   const to = (req.query.to || '').toString()
   const boutiqueId = (req.query.boutiqueId || '').toString() || undefined
@@ -120,7 +125,9 @@ router.get('/overview', requireAuth, async (req, res) => {
     })
     const dailySeries = Object.entries(dailyMap).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => ({ date, count: v.count, revenue: v.revenue }))
     const topProducts = Object.entries(prodMap).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 20).map(([productId, v]) => ({ productId, quantity: v.quantity, revenue: v.revenue }))
-    return res.json({ boutiqueId: boutiqueId || 'all', from, to, periodTotals: { count, revenue, payments }, dailySeries, topProducts })
+    const payload = { boutiqueId: boutiqueId || 'all', from, to, periodTotals: { count, revenue, payments }, dailySeries, topProducts }
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'sales.overview.read', resource: payload.boutiqueId, meta: { from, to } }) } catch {}
+    return res.json(payload)
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to compute overview' })
   }
@@ -143,7 +150,7 @@ const createSchema = z.object({
 })
 
 // POST /sales (supports offlineId for idempotency)
-router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg', 'employee'), async (req, res) => {
+router.post('/', requireAuth, requirePermission('pos', 'create'), async (req, res) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   try {
@@ -155,6 +162,7 @@ router.post('/', requireAuth, requireRole('super_admin', 'pdg', 'dg', 'employee'
       currency: parsed.data.currency,
       offlineId: parsed.data.offlineId || null
     })
+    try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'sales.create', resource: created.id, meta: { boutiqueId: parsed.data.boutiqueId, items: parsed.data.items.length, paymentMethod: parsed.data.paymentMethod } }) } catch {}
     return res.status(201).json(created)
   } catch (e: any) {
     return res.status(400).json({ error: e?.message || 'Failed to create sale' })

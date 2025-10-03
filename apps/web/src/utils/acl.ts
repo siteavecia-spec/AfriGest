@@ -1,7 +1,18 @@
 // Simple ACL helper to prepare fine-grained permissions without breaking existing role guards.
 // Usage (example): can('pdg', 'stock', 'read') => true/false
 
-export type Role = 'super_admin' | 'pdg' | 'dg' | 'manager_stock' | 'caissier' | 'ecom_manager' | 'ecom_ops' | 'support' | 'marketing'
+export type Role =
+  | 'super_admin'           // Plateforme
+  | 'support'               // Technique (temporaire)
+  | 'pdg'                   // Entreprise
+  | 'dr'                    // Directeur régional (Phase 2)
+  | 'dg'                    // DG Boutique
+  | 'manager_stock'
+  | 'caissier'
+  | 'employee'
+  | 'ecom_manager'
+  | 'ecom_ops'
+  | 'marketing'
 
 export type ModuleKey =
   | 'dashboard'
@@ -11,42 +22,58 @@ export type ModuleKey =
   | 'reports'
   | 'settings'
   | 'security'
+  | 'users'
+  | 'audit'
   | 'purchase_orders'
   | 'receiving'
   | 'returns'
   | 'customers'
-  | 'audit'
+  | 'admin.console'
+  | 'admin.companies'
+  | 'admin.audit_tech'
+  | 'support.session'
   | 'ecommerce.products'
   | 'ecommerce.orders'
   | 'ecommerce.settings'
 
-export type Action = 'read' | 'create' | 'update' | 'delete' | 'approve' | 'export' | 'status_change'
+export type Action = 'read' | 'create' | 'update' | 'delete' | 'approve' | 'export' | 'status_change' | 'suspend' | 'activate' | 'revoke'
 
-// Baseline matrix (can be evolved per project needs)
+// Revised baseline matrix aligned with business/technical separation & least privilege
 export const ROLE_PERMISSIONS: Record<Role, Partial<Record<ModuleKey, Action[]>>> = {
   super_admin: {
+    // Tenant-level super admin: broad access to all modules
     dashboard: ['read'],
     reports: ['read', 'export'],
-    pos: ['read', 'create'],
-    stock: ['read', 'create', 'update', 'delete'],
-    suppliers: ['read', 'create', 'update', 'delete'],
-    settings: ['read', 'update'],
     security: ['read', 'update'],
-    purchase_orders: ['read', 'create', 'update', 'delete', 'status_change', 'export'],
-    receiving: ['read', 'create', 'update'],
-    returns: ['read', 'create', 'update', 'export'],
-    customers: ['read', 'create', 'update'],
+    settings: ['read', 'update'],
+    pos: ['read', 'create', 'update'],
+    stock: ['read', 'create', 'update'],
+    suppliers: ['read', 'create', 'update', 'delete'],
+    users: ['read', 'create', 'update', 'suspend'],
+    purchase_orders: ['read', 'status_change', 'export'],
+    receiving: ['read', 'create'],
+    returns: ['read', 'create'],
+    customers: ['read', 'update'],
     audit: ['read', 'export'],
-    'ecommerce.products': ['read', 'create', 'update', 'delete', 'approve'],
-    'ecommerce.orders': ['read', 'update', 'status_change', 'approve'],
-    'ecommerce.settings': ['read', 'update']
+    'ecommerce.products': ['read', 'create', 'update', 'approve'],
+    'ecommerce.orders': ['read', 'status_change'],
+    'ecommerce.settings': ['read', 'update'],
+    // Platform console remains
+    'admin.console': ['read', 'update'],
+    'admin.companies': ['read', 'create', 'update'],
+    'admin.audit_tech': ['read', 'export']
+  },
+  support: {
+    // As per role sheet: reports only (UI read-only)
+    reports: ['read']
   },
   pdg: {
     dashboard: ['read'],
     reports: ['read', 'export'],
-    pos: ['read'],
-    stock: ['read'],
+    pos: ['read', 'create'],
+    stock: ['read', 'create', 'update'],
     suppliers: ['read'],
+    users: ['read', 'create', 'update', 'suspend'],
     settings: ['read', 'update'],
     purchase_orders: ['read', 'status_change', 'export'],
     receiving: ['read'],
@@ -56,12 +83,24 @@ export const ROLE_PERMISSIONS: Record<Role, Partial<Record<ModuleKey, Action[]>>
     'ecommerce.products': ['read'],
     'ecommerce.orders': ['read']
   },
+  dr: {
+    dashboard: ['read'],
+    reports: ['read', 'export'],
+    stock: ['read', 'update'],
+    pos: ['read', 'create'],
+    purchase_orders: ['read', 'status_change'],
+    receiving: ['read', 'create'],
+    returns: ['read', 'create'],
+    customers: ['read'],
+    audit: ['read']
+  },
   dg: {
     dashboard: ['read'],
     reports: ['read'],
-    pos: ['read', 'create'],
-    stock: ['read', 'update'],
-    suppliers: ['read', 'create', 'update'],
+    pos: ['read', 'create', 'update'],
+    stock: ['read', 'create', 'update'],
+    suppliers: ['read'],
+    users: ['read', 'update'],
     purchase_orders: ['read', 'status_change'],
     receiving: ['read', 'create'],
     returns: ['read', 'create'],
@@ -72,10 +111,19 @@ export const ROLE_PERMISSIONS: Record<Role, Partial<Record<ModuleKey, Action[]>>
   },
   manager_stock: {
     stock: ['read', 'create', 'update'],
-    suppliers: ['read', 'create', 'update']
+    suppliers: ['read', 'create', 'update'],
+    purchase_orders: ['read', 'create', 'update'],
+    receiving: ['read', 'create'],
+    returns: ['read'],
+    reports: ['read', 'export']
   },
   caissier: {
+    dashboard: ['read'],
     pos: ['read', 'create']
+  },
+  employee: {
+    dashboard: ['read'],
+    pos: ['read']
   },
   ecom_manager: {
     'ecommerce.products': ['read', 'create', 'update', 'approve'],
@@ -84,9 +132,6 @@ export const ROLE_PERMISSIONS: Record<Role, Partial<Record<ModuleKey, Action[]>>
   },
   ecom_ops: {
     'ecommerce.orders': ['read', 'status_change']
-  },
-  support: {
-    reports: ['read']
   },
   marketing: {
     reports: ['read', 'export']

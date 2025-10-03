@@ -2,7 +2,18 @@ import { useSelector } from 'react-redux'
 import { Navigate, Outlet } from 'react-router-dom'
 import type { RootState } from '../store'
 
-type Role = 'super_admin' | 'pdg' | 'dg' | 'employee'
+type Role =
+  | 'super_admin'
+  | 'pdg'
+  | 'dr'
+  | 'dg'
+  | 'manager_stock'
+  | 'caissier'
+  | 'ecom_manager'
+  | 'ecom_ops'
+  | 'support'
+  | 'marketing'
+  | 'employee'
 
 export default function ProtectedByRole({ allow }: { allow: Role[] }) {
   const token = useSelector((s: RootState) => s.auth.accessToken)

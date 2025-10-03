@@ -32,11 +32,12 @@ import ExecutiveDashboard from './pages/Executive/Dashboard'
 import Conversations from './pages/Messaging/Conversations'
 import Chat from './pages/Messaging/Chat'
 import PresencePage from './pages/Messaging/Presence'
-import { showEcommerce, showMessaging } from './config/featureFlags'
 import DevToolsPage from './pages/DevTools'
 import StorefrontCatalog from './pages/Storefront/Catalog'
 import StorefrontCart from './pages/Storefront/Cart'
 import StorefrontCheckout from './pages/Storefront/Checkout'
+import StorefrontProduct from './pages/Storefront/Product'
+import StorefrontTrack from './pages/Storefront/Track'
 import PrivacyPage from './pages/Privacy'
 import TermsPage from './pages/Terms'
 import LegalPage from './pages/Legal'
@@ -60,8 +61,10 @@ export default function App() {
       <Route path="/" element={<ErrorBoundary><LandingPage /></ErrorBoundary>} />
       {/* Public storefront (MVP) */}
       <Route path="/shop" element={<StorefrontCatalog />} />
+      <Route path="/shop/product/:sku" element={<StorefrontProduct />} />
       <Route path="/shop/cart" element={<StorefrontCart />} />
       <Route path="/shop/checkout" element={<StorefrontCheckout />} />
+      <Route path="/shop/track" element={<StorefrontTrack />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
@@ -99,42 +102,32 @@ export default function App() {
             <Route path="/restock" element={<RestockPage />} />
             <Route path="/ambassador" element={<AmbassadorPage />} />
             <Route path="/users" element={<UsersPage />} />
-            {/* Messaging module (feature flag) */}
-            {showMessaging && (
-              <>
-                <Route path="/messaging" element={<Conversations />} />
-                <Route path="/messaging/:userId" element={<Chat />} />
-                <Route path="/messaging/presence" element={<PresencePage />} />
-              </>
-            )}
+            {/* Messaging module */}
+            <Route path="/messaging" element={<Conversations />} />
+            <Route path="/messaging/:userId" element={<Chat />} />
+            <Route path="/messaging/presence" element={<PresencePage />} />
             {/* Ecommerce module */}
-            {showEcommerce && (
-              <>
-                <Route path="/ecommerce" element={<EcommerceOverview />} />
-                <Route element={<ProtectedByPermission moduleKey="ecommerce.products" action="read" />}> 
-                  <Route path="/ecommerce/products" element={<EcommerceProducts />} />
-                </Route>
-                <Route element={<ProtectedByPermission moduleKey="ecommerce.orders" action="read" />}> 
-                  <Route path="/ecommerce/orders" element={<EcommerceOrders />} />
-                </Route>
-                <Route element={<ProtectedByPermission moduleKey="ecommerce.orders" action="read" />}> 
-                  <Route path="/ecommerce/payments" element={<EcommercePaymentsPage />} />
-                </Route>
-                <Route path="/ecommerce/sync" element={<EcommerceSyncPage />} />
-                <Route path="/ecommerce/customers" element={<EcommerceCustomers />} />
-              </>
-            )}
+            <Route path="/ecommerce" element={<EcommerceOverview />} />
+            <Route element={<ProtectedByPermission moduleKey="ecommerce.products" action="read" />}> 
+              <Route path="/ecommerce/products" element={<EcommerceProducts />} />
+            </Route>
+            <Route element={<ProtectedByPermission moduleKey="ecommerce.orders" action="read" />}> 
+              <Route path="/ecommerce/orders" element={<EcommerceOrders />} />
+            </Route>
+            <Route element={<ProtectedByPermission moduleKey="ecommerce.orders" action="read" />}> 
+              <Route path="/ecommerce/payments" element={<EcommercePaymentsPage />} />
+            </Route>
+            <Route path="/ecommerce/sync" element={<EcommerceSyncPage />} />
+            <Route path="/ecommerce/customers" element={<EcommerceCustomers />} />
           </Route>
           <Route element={<ProtectedByRole allow={["super_admin", "pdg"]} />}>
             <Route element={<ProtectedByPermission moduleKey="settings" action="read" />}> 
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             {/* Ecommerce settings (PDG/Super Admin) */}
-            {showEcommerce && (
-              <Route element={<ProtectedByPermission moduleKey="ecommerce.settings" action="read" />}> 
-                <Route path="/ecommerce/settings" element={<EcommerceSettings />} />
-              </Route>
-            )}
+            <Route element={<ProtectedByPermission moduleKey="ecommerce.settings" action="read" />}> 
+              <Route path="/ecommerce/settings" element={<EcommerceSettings />} />
+            </Route>
             {/* Dev Tools (Phase 1 QA) */}
             <Route path="/dev-tools" element={<DevToolsPage />} />
             <Route path="/data-tools" element={<DataToolsPage />} />

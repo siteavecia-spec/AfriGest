@@ -47,7 +47,21 @@ router.get('/', async (req, res) => {
     const dailySeries = Object.entries(dailyMap).sort((a, b) => a[0].localeCompare(b[0])).map(([date, v]) => ({ date, count: v.count, revenue: v.revenue }))
     const topProducts = Object.entries(prodMap).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 50).map(([sku, v]) => ({ sku, quantity: v.quantity, revenue: v.revenue }))
 
-    return res.json({ from, to, periodTotals: { count, revenue, payments }, dailySeries, topProducts })
+    // Payment mix by provider when payments table exists
+    let paymentMix: Record<string, number> = {}
+    try {
+      if ((prisma as any)?.ecommercePayment) {
+        const payRows = await (prisma as any).ecommercePayment.findMany({ where: { createdAt: { gte: new Date(start), lt: new Date(end) } }, select: { provider: true, amount: true } })
+        for (const p of (payRows || [])) {
+          const key = String(p.provider || 'unknown')
+          paymentMix[key] = (paymentMix[key] || 0) + Number(p.amount || 0)
+        }
+      }
+    } catch {}
+
+    const averageOrderValue = count > 0 ? revenue / count : 0
+
+    return res.json({ from, to, periodTotals: { count, revenue, payments, averageOrderValue }, dailySeries, topProducts, paymentMix })
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'Failed to compute ecommerce overview' })
   }

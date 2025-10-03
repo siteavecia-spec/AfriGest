@@ -154,13 +154,25 @@ async function createSale(req, data) {
                     }
                     // Create sale + items
                     const total = data.items.reduce((sum, it) => sum + (it.unitPrice * it.quantity - (it.discount || 0)), 0);
+                    // Validate payments if provided
+                    if (Array.isArray(data.payments) && data.payments.length > 0) {
+                        const sum = data.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+                        const ok = Math.abs(sum - Number(total)) < 0.01;
+                        if (!ok)
+                            throw new Error('Payments total does not match sale total');
+                    }
                     const created = await tx.sale.create({ data: { boutiqueId: data.boutiqueId, total: total, paymentMethod: data.paymentMethod, currency: data.currency, cashierUserId: req.auth?.sub || null, createdAt: new Date(), offlineId: data.offlineId || null } });
                     for (const it of data.items) {
                         await tx.saleItem.create({ data: { saleId: created.id, productId: it.productId, quantity: it.quantity, unitPrice: it.unitPrice, discount: (it.discount || 0) } });
                     }
+                    if (Array.isArray(data.payments)) {
+                        for (const pmt of data.payments) {
+                            await tx.payment.create({ data: { saleId: created.id, method: pmt.method, amount: (pmt.amount || 0), reference: pmt.ref || null } });
+                        }
+                    }
                     return created.id;
                 });
-                const saved = await prisma.sale.findUnique({ where: { id: result }, include: { items: true } });
+                const saved = await prisma.sale.findUnique({ where: { id: result }, include: { items: true, payments: true } });
                 // Global AuditLog for sale.create
                 try {
                     await prisma.auditLog.create({ data: {
@@ -188,6 +200,7 @@ async function createSale(req, data) {
                     currency: saved.currency,
                     createdAt: saved.createdAt,
                     offlineId: saved.offlineId || null,
+                    payments: saved.payments ? saved.payments.map((p) => ({ method: p.method, amount: Number(p.amount || 0), ref: p.reference || undefined })) : undefined,
                 };
             }
             catch (e) {
@@ -208,6 +221,13 @@ async function createSale(req, data) {
     // Deduct stock
     data.items.forEach(it => (0, memory_1.upsertStock)(data.boutiqueId, it.productId, -it.quantity));
     const total = data.items.reduce((sum, it) => sum + (it.unitPrice * it.quantity - (it.discount || 0)), 0);
+    // Validate payments
+    if (Array.isArray(data.payments) && data.payments.length > 0) {
+        const sum = data.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+        const ok = Math.abs(sum - Number(total)) < 0.01;
+        if (!ok)
+            throw new Error('Payments total does not match sale total');
+    }
     const sale = {
         id: `sale-${Date.now()}`,
         boutiqueId: data.boutiqueId,

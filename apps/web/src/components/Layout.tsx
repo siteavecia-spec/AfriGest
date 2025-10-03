@@ -7,8 +7,7 @@ import { logout } from '../features/auth/slice'
 import OfflineBanner from './OfflineBanner'
 import { useEffect, useState } from 'react'
 import { messagingConnect } from '../features/messaging/wsMiddleware'
-import { showEcommerce, showMessaging } from '../config/featureFlags'
-import { logoutApi } from '../api/client_clean'
+import { logoutApi, adminSupportToken } from '../api/client_clean'
 import { useI18n } from '../i18n/i18n'
 import { getPendingSales, trySyncSales, getSyncErrors, clearSyncErrors } from '../offline/salesQueue'
 import { listPendingReceivings, trySyncReceivings } from '../offline/poQueue'
@@ -36,6 +35,16 @@ export default function Layout() {
   const { locale, setLocale } = useI18n()
   const [companyKey, setCompanyKey] = useState<string | null>(null)
   const [openDebug, setOpenDebug] = useState(false)
+  const [supportUntil, setSupportUntil] = useState<string | null>(null)
+  // Permission-driven feature visibility
+  const hasEcommerce = can(role as any, 'ecommerce.products', 'read') || can(role as any, 'ecommerce.orders', 'read') || can(role as any, 'ecommerce.settings', 'read')
+  // Common permission flags for menu disable/tooltip
+  const canDash = can(role as any, 'dashboard', 'read')
+  const canPosRead = can(role as any, 'pos', 'read')
+  const canStockRead = can(role as any, 'stock', 'read')
+  const canSuppliersRead = can(role as any, 'suppliers', 'read')
+  const canUsersRead = can(role as any, 'users', 'read')
+  const hasMessaging = true // messaging access: no ACL defined yet, remove phase gating
 
   async function refreshSyncStatus() {
     try {
@@ -58,8 +67,8 @@ export default function Layout() {
 
   // lightweight polling and online event
   useEffect(() => {
-    // connect messaging WS (only if messaging enabled)
-    if (showMessaging) {
+    // connect messaging WS (always, remove phase gating)
+    {
       try { (dispatch as any)(messagingConnect()) } catch {}
     }
     let timer: any
@@ -80,6 +89,8 @@ export default function Layout() {
         setImpersonateCompany(comp)
         const c = (localStorage.getItem('afrigest_company') || '').toLowerCase()
         setCompanyKey(c || null)
+        const su = localStorage.getItem('afrigest_support_until') || null
+        setSupportUntil(su)
       } catch {}
     }
     load()
@@ -135,8 +146,8 @@ export default function Layout() {
             <>
               {!isMasterContext && (
                 <>
-                  <Button color={isActive('/dashboard') ? 'secondary' : 'inherit'} onClick={go('/dashboard')}>Dashboard</Button>
-                  <Button color={isActive('/pos') ? 'secondary' : 'inherit'} onClick={go('/pos')}>POS</Button>
+                  <Button color={isActive('/dashboard') ? 'secondary' : 'inherit'} onClick={go('/dashboard')} disabled={!canDash} title={!canDash ? 'Permission requise' : undefined}>Dashboard</Button>
+                  <Button color={isActive('/pos') ? 'secondary' : 'inherit'} onClick={go('/pos')} disabled={!canPosRead} title={!canPosRead ? 'Permission requise' : undefined}>POS</Button>
                 </>
               )}
               {isMasterContext && (
@@ -144,9 +155,17 @@ export default function Layout() {
                   <Button color={isActive('/admin/console') ? 'secondary' : 'inherit'} onClick={go('/admin/console')}>Console</Button>
                   <Button color={isActive('/admin/companies') ? 'secondary' : 'inherit'} onClick={go('/admin/companies')}>Entreprises</Button>
                   <Button color={isActive('/leads') ? 'secondary' : 'inherit'} onClick={go('/leads')}>Leads</Button>
+                  {/* Support activation (Admin) */}
+                  <Button color="inherit" onClick={async () => {
+                    try {
+                      const json = await adminSupportToken({ hours: 4 })
+                      localStorage.setItem('afrigest_support_until', json.support_until)
+                      setSupportUntil(json.support_until)
+                    } catch (e) { /* ignore */ }
+                  }}>Activer Support (4h)</Button>
                 </>
               )}
-              {showMessaging && (
+              {hasMessaging && (
                 <>
                   <Button color={isActive('/messaging') ? 'secondary' : 'inherit'} onClick={go('/messaging')}>
                     <Badge color="error" overlap="circular" badgeContent={useSelector((s: RootState) => s.messaging?.unreadTotal || 0)}>
@@ -159,24 +178,18 @@ export default function Layout() {
               {!isMasterContext && (
                 <>
                   {/* Stock & Inventaire (show only if allowed) */}
-                  {can(role as any, 'stock', 'read') && (
-                    <>
-                      <Button color={isActive('/stock') ? 'secondary' : 'inherit'} onClick={go('/stock')}>Stock</Button>
-                      <Button color={isActive('/inventory') ? 'secondary' : 'inherit'} onClick={go('/inventory')}>Inventaire</Button>
-                      <Button color={isActive('/purchase-orders') ? 'secondary' : 'inherit'} onClick={go('/purchase-orders')}>Appro</Button>
-                      <Button color={isActive('/receiving') ? 'secondary' : 'inherit'} onClick={go('/receiving')}>Réceptions</Button>
-                    </>
-                  )}
+                  <>
+                    <Button color={isActive('/stock') ? 'secondary' : 'inherit'} onClick={go('/stock')} disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined}>Stock</Button>
+                    <Button color={isActive('/inventory') ? 'secondary' : 'inherit'} onClick={go('/inventory')} disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined}>Inventaire</Button>
+                    <Button color={isActive('/purchase-orders') ? 'secondary' : 'inherit'} onClick={go('/purchase-orders')} disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined}>Appro</Button>
+                    <Button color={isActive('/receiving') ? 'secondary' : 'inherit'} onClick={go('/receiving')} disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined}>Réceptions</Button>
+                  </>
 
                   {/* Fournisseurs */}
-                  {can(role as any, 'suppliers', 'read') && (
-                    <Button color={isActive('/suppliers') ? 'secondary' : 'inherit'} onClick={go('/suppliers')}>Fournisseurs</Button>
-                  )}
+                  <Button color={isActive('/suppliers') ? 'secondary' : 'inherit'} onClick={go('/suppliers')} disabled={!canSuppliersRead} title={!canSuppliersRead ? 'Permission requise' : undefined}>Fournisseurs</Button>
 
                   {/* Ventes */}
-                  {can(role as any, 'pos', 'read') && (
-                    <Button color={isActive('/sales') ? 'secondary' : 'inherit'} onClick={go('/sales')}>Ventes</Button>
-                  )}
+                  <Button color={isActive('/sales') ? 'secondary' : 'inherit'} onClick={go('/sales')} disabled={!canPosRead} title={!canPosRead ? 'Permission requise' : undefined}>Ventes</Button>
                   {/* Retours */}
                   {can(role as any, 'returns', 'read') && (
                     <Button color={isActive('/returns') ? 'secondary' : 'inherit'} onClick={go('/returns')}>Retours</Button>
@@ -190,12 +203,12 @@ export default function Layout() {
                     <Button color={isActive('/ambassador') ? 'secondary' : 'inherit'} onClick={go('/ambassador')}>Ambassadeur</Button>
                   )}
                   {/* Utilisateurs: Super Admin & PDG */}
-                  {(role === 'super_admin' || role === 'pdg') && (
-                    <Button color={isActive('/users') ? 'secondary' : 'inherit'} onClick={go('/users')}>Utilisateurs</Button>
+                  {(
+                    <Button color={isActive('/users') ? 'secondary' : 'inherit'} onClick={go('/users')} disabled={!canUsersRead} title={!canUsersRead ? 'Permission requise' : undefined}>Utilisateurs</Button>
                   )}
 
-                  {/* Ecommerce */}
-                  {showEcommerce && (
+                  {/* Ecommerce (visible si permissions) */}
+                  {hasEcommerce && (
                     <>
                       <Button color={isActive('/ecommerce') ? 'secondary' : 'inherit'} onClick={go('/ecommerce')}>Boutique en ligne</Button>
                       {can(role as any, 'ecommerce.products', 'read') && (
@@ -218,7 +231,7 @@ export default function Layout() {
                     <Button color={isActive('/settings') ? 'secondary' : 'inherit'} onClick={go('/settings')}>Paramètres</Button>
                   )}
                   {/* Ecommerce Settings */}
-                  {showEcommerce && can(role as any, 'ecommerce.settings', 'read') && (
+                  {can(role as any, 'ecommerce.settings', 'read') && (
                     <Button color={isActive('/ecommerce/settings') ? 'secondary' : 'inherit'} onClick={go('/ecommerce/settings')}>E‑commerce: Paramètres</Button>
                   )}
                   {/* Dev Tools (Phase 1 QA) */}
@@ -261,8 +274,8 @@ export default function Layout() {
               <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
                 {!isMasterContext && (
                   <>
-                    <MenuItem onClick={() => { navigate('/dashboard'); setMenuAnchor(null) }}>Dashboard</MenuItem>
-                    <MenuItem onClick={() => { navigate('/pos'); setMenuAnchor(null) }}>POS</MenuItem>
+                    <MenuItem disabled={!canDash} title={!canDash ? 'Permission requise' : undefined} onClick={() => { if (!canDash) return; navigate('/dashboard'); setMenuAnchor(null) }}>Dashboard</MenuItem>
+                    <MenuItem disabled={!canPosRead} title={!canPosRead ? 'Permission requise' : undefined} onClick={() => { if (!canPosRead) return; navigate('/pos'); setMenuAnchor(null) }}>POS</MenuItem>
                   </>
                 )}
                 {isMasterContext && (
@@ -272,7 +285,7 @@ export default function Layout() {
                     <MenuItem onClick={() => { navigate('/leads'); setMenuAnchor(null) }}>Leads</MenuItem>
                   </>
                 )}
-                {showMessaging && (
+                {hasMessaging && (
                   <>
                     <MenuItem onClick={() => { navigate('/messaging'); setMenuAnchor(null) }}>Messagerie</MenuItem>
                     <MenuItem onClick={() => { navigate('/messaging/presence'); setMenuAnchor(null) }}>Présence</MenuItem>
@@ -280,20 +293,14 @@ export default function Layout() {
                 )}
                 {!isMasterContext && (
                   <>
-                    {can(role as any, 'stock', 'read') && (
-                      <>
-                        <MenuItem onClick={() => { navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
-                        <MenuItem onClick={() => { navigate('/inventory'); setMenuAnchor(null) }}>Inventaire</MenuItem>
-                        <MenuItem onClick={() => { navigate('/purchase-orders'); setMenuAnchor(null) }}>Appro</MenuItem>
-                        <MenuItem onClick={() => { navigate('/receiving'); setMenuAnchor(null) }}>Réceptions</MenuItem>
-                      </>
-                    )}
-                    {can(role as any, 'suppliers', 'read') && (
-                      <MenuItem onClick={() => { navigate('/suppliers'); setMenuAnchor(null) }}>Fournisseurs</MenuItem>
-                    )}
-                    {can(role as any, 'pos', 'read') && (
-                      <MenuItem onClick={() => { navigate('/sales'); setMenuAnchor(null) }}>Ventes</MenuItem>
-                    )}
+                    <>
+                      <MenuItem disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined} onClick={() => { if (!canStockRead) return; navigate('/stock'); setMenuAnchor(null) }}>Stock</MenuItem>
+                      <MenuItem disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined} onClick={() => { if (!canStockRead) return; navigate('/inventory'); setMenuAnchor(null) }}>Inventaire</MenuItem>
+                      <MenuItem disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined} onClick={() => { if (!canStockRead) return; navigate('/purchase-orders'); setMenuAnchor(null) }}>Appro</MenuItem>
+                      <MenuItem disabled={!canStockRead} title={!canStockRead ? 'Permission requise' : undefined} onClick={() => { if (!canStockRead) return; navigate('/receiving'); setMenuAnchor(null) }}>Réceptions</MenuItem>
+                    </>
+                    <MenuItem disabled={!canSuppliersRead} title={!canSuppliersRead ? 'Permission requise' : undefined} onClick={() => { if (!canSuppliersRead) return; navigate('/suppliers'); setMenuAnchor(null) }}>Fournisseurs</MenuItem>
+                    <MenuItem disabled={!canPosRead} title={!canPosRead ? 'Permission requise' : undefined} onClick={() => { if (!canPosRead) return; navigate('/sales'); setMenuAnchor(null) }}>Ventes</MenuItem>
                     {can(role as any, 'returns', 'read') && (
                       <MenuItem onClick={() => { navigate('/returns'); setMenuAnchor(null) }}>Retours</MenuItem>
                     )}
@@ -303,11 +310,9 @@ export default function Layout() {
                     {(role === 'super_admin' || role === 'pdg' || role === 'dg') && (
                       <MenuItem onClick={() => { navigate('/ambassador'); setMenuAnchor(null) }}>Ambassadeur</MenuItem>
                     )}
-                    {(role === 'super_admin' || role === 'pdg') && (
-                      <MenuItem onClick={() => { navigate('/users'); setMenuAnchor(null) }}>Utilisateurs</MenuItem>
-                    )}
+                    <MenuItem disabled={!canUsersRead} title={!canUsersRead ? 'Permission requise' : undefined} onClick={() => { if (!canUsersRead) return; navigate('/users'); setMenuAnchor(null) }}>Utilisateurs</MenuItem>
                     {/* Ecommerce (Overview/Products/Orders/Customers) */}
-                    {showEcommerce && (
+                    {hasEcommerce && (
                       <>
                         <MenuItem onClick={() => { navigate('/ecommerce'); setMenuAnchor(null) }}>Boutique en ligne</MenuItem>
                         {can(role as any, 'ecommerce.products', 'read') && (
@@ -333,7 +338,7 @@ export default function Layout() {
                       <MenuItem onClick={() => { navigate('/settings'); setMenuAnchor(null) }}>Paramètres</MenuItem>
                     )}
                     {/* Ecommerce Settings */}
-                    {showEcommerce && can(role as any, 'ecommerce.settings', 'read') && (
+                    {can(role as any, 'ecommerce.settings', 'read') && (
                       <MenuItem onClick={() => { navigate('/ecommerce/settings'); setMenuAnchor(null) }}>E‑commerce: Paramètres</MenuItem>
                     )}
                     {/* Dev Tools (Phase 1 QA) */}
@@ -388,6 +393,21 @@ export default function Layout() {
             </Stack>
           }>
             Mode support actif — Entreprise: {impersonateCompany || '—'}
+          </Alert>
+        </Box>
+      )}
+      {/* Support active banner */}
+      {!!supportUntil && (
+        <Box sx={{ px: 2 }}>
+          <Alert severity="info" action={
+            <Stack direction="row" spacing={1}>
+              <Button size="small" variant="outlined" onClick={() => {
+                try { localStorage.removeItem('afrigest_support_until') } catch {}
+                setSupportUntil(null)
+              }}>Désactiver</Button>
+            </Stack>
+          }>
+            Support technique actif jusqu'au: {new Date(supportUntil).toLocaleString()}
           </Alert>
         </Box>
       )}

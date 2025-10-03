@@ -1,4 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+import type { Role } from '../utils/acl'
 
 // Simple in-memory cache for signed media URLs
 // Key: original path; Value: { url, exp } where exp is epoch ms when entry expires
@@ -9,6 +10,17 @@ function getCachedSignedUrl(path: string): string | null {
   if (hit && hit.exp > now) return hit.url
   if (hit && hit.exp <= now) signedUrlCache.delete(path)
   return null
+}
+
+// Public tracking: get limited order info by id, optional email verification
+export async function ecomGetPublicOrder(orderId: string, email?: string) {
+  const tenantId = getTenantId()
+  const q = new URLSearchParams()
+  if (email) q.set('email', email)
+  const url = `${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/orders/${encodeURIComponent(orderId)}/public${q.toString() ? `?${q.toString()}` : ''}`
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to fetch order')
+  return res.json() as Promise<{ id: string; status: string; paymentStatus?: string; total: number; currency: string; createdAt?: string; items?: Array<{ sku: string; quantity: number; price: number }> }>
 }
 
 // Update product basic fields
@@ -125,6 +137,16 @@ export async function ecomRemoveProductImage(sku: string, url: string) {
   return res.json() as Promise<{ ok: true; images: string[] }>
 }
 
+// Approve product for online publication
+export async function ecomApproveProduct(sku: string) {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/products/${encodeURIComponent(sku)}/approve`, {
+    method: 'PATCH'
+  })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to approve ecommerce product')
+  return res.json() as Promise<{ ok: true; sku: string }>
+}
+
 // Create/Update ecommerce product (back-office)
 export async function ecomUpsertProduct(payload: {
   sku: string
@@ -149,11 +171,20 @@ export async function ecomUpsertProduct(payload: {
 }
 
 // --- E-COMMERCE CLIENT HELPERS ---
-export async function ecomListProducts() {
+export async function ecomListProducts(params?: { q?: string; approved?: boolean; onlineOnly?: boolean; sort?: 'name_asc'|'name_desc'|'price_asc'|'price_desc'; limit?: number; offset?: number }) {
   const tenantId = getTenantId()
-  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/products`)
+  const q = new URLSearchParams()
+  if (params?.q) q.set('q', params.q)
+  if (params?.approved !== undefined) q.set('approved', String(params.approved))
+  if (params?.onlineOnly !== undefined) q.set('onlineOnly', String(params.onlineOnly))
+  if (params?.sort) q.set('sort', params.sort)
+  if (params?.limit != null) q.set('limit', String(params.limit))
+  if (params?.offset != null) q.set('offset', String(params.offset))
+  const qs = q.toString()
+  const url = `${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/products${qs ? `?${qs}` : ''}`
+  const res = await authFetch(url)
   if (!res.ok) throw new Error(await res.text() || 'Failed to load ecommerce products')
-  return res.json() as Promise<{ items: Array<{ sku: string; title: string; price: number; currency: string; isOnlineAvailable: boolean }>, tenantId: string }>
+  return res.json() as Promise<{ items: Array<{ sku: string; title: string; price: number; currency: string; isOnlineAvailable: boolean }>, tenantId: string, total?: number, limit?: number, offset?: number }>
 }
 
 // Get a short-lived signed URL for a private media key under the tenant namespace (with small cache)
@@ -281,10 +312,21 @@ export async function ecomPaymentsPayPalOrder(payload: { items: Array<{ sku: str
     body: JSON.stringify(payload)
   })
   if (!res.ok) throw new Error(await res.text() || 'Failed to init PayPal order')
-  return res.json() as Promise<{ provider: 'paypal'; status?: string; id?: string; approveUrl?: string; message?: string }>
+  return res.json() as Promise<{ provider: 'paypal'; status?: string; orderId?: string; paypalOrderId?: string; approveUrl?: string; message?: string }>
 }
 
-export async function ecomPaymentsMtnInit(payload: { amount: number; currency?: string; phone?: string }) {
+export async function ecomPaymentsPayPalCapture(payload: { paypalOrderId: string; orderId?: string }) {
+  const tenantId = getTenantId()
+  const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/payments/paypal/capture`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to capture PayPal order')
+  return res.json() as Promise<{ ok: boolean; result?: any }>
+}
+
+export async function ecomPaymentsMtnInit(payload: { amount: number; currency?: string; phone?: string; items?: Array<{ sku: string; quantity: number; price: number; currency?: string }> }) {
   const tenantId = getTenantId()
   const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/payments/mtn/init`, {
     method: 'POST',
@@ -292,10 +334,10 @@ export async function ecomPaymentsMtnInit(payload: { amount: number; currency?: 
     body: JSON.stringify(payload)
   })
   if (!res.ok) throw new Error(await res.text() || 'Failed to init MTN MoMo')
-  return res.json() as Promise<{ provider: 'mtn_momo'; status?: string; message?: string }>
+  return res.json() as Promise<{ provider: 'mtn_momo'; status?: string; message?: string; ref?: string; orderId?: string }>
 }
 
-export async function ecomPaymentsOrangeInit(payload: { amount: number; currency?: string; phone?: string }) {
+export async function ecomPaymentsOrangeInit(payload: { amount: number; currency?: string; phone?: string; items?: Array<{ sku: string; quantity: number; price: number; currency?: string }> }) {
   const tenantId = getTenantId()
   const res = await authFetch(`${API_URL}/api/tenants/${encodeURIComponent(tenantId)}/ecommerce/payments/orange/init`, {
     method: 'POST',
@@ -303,7 +345,7 @@ export async function ecomPaymentsOrangeInit(payload: { amount: number; currency
     body: JSON.stringify(payload)
   })
   if (!res.ok) throw new Error(await res.text() || 'Failed to init Orange MoMo')
-  return res.json() as Promise<{ provider: 'orange_momo'; status?: string; message?: string }>
+  return res.json() as Promise<{ provider: 'orange_momo'; status?: string; message?: string; ref?: string; orderId?: string }>
 }
 
 export interface LoginPayload {
@@ -315,7 +357,7 @@ export interface LoginPayload {
 export interface LoginResponse {
   accessToken: string
   refreshToken: string
-  role: 'super_admin' | 'pdg' | 'dg' | 'employee'
+  role: Role
 }
 
 function authHeaders() {
@@ -326,6 +368,8 @@ function authHeaders() {
   if (company) headers['x-company'] = company
   const email = localStorage.getItem('afrigest_email')
   if (email) headers['x-user-email'] = email
+  const supportUntil = localStorage.getItem('afrigest_support_until')
+  if (supportUntil) headers['x-support-until'] = supportUntil
   return headers
 }
 
@@ -569,6 +613,18 @@ export async function adminProvisionCompany(id: string) {
   const res = await authFetch(`${API_URL}/admin/companies/${encodeURIComponent(id)}/provision`, { method: 'POST' })
   if (!res.ok) throw new Error(await res.text() || 'Failed to provision company')
   return res.json() as Promise<{ ok: true; id: string; status: string }>
+}
+
+// --- Admin: Support token ---
+export async function adminSupportToken(payload?: { hours?: number; scopes?: string[] }) {
+  const res = await authFetch(`${API_URL}/admin/support-token`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload || {}) })
+  if (!res.ok) throw new Error(await res.text() || 'Failed to mint support token')
+  const json = await res.json() as { accessToken: string; role: string; support_until: string; scopes?: string[] }
+  try {
+    localStorage.setItem('afrigest_token', json.accessToken)
+    localStorage.setItem('afrigest_support_until', json.support_until)
+  } catch {}
+  return json
 }
 
 // Products

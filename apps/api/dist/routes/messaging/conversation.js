@@ -2,11 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../../middleware/auth");
+const authorization_1 = require("../../middleware/authorization");
 const db_1 = require("../../db");
 const router = (0, express_1.Router)({ mergeParams: true });
 // GET /api/tenants/:tenantId/messaging/conversation/:userId
 // Returns recent messages (desc) between auth user and :userId
-router.get('/:userId', auth_1.requireAuth, async (req, res) => {
+router.get('/:userId', auth_1.requireAuth, (0, authorization_1.requirePermission)('messaging', 'read'), async (req, res) => {
     const { tenantId, userId } = req.params;
     const auth = req.auth;
     const prisma = (0, db_1.getTenantClientFromReq)(req);

@@ -125,24 +125,6 @@ Notes:
   - **S5**: Intégration contextuelle + deep links.
 - Phase 4.2.3 (2 semaines)
   - **S6**: Audit logging complet + sécurité (forbidden attempts).
-  - **S7**: Perf & tests de charge.
-- Phase 4.2.4 (1 semaine)
-  - **S8**: Déploiement progressif + monitoring + feature flag.
-
-## 10) ENV & Infra
-- `REDIS_URL=redis://localhost:6379`
-- Monitoring: New Relic/Datadog (métriques WS, CPU, mémoire).
-
-## 11) KPIs de Succès
-- Latence moyenne < 80ms, Uptime > 99.9%, Zero critical bugs.
-- Produit: > 60% DAU utilisent la messagerie; > 10 messages/utilisateur/jour; NPS > +30.
-- Business: -15% tickets support; +5% rétention; CSAT > 4.5/5.
-
-## 12) Runbook QA (Phase 4.2)
-- **[Pré‑requis]**
-  - `REDIS_URL` configuré (ex: `redis://localhost:6379`).
-  - Modèles Prisma AfriTalk migrés (tenant) et API démarrée.
-  - Deux utilisateurs actifs au sein du même tenant (ex: `DG`, `Employé`).
 
 - **[Connexion WS]**
   - Ouvrir l’Admin (session 1), puis l’Admin (session 2) avec un autre compte.
@@ -167,3 +149,24 @@ Notes:
 
 - **[Robustesse]**
   - Rechargez l’Admin: la connexion WS se rétablit, le badge “non lus” s’affiche correctement, les conversations se rechargent.
+
+---
+
+## 13) Delivered (MVP 2025-10-03)
+
+- Backend REST livré:
+  - `GET /api/tenants/:tenantId/messaging/conversations` (unread, lastMessage).
+  - `GET /api/tenants/:tenantId/messaging/conversation/:userId?limit&before` (pagination).
+  - `POST /api/tenants/:tenantId/messaging/message` (sanitation, rate-limit, audit, WS `messaging:new`).
+  - `PUT /api/tenants/:tenantId/messaging/:messageId/read` (audit, WS `messaging:read`).
+- WebSocket:
+  - Initialisation Socket.io avec rooms `tenant:` et `user:`.
+  - Émissions `messaging:new` et `messaging:read`; présence mémoire + `presence:ping`.
+- RBAC:
+  - ModuleKey `messaging` ajouté; routes protégées (`read` pour lecture, `create` pour envoi).
+- Sécurité:
+  - Sanitation côté serveur (contenu non vide, ≤ 2000 chars), rate‑limit 30 msgs / 60s / utilisateur (MVP mémoire).
+- Frontend Admin:
+  - Pages Conversations, Chat (pagination bouton “Charger plus”, read receipts), Présence.
+- E2E:
+  - Spéc REST `e2e/tests/messaging.spec.ts` (send/read). Les tests WS temps‑réel sont couverts en smoke.

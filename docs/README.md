@@ -7,6 +7,7 @@ This index links all key documents to navigate features, phases, and runbooks.
 - Phase 2 (Consolidation): feature-complete in demo mode (Transfers + Inventory + Exports EOD/period); for production grade: PDG consolidated dashboard refinements and end-of-day PDF, optional attachments for transfers.
 
 ## Getting Started
+- `QUICKSTART.md` (recommended first read for local setup)
 - `requirements.md`
 - `cahier-des-charges-afrigest.md`
 - `ENV.md`, `web.env.example`, `api.env.example`

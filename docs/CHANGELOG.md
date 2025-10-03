@@ -1,5 +1,26 @@
 # AfriGest — E‑Commerce Module — CHANGELOG
 
+## 2025-10-03 — Phase 2 Readiness (Storefront + Payments + Messaging)
+
+### Backend
+- Payments finalized for MVP: PayPal (order & capture), MTN MoMo and Orange Money (init + callbacks) under `apps/api/src/routes/ecommerce/payments.ts` with idempotent updates of `paymentStatus` and creation of `EcommercePayment`.
+- Inventory shared mode wired through Prisma service with safe decrement/release during logistics status transitions in `apps/api/src/routes/ecommerce/orders.ts`.
+- Messaging module (AfriTalk) endpoints ready: list conversations, fetch conversation (pagination `limit/before`), send message (sanitation + rate limit), mark read; WebSocket broadcasts `messaging:new` and `messaging:read`.
+- RBAC: dedicated `messaging` ModuleKey added in `apps/api/src/middleware/authorization.ts`; routes protected accordingly; audit via `auditReq` on send/read.
+
+### Frontend (Admin + Storefront)
+- Public storefront completed for MVP: Catalog, Product, Cart, Checkout (PayPal init), and public Track page `/shop/track`.
+- Admin: Messaging UI (Conversations, Chat with “Charger plus” pagination, Presence), Orders page payment test buttons, KPIs updates.
+
+### E2E
+- Added targeted Playwright suites:
+  - `e2e/tests/ecommerce-momo-callbacks.spec.ts` covering MTN/Orange init + callback and order payment status update.
+  - `e2e/tests/messaging.spec.ts` covering REST send + read flows; WS verified separately during manual smoke.
+
+### Docs
+- Updated RBAC to include `messaging` module.
+- Bumped AfriTalk spec with latest endpoints, sanitation, and rate limiting notes.
+
 ## 2025-09-25 — Phase 1 (in‑memory + Prisma fallback)
 
 ### Backend

@@ -7,8 +7,12 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import Page from '../components/Page'
 import DataTable from '../components/DataTable'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../store'
+import { can } from '../utils/acl'
 
 export default function SuppliersPage() {
+  const role = useSelector((s: RootState) => s.auth.role) as any
   const [suppliers, setSuppliers] = useState<Array<any>>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -29,6 +33,11 @@ export default function SuppliersPage() {
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [total, setTotal] = useState<number | undefined>(undefined)
+
+  // Permissions
+  const canCreate = can(role, 'suppliers', 'create')
+  const canUpdate = can(role, 'suppliers', 'update')
+  const canDelete = can(role, 'suppliers', 'delete')
 
   const load = async () => {
     setLoading(true)
@@ -164,6 +173,7 @@ export default function SuppliersPage() {
       </Snackbar>
 
       <Grid container spacing={3}>
+        {canCreate && (
         <Grid item xs={12} md={5}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={600}>Nouveau fournisseur</Typography>
@@ -177,6 +187,7 @@ export default function SuppliersPage() {
             </Stack>
           </Paper>
         </Grid>
+        )}
         <Grid item xs={12} md={7}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -269,8 +280,12 @@ export default function SuppliersPage() {
                       <TableCell><Typography color="text.secondary">{s.phone || '-'}</Typography></TableCell>
                       <TableCell><Typography color="text.secondary">{s.email || '-'}</Typography></TableCell>
                       <TableCell align="right">
-                        <IconButton size="small" onClick={() => startEdit(s)} disabled={loading}><EditIcon fontSize="small" /></IconButton>
-                        <IconButton size="small" color="error" onClick={() => removeSupplier(s.id)} disabled={loading}><DeleteIcon fontSize="small" /></IconButton>
+                        {canUpdate && (
+                          <IconButton size="small" onClick={() => startEdit(s)} disabled={loading}><EditIcon fontSize="small" /></IconButton>
+                        )}
+                        {canDelete && (
+                          <IconButton size="small" color="error" onClick={() => removeSupplier(s.id)} disabled={loading}><DeleteIcon fontSize="small" /></IconButton>
+                        )}
                       </TableCell>
                     </>
                   )}

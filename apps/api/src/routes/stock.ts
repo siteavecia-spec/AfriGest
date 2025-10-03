@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { requireAuth } from '../middleware/auth'
-import { requireRole } from '../middleware/rbac'
 import { requirePermission } from '../middleware/authorization'
 import { boutiques, products } from '../stores/memory'
 import * as svc from '../services/stock'
+import { auditReq } from '../services/audit'
 
 const router = Router()
 
@@ -23,13 +23,14 @@ const entrySchema = z.object({
   items: z.array(z.object({ productId: z.string().min(1), quantity: z.number().int().positive(), unitCost: z.number().nonnegative() })).min(1).max(100)
 })
 
-router.post('/entries', requireAuth, requireRole('super_admin', 'pdg', 'dg'), requirePermission('stock', 'update'), async (req, res) => {
+router.post('/entries', requireAuth, requirePermission('stock', 'update'), async (req, res) => {
   const parsed = entrySchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   const { boutiqueId } = parsed.data
   const bq = boutiques.find(b => b.id === boutiqueId)
   if (!bq) return res.status(404).json({ error: 'Boutique not found' })
   const out = await svc.createStockEntry(req, parsed.data)
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'stock.entry.create', resource: parsed.data.boutiqueId, meta: { items: parsed.data.items.length, reference: parsed.data.reference } }) } catch {}
   return res.status(201).json(out)
 })
 
@@ -41,7 +42,7 @@ const adjustSchema = z.object({
   reason: z.string().min(1)
 })
 
-router.post('/adjust', requireAuth, requireRole('super_admin', 'pdg', 'dg'), requirePermission('stock', 'update'), async (req, res) => {
+router.post('/adjust', requireAuth, requirePermission('stock', 'update'), async (req, res) => {
   const parsed = adjustSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() })
   const { boutiqueId, productId, delta, reason } = parsed.data
@@ -50,16 +51,18 @@ router.post('/adjust', requireAuth, requireRole('super_admin', 'pdg', 'dg'), req
   const prod = products.find(p => p.id === productId)
   if (!prod) return res.status(404).json({ error: 'Product not found' })
   const out = await svc.adjustStock(req, { boutiqueId, productId, delta, reason })
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'stock.adjust', resource: `${boutiqueId}:${productId}`, meta: { delta, reason } }) } catch {}
   return res.status(201).json(out)
 })
 
 // GET /stock/audit?productId=...&limit=...
-router.get('/audit', requireAuth, requireRole('super_admin', 'pdg', 'dg'), requirePermission('stock', 'read'), async (req, res) => {
+router.get('/audit', requireAuth, requirePermission('stock', 'read'), async (req, res) => {
   const productId = (req.query.productId || '').toString()
   const rawLimit = Number((req.query.limit || 50).toString())
   const limit = Math.max(1, Math.min(200, Number.isFinite(rawLimit) ? rawLimit : 50))
   if (!productId) return res.status(400).json({ error: 'Missing productId' })
   const rows = await svc.getStockAudit(req, productId, limit)
+  try { await auditReq(req, { userId: (req as any).auth?.sub, action: 'stock.audit.read', resource: productId, meta: { limit } }) } catch {}
   return res.json(rows)
 })
 

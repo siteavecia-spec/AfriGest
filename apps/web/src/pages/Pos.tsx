@@ -14,8 +14,12 @@ import { useBoutique } from '../context/BoutiqueContext'
 import ErrorBanner from '../components/ErrorBanner'
 import { useI18n } from '../i18n/i18n'
 import Page from '../components/Page'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../store'
+import { can } from '../utils/acl'
 
 export default function PosPage() {
+  const role = useSelector((s: RootState) => s.auth.role) as any
   const { selectedBoutiqueId: boutiqueId, setSelectedBoutiqueId, boutiques } = useBoutique()
   const { t } = useI18n()
   const [products, setProducts] = useState<Array<any>>([])
@@ -103,7 +107,12 @@ export default function PosPage() {
     )
   }, [products, query])
 
+  // Permissions
+  const canPosCreate = can(role, 'pos', 'create')
+  const canReportsRead = can(role, 'reports', 'read')
+
   const onSelectProduct = (id: string) => {
+    if (!canPosCreate) return
     const p = products.find((x: any) => x.id === id)
     setSelectedProductId(id)
     setUnitPrice(p ? Number(p.price ?? 0) : 0)
@@ -111,6 +120,7 @@ export default function PosPage() {
   }
 
   const addToCart = () => {
+    if (!canPosCreate) return
     const p = products.find((x: any) => x.id === selectedProductId)
     if (!p) return
     if (quantity <= 0 || unitPrice < 0) return
@@ -285,6 +295,10 @@ export default function PosPage() {
   }
 
   const submitSale = async () => {
+    if (!canPosCreate) {
+      setMessage('Action non autorisée (pos.create requis)')
+      return
+    }
     setMessage(null)
     setLoading(true)
     const items = cart.map(i => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.unitPrice, discount: i.discount }))
@@ -350,6 +364,7 @@ export default function PosPage() {
   // Quick add by barcode or SKU: when Enter pressed on barcode field
   const onBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return
+    if (!canPosCreate) return
     const code = barcode.trim().toLowerCase()
     if (!code) return
     const p = products.find((x: any) => x.barcode?.toLowerCase() === code || x.sku?.toLowerCase() === code)
@@ -448,7 +463,7 @@ export default function PosPage() {
               a.click()
               URL.revokeObjectURL(url)
             } catch {}
-          }}>Exporter fin de journée (CSV)</Button>
+          }} disabled={!canReportsRead}>Exporter fin de journée (CSV)</Button>
           <Button size="small" variant="outlined" onClick={async () => {
             try {
               const batchSize = 1000
@@ -561,7 +576,7 @@ export default function PosPage() {
               })
               pdf.save('recus_du_jour.pdf')
             } catch {}
-          }}>{t('pos.export_receipts_pdf') || 'Exporter reçus du jour (PDF)'}</Button>
+          }} disabled={!canReportsRead}>{t('pos.export_receipts_pdf') || 'Exporter reçus du jour (PDF)'}</Button>
         </Stack>
         <Stack spacing={2}>
           <TextField select label="Boutique" value={boutiqueId} onChange={e => setSelectedBoutiqueId(e.target.value)}>
@@ -569,10 +584,10 @@ export default function PosPage() {
               <MenuItem key={b.id} value={b.id}>{b.code ? `${b.code} — ` : ''}{b.name}</MenuItem>
             ))}
           </TextField>
-          <TextField label="Scan code-barres / SKU" value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={onBarcodeKeyDown} placeholder="Scannez ici puis Entrée" />
+          <TextField label="Scan code-barres / SKU" value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={onBarcodeKeyDown} placeholder="Scannez ici puis Entrée" disabled={!canPosCreate} />
           <TextField label="Recherche produit (Nom ou SKU)" value={query} onChange={e => setQuery(e.target.value)} />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
-            <TextField select label="Produit" value={selectedProductId} onChange={e => onSelectProduct(e.target.value)} placeholder="Sélectionner un produit">
+            <TextField select label="Produit" value={selectedProductId} onChange={e => onSelectProduct(e.target.value)} placeholder="Sélectionner un produit" disabled={!canPosCreate}>
               {filtered.length === 0 ? (
                 <MenuItem value="" disabled>Aucun produit</MenuItem>
               ) : (

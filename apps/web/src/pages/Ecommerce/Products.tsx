@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Button, Card, CardContent, Grid, Stack, TextField, Typography, Table, TableHead, TableRow, TableCell, TableBody, Snackbar, Alert, Link, Switch, FormControlLabel, Select, MenuItem, IconButton, Chip, TableContainer } from '@mui/material'
-import { ecomListProducts, ecomSyncInventory, ecomPresignUpload, ecomUpsertProduct, ecomAddProductImage, ecomRemoveProductImage, ecomSetProductCover } from '../../api/client_clean'
+import { ecomListProducts, ecomSyncInventory, ecomPresignUpload, ecomUpsertProduct, ecomAddProductImage, ecomRemoveProductImage, ecomSetProductCover, ecomApproveProduct } from '../../api/client_clean'
+import { useSelector } from 'react-redux'
+import type { RootState } from '../../store'
+import { can } from '../../utils/acl'
 
 export default function EcommerceProducts() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [items, setItems] = useState<Array<{ sku: string; title: string; price: number; isOnlineAvailable: boolean; imageUrl?: string; images?: string[]; currency?: string; onlineStockMode?: 'shared'|'dedicated'; onlineStockQty?: number }>>([])
+  const [items, setItems] = useState<Array<{ sku: string; title: string; price: number; isOnlineAvailable: boolean; imageUrl?: string; images?: string[]; currency?: string; onlineStockMode?: 'shared'|'dedicated'; onlineStockQty?: number; approved?: boolean }>>([])
   const [uploading, setUploading] = useState(false)
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
   const [toast, setToast] = useState<string | null>(null)
@@ -20,22 +23,29 @@ export default function EcommerceProducts() {
   const [fOnline, setFOnline] = useState(true)
   const [fMode, setFMode] = useState<'shared' | 'dedicated'>('shared')
   const [fQty, setFQty] = useState<number | ''>('')
+  // Permissions
+  const role = useSelector((s: RootState) => s.auth.role) as any
+  const canCreate = can(role, 'ecommerce.products', 'create')
+  const canUpdate = can(role, 'ecommerce.products', 'update')
+  const canApprove = can(role, 'ecommerce.products', 'approve')
+  const canModify = canCreate || canUpdate
 
   async function load() {
     setLoading(true)
     setError(null)
     try {
-      const res = await ecomListProducts()
+      const res = await ecomListProducts({ q: query || undefined })
       const list = (res.items || []).map((p: any) => ({
         sku: p.sku,
         title: p.title,
         price: Number(p.price ?? 0),
         isOnlineAvailable: Boolean(p.isOnlineAvailable),
         imageUrl: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : undefined,
-        images: Array.isArray(p.images) ? p.images : [],
+        images: (Array.isArray(p.images) ? p.images : []) as string[],
         currency: p.currency || 'GNF',
-        onlineStockMode: (p.onlineStockMode === 'dedicated' ? 'dedicated' : 'shared'),
-        onlineStockQty: typeof p.onlineStockQty === 'number' ? p.onlineStockQty : undefined
+        onlineStockMode: (p.onlineStockMode === 'dedicated' ? 'dedicated' : 'shared') as 'dedicated' | 'shared',
+        onlineStockQty: typeof p.onlineStockQty === 'number' ? p.onlineStockQty : undefined,
+        approved: typeof p.approved === 'boolean' ? p.approved : (typeof p.isApproved === 'boolean' ? p.isApproved : undefined)
       }))
       setItems(list)
     } catch (e: any) {
@@ -45,7 +55,7 @@ export default function EcommerceProducts() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [query])
 
   async function onPickFile() {
     try { fileRef.current?.click() } catch {}
@@ -79,17 +89,19 @@ export default function EcommerceProducts() {
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
             <TextField label="Recherche" value={query} onChange={e => setQuery(e.target.value)} sx={{ flex: 1 }} placeholder="SKU, nom…" />
-            <Button variant="contained" onClick={() => {
-              setFSku(''); setFTitle(''); setFPrice(''); setFCurrency('GNF'); setFDesc(''); setFOnline(true); setFMode('shared'); setFQty(''); setUploadedUrl(null)
-            }}>Nouveau produit</Button>
+            {canCreate && (
+              <Button variant="contained" onClick={() => {
+                setFSku(''); setFTitle(''); setFPrice(''); setFCurrency('GNF'); setFDesc(''); setFOnline(true); setFMode('shared'); setFQty(''); setUploadedUrls([])
+              }}>Nouveau produit</Button>
+            )}
           </Stack>
           {/* Upsert form */}
           <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={12} sm={3}><TextField label="SKU" value={fSku} onChange={e => setFSku(e.target.value)} fullWidth /></Grid>
-            <Grid item xs={12} sm={3}><TextField label="Nom" value={fTitle} onChange={e => setFTitle(e.target.value)} fullWidth /></Grid>
-            <Grid item xs={6} sm={2}><TextField label="Prix" type="number" value={fPrice} onChange={e => setFPrice(e.target.value === '' ? '' : Number(e.target.value))} fullWidth /></Grid>
+            <Grid item xs={12} sm={3}><TextField label="SKU" value={fSku} onChange={e => setFSku(e.target.value)} fullWidth disabled={!canModify} /></Grid>
+            <Grid item xs={12} sm={3}><TextField label="Nom" value={fTitle} onChange={e => setFTitle(e.target.value)} fullWidth disabled={!canModify} /></Grid>
+            <Grid item xs={6} sm={2}><TextField label="Prix" type="number" value={fPrice} onChange={e => setFPrice(e.target.value === '' ? '' : Number(e.target.value))} fullWidth disabled={!canModify} /></Grid>
             <Grid item xs={6} sm={2}>
-              <Select size="small" fullWidth value={fCurrency} onChange={e => setFCurrency(e.target.value as string)}>
+              <Select size="small" fullWidth value={fCurrency} onChange={e => setFCurrency(e.target.value as string)} disabled={!canModify}>
                 <MenuItem value="GNF">GNF</MenuItem>
                 <MenuItem value="XOF">XOF</MenuItem>
                 <MenuItem value="XAF">XAF</MenuItem>
@@ -97,29 +109,29 @@ export default function EcommerceProducts() {
                 <MenuItem value="EUR">EUR</MenuItem>
               </Select>
             </Grid>
-            <Grid item xs={12} sm={4}><TextField label="Description" value={fDesc} onChange={e => setFDesc(e.target.value)} fullWidth multiline minRows={2} /></Grid>
-            <Grid item xs={6} sm={2}><FormControlLabel control={<Switch checked={fOnline} onChange={(_, c) => setFOnline(c)} />} label="En ligne" /></Grid>
+            <Grid item xs={12} sm={4}><TextField label="Description" value={fDesc} onChange={e => setFDesc(e.target.value)} fullWidth multiline minRows={2} disabled={!canModify} /></Grid>
+            <Grid item xs={6} sm={2}><FormControlLabel control={<Switch checked={fOnline} onChange={(_, c) => setFOnline(c)} disabled={!canModify} />} label="En ligne" /></Grid>
             <Grid item xs={6} sm={2}>
-              <Select size="small" fullWidth value={fMode} onChange={e => setFMode((e.target.value as 'shared'|'dedicated') || 'shared')}>
+              <Select size="small" fullWidth value={fMode} onChange={e => setFMode((e.target.value as 'shared'|'dedicated') || 'shared')} disabled={!canModify}>
                 <MenuItem value="shared">Stock partagé</MenuItem>
                 <MenuItem value="dedicated">Stock dédié</MenuItem>
               </Select>
             </Grid>
-            <Grid item xs={6} sm={2}><TextField label="Stock en ligne" type="number" value={fQty} onChange={e => setFQty(e.target.value === '' ? '' : Number(e.target.value))} fullWidth /></Grid>
+            <Grid item xs={6} sm={2}><TextField label="Stock en ligne" type="number" value={fQty} onChange={e => setFQty(e.target.value === '' ? '' : Number(e.target.value))} fullWidth disabled={!canModify} /></Grid>
             <Grid item xs={12} sm={3}>
               <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFileChange} />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                <Button variant="outlined" disabled={uploading} onClick={onPickFile}>{uploading ? 'Upload…' : 'Ajouter image (S3)'}</Button>
+                <Button variant="outlined" disabled={uploading || !canModify} onClick={onPickFile}>{uploading ? 'Upload…' : 'Ajouter image (S3)'}</Button>
                 {uploadedUrls.length > 0 && (
                   <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                     {uploadedUrls.map((u, idx) => (
                       <Stack key={u} direction="row" spacing={1} alignItems="center">
                         <Chip label={`img${idx+1}`} onClick={() => window.open(u, '_blank')} onDelete={() => setUploadedUrls(urls => urls.filter(x => x !== u))} />
-                        <Button size="small" variant="outlined" disabled={!fSku} onClick={async () => {
+                        <Button size="small" variant="outlined" disabled={!fSku || !canModify} onClick={async () => {
                           if (!fSku) { setError('Renseignez un SKU pour attacher une image'); return }
                           try { await ecomAddProductImage(fSku, u); setToast('Image attachée au produit'); await load() } catch (e:any) { setError(e?.message || 'Échec attacher image') }
                         }}>Attacher</Button>
-                        <Button size="small" variant="text" disabled={!fSku} onClick={async () => {
+                        <Button size="small" variant="text" disabled={!fSku || !canModify} onClick={async () => {
                           if (!fSku) { setError('Renseignez un SKU pour détacher une image'); return }
                           try { await ecomRemoveProductImage(fSku, u); setToast('Image supprimée du produit'); await load() } catch (e:any) { setError(e?.message || 'Échec suppression image') }
                         }}>Supprimer du produit</Button>
@@ -129,8 +141,9 @@ export default function EcommerceProducts() {
                 )}
               </Stack>
             </Grid>
-            <Grid item xs={12} sm={3}>
-              <Button variant="contained" onClick={async () => {
+            <Grid item xs={12} sm={4}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button variant="contained" disabled={!canModify} onClick={async () => {
                 setError(null)
                 try {
                   if (!fSku || !fTitle || fPrice === '' || !Number.isFinite(Number(fPrice))) throw new Error('Veuillez renseigner SKU, Nom et Prix')
@@ -146,6 +159,20 @@ export default function EcommerceProducts() {
                   setError(e?.message || 'Échec de l\'enregistrement')
                 }
               }}>Enregistrer</Button>
+              {canApprove && (
+                <Button variant="outlined" color="success" disabled={!fSku} onClick={async () => {
+                  setError(null)
+                  try {
+                    if (!fSku) throw new Error('Sélectionnez ou saisissez un SKU')
+                    await ecomApproveProduct(fSku)
+                    setToast('Produit approuvé')
+                    await load()
+                  } catch (e: any) {
+                    setError(e?.message || 'Échec de l\'approbation')
+                  }
+                }}>Approuver</Button>
+              )}
+              </Stack>
             </Grid>
           </Grid>
           {/* Images actuelles du produit sélectionné (si présent dans la liste) */}
@@ -157,8 +184,8 @@ export default function EcommerceProducts() {
                 <Typography variant="subtitle2" sx={{ mr: 1 }}>Images du produit:</Typography>
                 {imgs.map((u, idx) => (
                   <Stack key={u} direction="row" spacing={1} alignItems="center">
-                    <Chip label={(idx === 0 ? '★ ' : '') + (u.split('/').pop() || 'image')} onClick={() => window.open(u, '_blank')} onDelete={async () => { try { await ecomRemoveProductImage(fSku, u); setToast('Image supprimée'); await load() } catch (e:any) { setError(e?.message || 'Échec suppression image') } }} />
-                    {idx !== 0 && (
+                    <Chip label={(idx === 0 ? '★ ' : '') + (u.split('/').pop() || 'image')} onClick={() => window.open(u, '_blank')} onDelete={async () => { if (!canModify) return; try { await ecomRemoveProductImage(fSku, u); setToast('Image supprimée'); await load() } catch (e:any) { setError(e?.message || 'Échec suppression image') } }} />
+                    {idx !== 0 && canModify && (
                       <Button size="small" variant="text" onClick={async () => { try { await ecomSetProductCover(fSku, u); setToast('Cover définie'); await load() } catch (e:any) { setError(e?.message || 'Échec définir cover') } }}>Définir comme cover</Button>
                     )}
                   </Stack>
@@ -169,7 +196,7 @@ export default function EcommerceProducts() {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }} sx={{ mt: 2 }}>
             <TextField size="small" label="SKU" placeholder="SKU-TSHIRT" id="sync-sku" />
             <TextField size="small" type="number" label="Delta" placeholder="+5 ou -2" id="sync-delta" sx={{ width: 160 }} />
-            <Button variant="outlined" onClick={async () => {
+            <Button variant="outlined" disabled={!canUpdate} onClick={async () => {
               setError(null)
               try {
                 const skuEl = document.getElementById('sync-sku') as HTMLInputElement | null
@@ -192,6 +219,7 @@ export default function EcommerceProducts() {
                     <TableCell>Image</TableCell>
                     <TableCell>SKU</TableCell>
                     <TableCell>Nom</TableCell>
+                    <TableCell>Approbation</TableCell>
                     <TableCell>Prix</TableCell>
                     <TableCell>En ligne</TableCell>
                   </TableRow>
@@ -210,13 +238,22 @@ export default function EcommerceProducts() {
                         <TableCell>{p.imageUrl ? <img src={p.imageUrl} alt={p.title} style={{ maxHeight: 40 }} /> : '-'}</TableCell>
                         <TableCell>{p.sku}</TableCell>
                         <TableCell>{p.title}</TableCell>
+                        <TableCell>
+                          {p.approved === true ? (
+                            <Chip size="small" color="success" label="Approuvé" />
+                          ) : p.approved === false ? (
+                            <Chip size="small" color="default" label="En attente" />
+                          ) : (
+                            <Chip size="small" color="default" label="—" />
+                          )}
+                        </TableCell>
                         <TableCell>{p.price.toLocaleString('fr-FR')}</TableCell>
                         <TableCell>{p.isOnlineAvailable ? 'Oui' : 'Non'}</TableCell>
                       </TableRow>
                     ))}
                   {items.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={6} align="center">
                         <Typography color="text.secondary" sx={{ py: 2 }}>Aucun produit.</Typography>
                       </TableCell>
                     </TableRow>

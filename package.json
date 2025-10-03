@@ -10,5 +10,8 @@
     "build": "npm -w apps/web run build && npm -w apps/api run build",
     "dev:web": "npm -w apps/web run dev",
     "dev:api": "npm -w apps/api run dev"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1"
   }
 }

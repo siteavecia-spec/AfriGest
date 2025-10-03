@@ -3,7 +3,11 @@ import jwt from 'jsonwebtoken'
 import { env } from '../config/env'
 import { passwordRevokedAfter } from '../stores/memory'
 
-export interface AuthPayload { sub: string; role: 'super_admin' | 'pdg' | 'dg' | 'employee' }
+export interface AuthPayload {
+  sub: string
+  role: 'super_admin' | 'support' | 'pdg' | 'dr' | 'dg' | 'manager_stock' | 'caissier' | 'employee' | 'ecom_manager' | 'ecom_ops' | 'marketing'
+  support_until?: string
+}
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization
@@ -20,7 +24,11 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
         return res.status(401).json({ error: 'Session invalidated, please login again' })
       }
     }
-    ;(req as any).auth = payload
+    // Allow support window override via header (MVP). Only attach if present and role is support or header provided.
+    const supportUntilHeader = (req.headers['x-support-until'] || '').toString().trim()
+    const enriched: AuthPayload = { ...payload }
+    if (supportUntilHeader) enriched.support_until = supportUntilHeader
+    ;(req as any).auth = enriched
     next()
   } catch (e) {
     return res.status(401).json({ error: 'Invalid token' })

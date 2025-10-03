@@ -36,12 +36,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const zod_1 = require("zod");
 const auth_1 = require("../middleware/auth");
-const rbac_1 = require("../middleware/rbac");
+const authorization_1 = require("../middleware/authorization");
 const memory_1 = require("../stores/memory");
 const svc = __importStar(require("../services/stock"));
+const audit_1 = require("../services/audit");
 const router = (0, express_1.Router)();
 // GET /stock/summary?boutiqueId=...
-router.get('/summary', auth_1.requireAuth, async (req, res) => {
+router.get('/summary', auth_1.requireAuth, (0, authorization_1.requirePermission)('stock', 'read'), async (req, res) => {
     const boutiqueId = (req.query.boutiqueId || '').toString();
     if (!boutiqueId)
         return res.status(400).json({ error: 'Missing boutiqueId' });
@@ -54,7 +55,7 @@ const entrySchema = zod_1.z.object({
     reference: zod_1.z.string().optional(),
     items: zod_1.z.array(zod_1.z.object({ productId: zod_1.z.string().min(1), quantity: zod_1.z.number().int().positive(), unitCost: zod_1.z.number().nonnegative() })).min(1).max(100)
 });
-router.post('/entries', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.post('/entries', auth_1.requireAuth, (0, authorization_1.requirePermission)('stock', 'update'), async (req, res) => {
     const parsed = entrySchema.safeParse(req.body);
     if (!parsed.success)
         return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() });
@@ -63,6 +64,10 @@ router.post('/entries', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin
     if (!bq)
         return res.status(404).json({ error: 'Boutique not found' });
     const out = await svc.createStockEntry(req, parsed.data);
+    try {
+        await (0, audit_1.auditReq)(req, { userId: req.auth?.sub, action: 'stock.entry.create', resource: parsed.data.boutiqueId, meta: { items: parsed.data.items.length, reference: parsed.data.reference } });
+    }
+    catch { }
     return res.status(201).json(out);
 });
 // POST /stock/adjust
@@ -72,7 +77,7 @@ const adjustSchema = zod_1.z.object({
     delta: zod_1.z.number().int(),
     reason: zod_1.z.string().min(1)
 });
-router.post('/adjust', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.post('/adjust', auth_1.requireAuth, (0, authorization_1.requirePermission)('stock', 'update'), async (req, res) => {
     const parsed = adjustSchema.safeParse(req.body);
     if (!parsed.success)
         return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() });
@@ -84,16 +89,24 @@ router.post('/adjust', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin'
     if (!prod)
         return res.status(404).json({ error: 'Product not found' });
     const out = await svc.adjustStock(req, { boutiqueId, productId, delta, reason });
+    try {
+        await (0, audit_1.auditReq)(req, { userId: req.auth?.sub, action: 'stock.adjust', resource: `${boutiqueId}:${productId}`, meta: { delta, reason } });
+    }
+    catch { }
     return res.status(201).json(out);
 });
 // GET /stock/audit?productId=...&limit=...
-router.get('/audit', auth_1.requireAuth, (0, rbac_1.requireRole)('super_admin', 'pdg', 'dg'), async (req, res) => {
+router.get('/audit', auth_1.requireAuth, (0, authorization_1.requirePermission)('stock', 'read'), async (req, res) => {
     const productId = (req.query.productId || '').toString();
     const rawLimit = Number((req.query.limit || 50).toString());
     const limit = Math.max(1, Math.min(200, Number.isFinite(rawLimit) ? rawLimit : 50));
     if (!productId)
         return res.status(400).json({ error: 'Missing productId' });
     const rows = await svc.getStockAudit(req, productId, limit);
+    try {
+        await (0, audit_1.auditReq)(req, { userId: req.auth?.sub, action: 'stock.audit.read', resource: productId, meta: { limit } });
+    }
+    catch { }
     return res.json(rows);
 });
 exports.default = router;
